@@ -1,107 +1,6 @@
-/* AutoDeal Next.js - Global Stylesheet with General Sans Font */
+/* AutoDeal Next.js - Original CSS files in public/app/css and public/forms provide full styling byte-for-byte */
 
-/* 1. General Sans Font-Face Definitions */
-@font-face {
-  font-family: 'General Sans';
-  src: url('/font/general-sans/GeneralSans-Extralight.otf') format('opentype');
-  font-weight: 200;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'General Sans';
-  src: url('/font/general-sans/GeneralSans-Light.otf') format('opentype');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'General Sans';
-  src: url('/font/general-sans/GeneralSans-Regular.otf') format('opentype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'General Sans';
-  src: url('/font/general-sans/GeneralSans-Medium.otf') format('opentype');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'General Sans';
-  src: url('/font/general-sans/GeneralSans-Semibold.otf') format('opentype');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'General Sans';
-  src: url('/font/general-sans/GeneralSans-Bold.otf') format('opentype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'General Sans';
-  src: url('/font/general-sans/GeneralSans-Italic.otf') format('opentype');
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'General Sans';
-  src: url('/font/general-sans/GeneralSans-MediumItalic.otf') format('opentype');
-  font-weight: 500;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'General Sans';
-  src: url('/font/general-sans/GeneralSans-SemiboldItalic.otf') format('opentype');
-  font-weight: 600;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'General Sans';
-  src: url('/font/general-sans/GeneralSans-BoldItalic.otf') format('opentype');
-  font-weight: 700;
-  font-style: italic;
-  font-display: swap;
-}
-
-/* 2. Global Font Application */
-:root {
-  --font-general-sans: 'General Sans', sans-serif;
-}
-
-*, *::before, *::after {
-  font-family: 'General Sans', sans-serif !important;
-}
-
-html, body {
-  font-family: 'General Sans', sans-serif !important;
-}
-
-h1, h2, h3, h4, h5, h6,
-p, span, a, div, li, ul,
-input, button, select, textarea,
-.font, .font-2, .inner, .title, .menu-tab {
-  font-family: 'General Sans', sans-serif !important;
-}
-
-/* 3. Preloader Dismiss */
+/* Preloader dismiss: ensures preloader never covers the screen with white overlay */
 .preload,
 .preload-container,
 .preload-container .middle {
@@ -112,111 +11,84 @@ input, button, select, textarea,
   z-index: -9999 !important;
 }
 
-/* 4. Full-Screen Hero Section */
-.slider.home7,
-.slider.home7 .swiper-wrapper,
-.slider.home7 .swiper-slide,
-.slider.home7 .slider-item {
-  height: 100vh !important;
-  min-height: 100vh !important;
-}
-
-.slider.home7 .slider-item .img-slider {
-  height: 100vh !important;
-  width: 100% !important;
-}
-
-.slider.home7 .slider-item .img-slider img {
-  height: 100% !important;
-  width: 100% !important;
-  object-fit: cover !important;
-}
-
-.slider.home7 .slider-item .content {
-  min-height: 100vh !important;
-  height: 100vh !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  padding: 120px 0 100px 11px !important;
-}
-
-/* 5. Hero Button UI - Matching Provided Screenshot */
-.hero-controller-buttons {
+/* Hero right-side action buttons */
+.hero-action-buttons {
+  margin-top: 10px;
+  z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 16px;
   align-items: flex-end;
-  z-index: 10;
 }
 
-.hero-controller-buttons .controller {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
+.hero-btn-brand-new {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 14px 34px !important;
+  min-width: 185px !important;
+  font-family: "Outfit", sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  background-color: #FF7101 !important;
+  border: 1px solid #FF7101 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(255, 113, 1, 0.35) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
 }
 
-.hero-controller-buttons .controller .content-controller {
-  padding-right: 14px;
-  text-align: right;
+.hero-btn-brand-new:hover {
+  background-color: #e66600 !important;
+  border-color: #e66600 !important;
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 12px 28px rgba(255, 113, 1, 0.5) !important;
 }
 
-.hero-controller-buttons .controller .content-controller p {
-  color: #FFFFFF;
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 22px;
-  margin: 0;
-  text-align: right;
-  transition: color 0.3s ease;
+.hero-btn-recondition {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 14px 34px !important;
+  min-width: 185px !important;
+  font-family: "Outfit", sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  background-color: rgba(36, 39, 44, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
 }
 
-.hero-controller-buttons .controller .icon-controller {
-  width: 58px;
-  height: 58px;
-  background-color: rgba(45, 40, 36, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  text-align: center;
-  line-height: 58px;
-  border-radius: 100%;
-  font-size: 20px;
-  color: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  flex-shrink: 0;
-}
-
-.hero-controller-buttons .controller:hover .icon-controller {
-  background-color: #FF7101;
-  border-color: #FF7101;
-  transform: scale(1.08);
-  box-shadow: 0 0 20px rgba(255, 113, 1, 0.5);
-}
-
-.hero-controller-buttons .controller:hover .content-controller p {
-  color: #FF7101;
+.hero-btn-recondition:hover {
+  background-color: #FF7101 !important;
+  border-color: #FF7101 !important;
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 12px 28px rgba(255, 113, 1, 0.4) !important;
 }
 
 @media (max-width: 767px) {
-  .hero-controller-buttons {
-    align-items: flex-start;
-    margin-top: 15px;
+  .hero-action-buttons {
+    align-items: flex-start !important;
+    margin-top: 15px !important;
   }
-  .hero-controller-buttons .controller {
-    justify-content: flex-start;
-  }
-  .hero-controller-buttons .controller .content-controller p {
-    text-align: left;
+  .hero-btn-brand-new,
+  .hero-btn-recondition {
+    min-width: 150px !important;
+    padding: 10px 22px !important;
+    font-size: 14px !important;
   }
 }
 
-/* 6. Used Cars by Budget Section: 2 Columns x 3 Rows = 6 Cards */
+/* Used Cars by Budget: 2-column layout reversal & padding */
 .list-car-grid-2 {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -224,30 +96,10 @@ input, button, select, textarea,
 }
 
 @media only screen and (min-width: 992px) {
-  /* Left column cards: car picture placed on the right side (reversed), text items starting from right side */
+  /* Left column cards: car picture placed on the right side (reversed), right column normal */
+  .list-car-grid-2 > .box-car-list:nth-child(2n+1),
   .list-car-grid-2 > .box-car-list.card-reversed {
     flex-direction: row-reverse !important;
-  }
-  .list-car-grid-2 > .box-car-list.card-reversed .content {
-    text-align: right !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-end !important;
-  }
-  .list-car-grid-2 > .box-car-list.card-reversed .content .text-address {
-    text-align: right !important;
-    width: 100% !important;
-  }
-  .list-car-grid-2 > .box-car-list.card-reversed .content .link-style-1 {
-    text-align: right !important;
-    width: 100% !important;
-  }
-  .list-car-grid-2 > .box-car-list.card-reversed .content .icon-box {
-    justify-content: flex-end !important;
-    width: 100% !important;
-  }
-  .list-car-grid-2 > .box-car-list.card-reversed .content .days-box {
-    width: 100% !important;
   }
 }
 
@@ -276,39 +128,22 @@ input, button, select, textarea,
   top: 26px !important;
 }
 
-/* Days box: Price on left side, View Car on right side (author removed) */
-.box-car-list.style-2 .content .days-box {
-  padding-top: 15px !important;
-  margin-top: 15px !important;
-  border-top: 1px solid #EDEDED !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  width: 100% !important;
-}
-
-.box-car-list.style-2 .content .days-box .money {
-  margin: 0 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-}
-
-/* View Car text button: border removed */
+/* View Car text button with arrow icon */
 .view-car.text-button {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 6px !important;
+  gap: 8px !important;
+  font-family: "Outfit", sans-serif !important;
   font-size: 14px !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
   line-height: 1.2 !important;
   color: #24272C !important;
-  border: none !important;
-  background: transparent !important;
-  padding: 0 !important;
+  border: 1px solid #24272C !important;
+  border-radius: 12px !important;
+  padding: 9px 18px !important;
   transition: all 0.3s ease !important;
   text-decoration: none !important;
-  cursor: pointer !important;
 }
 
 .view-car.text-button svg {
@@ -316,9 +151,9 @@ input, button, select, textarea,
 }
 
 .view-car.text-button:hover {
-  color: #FF7101 !important;
-  background: transparent !important;
-  border: none !important;
+  color: #FFFFFF !important;
+  background-color: #FF7101 !important;
+  border-color: #FF7101 !important;
 }
 
 .view-car.text-button:hover svg {
@@ -338,3 +173,5 @@ input, button, select, textarea,
   display: inline-block;
   vertical-align: -0.15em;
 }
+
+

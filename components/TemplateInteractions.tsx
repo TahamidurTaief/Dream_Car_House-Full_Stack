@@ -249,6 +249,50 @@ export default function TemplateInteractions() {
       });
       swiperInstances = [];
 
+      // Listing slide (Explore Inventory / Car by Body) - Auto slider 1-by-1 every 3-5 sec
+      document.querySelectorAll(".listing-slide:not(.swiper-initialized)").forEach((el) => {
+        try {
+          const s = new SwiperClass(el, {
+            slidesPerView: 3,
+            slidesPerGroup: 1,
+            spaceBetween: 40,
+            centeredSlides: true,
+            centeredSlidesBounds: true,
+            observer: true,
+            observeParents: true,
+            speed: 1000,
+            loop: true,
+            autoplay: {
+              delay: 3500,
+              disableOnInteraction: false,
+              pauseOnMouseEnter: true,
+            },
+            navigation: {
+              nextEl: el.querySelector(".swiper-button-next") || ".swiper-button-next.style-2",
+              prevEl: el.querySelector(".swiper-button-prev") || ".swiper-button-prev.style-2",
+            },
+            breakpoints: {
+              0: {
+                slidesPerView: 1,
+                slidesPerGroup: 1,
+                spaceBetween: 20,
+              },
+              768: {
+                slidesPerView: 2,
+                slidesPerGroup: 1,
+                spaceBetween: 24,
+              },
+              1200: {
+                slidesPerView: 3,
+                slidesPerGroup: 1,
+                spaceBetween: 40,
+              },
+            },
+          });
+          swiperInstances.push(s);
+        } catch {}
+      });
+
       // Carousel 2 (Car listing cards image carousel)
       document.querySelectorAll(".carousel-2").forEach((el) => {
         try {
