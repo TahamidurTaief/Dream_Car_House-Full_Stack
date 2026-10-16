@@ -1,4 +1,4 @@
-﻿@charset "UTF-8";
+@charset "UTF-8";
 /**
   * Name: AutoDeal - Car Dealer, Rental & Listing HTML Template
   * Version: 1.0.3
@@ -1134,9 +1134,13 @@
   line-height: 17.64px;
   font-family: "Outfit", sans-serif;
   color: #24272C;
-  border: 1px solid #24272C;
-  border-radius: 14px;
-  padding: 9px 15.5px;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   -webkit-transition: all 0.3s ease;
   -moz-transition: all 0.3s ease;
   -ms-transition: all 0.3s ease;
@@ -1145,7 +1149,8 @@
 }
 .view-car:hover {
   color: #FF7101;
-  border: 1px solid #FF7101;
+  border: none;
+  background: transparent;
 }
 
 /**

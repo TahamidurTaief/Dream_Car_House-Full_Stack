@@ -174,36 +174,58 @@
   top: 26px !important;
 }
 
-/* View Car text button with arrow icon */
-.view-car.text-button {
+/* View Car pure text button (no background, no border, just text and arrow icon) */
+.view-car,
+.view-car.text-button,
+a.view-car,
+a.view-car.text-button,
+.box-car-list .content .days-box .view-car {
   display: inline-flex !important;
   align-items: center !important;
-  justify-content: center !important;
+  justify-content: flex-start !important;
   gap: 8px !important;
   font-family: "Outfit", sans-serif !important;
   font-size: 14px !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
   line-height: 1.2 !important;
   color: #24272C !important;
-  border: 1px solid #24272C !important;
-  border-radius: 12px !important;
-  padding: 9px 18px !important;
-  transition: all 0.3s ease !important;
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: color 0.25s ease !important;
+}
+
+.view-car svg,
+.view-car.text-button svg,
+.box-car-list .content .days-box .view-car svg {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  transition: transform 0.25s ease !important;
+}
+
+.view-car:hover,
+.view-car.text-button:hover,
+a.view-car:hover,
+a.view-car.text-button:hover,
+.box-car-list .content .days-box .view-car:hover {
+  color: #FF7101 !important;
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   text-decoration: none !important;
 }
 
-.view-car.text-button svg {
-  transition: transform 0.3s ease !important;
-}
-
-.view-car.text-button:hover {
-  color: #FFFFFF !important;
-  background-color: #FF7101 !important;
-  border-color: #FF7101 !important;
-}
-
-.view-car.text-button:hover svg {
-  transform: translateX(4px) !important;
+.view-car:hover svg,
+.view-car.text-button:hover svg,
+.box-car-list .content .days-box .view-car:hover svg {
+  transform: translateX(5px) !important;
 }
 
 /* BDT Icon styling */
