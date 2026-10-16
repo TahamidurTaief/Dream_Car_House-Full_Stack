@@ -1,0 +1,177 @@
+/* AutoDeal Next.js - Original CSS files in public/app/css and public/forms provide full styling byte-for-byte */
+
+/* Preloader dismiss: ensures preloader never covers the screen with white overlay */
+.preload,
+.preload-container,
+.preload-container .middle {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  z-index: -9999 !important;
+}
+
+/* Hero right-side action buttons */
+.hero-action-buttons {
+  margin-top: 10px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.hero-btn-brand-new {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 14px 34px !important;
+  min-width: 185px !important;
+  font-family: "Outfit", sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  background-color: #FF7101 !important;
+  border: 1px solid #FF7101 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(255, 113, 1, 0.35) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+}
+
+.hero-btn-brand-new:hover {
+  background-color: #e66600 !important;
+  border-color: #e66600 !important;
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 12px 28px rgba(255, 113, 1, 0.5) !important;
+}
+
+.hero-btn-recondition {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 14px 34px !important;
+  min-width: 185px !important;
+  font-family: "Outfit", sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  background-color: rgba(36, 39, 44, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+}
+
+.hero-btn-recondition:hover {
+  background-color: #FF7101 !important;
+  border-color: #FF7101 !important;
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 12px 28px rgba(255, 113, 1, 0.4) !important;
+}
+
+@media (max-width: 767px) {
+  .hero-action-buttons {
+    align-items: flex-start !important;
+    margin-top: 15px !important;
+  }
+  .hero-btn-brand-new,
+  .hero-btn-recondition {
+    min-width: 150px !important;
+    padding: 10px 22px !important;
+    font-size: 14px !important;
+  }
+}
+
+/* Used Cars by Budget: 2-column layout reversal & padding */
+.list-car-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+}
+
+@media only screen and (min-width: 992px) {
+  /* Left column cards: car picture placed on the right side (reversed), right column normal */
+  .list-car-grid-2 > .box-car-list:nth-child(2n+1),
+  .list-car-grid-2 > .box-car-list.card-reversed {
+    flex-direction: row-reverse !important;
+  }
+}
+
+/* Same amount of padding around image as content section (17px 16px 15px 16px) */
+.list-car-grid-2 .box-car-list.style-2 > .image-group {
+  padding: 17px 16px 15px 16px !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  width: 252px !important;
+  flex-shrink: 0 !important;
+}
+
+.list-car-grid-2 .box-car-list.style-2 > .image-group .img-style,
+.list-car-grid-2 .box-car-list.style-2 > .image-group img {
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+.list-car-grid-2 .box-car-list.style-2 > .image-group .top {
+  left: 26px !important;
+  right: 26px !important;
+  top: 26px !important;
+}
+
+/* View Car text button with arrow icon */
+.view-car.text-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  font-family: "Outfit", sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  color: #24272C !important;
+  border: 1px solid #24272C !important;
+  border-radius: 12px !important;
+  padding: 9px 18px !important;
+  transition: all 0.3s ease !important;
+  text-decoration: none !important;
+}
+
+.view-car.text-button svg {
+  transition: transform 0.3s ease !important;
+}
+
+.view-car.text-button:hover {
+  color: #FFFFFF !important;
+  background-color: #FF7101 !important;
+  border-color: #FF7101 !important;
+}
+
+.view-car.text-button:hover svg {
+  transform: translateX(4px) !important;
+}
+
+/* BDT Icon styling */
+.bdt-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.money .bdt-icon svg,
+.tab-title .bdt-icon svg {
+  display: inline-block;
+  vertical-align: -0.15em;
+}
+
+
