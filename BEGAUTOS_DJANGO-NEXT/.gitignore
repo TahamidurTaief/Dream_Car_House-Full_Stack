@@ -1,0 +1,8 @@
+backend/media_root/
+backend/db.sqlite3
+backend/db.sqlite3
+backend/db.sqlite3
+
+
+frontend/.env
+frontend/.env.local

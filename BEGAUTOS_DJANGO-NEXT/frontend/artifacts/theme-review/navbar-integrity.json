@@ -1,0 +1,14 @@
+{
+  "frontend/components/layouts/Header.tsx": {
+    "sha256": "eb10559f0b1f5cb4ccfc94d2ed1381364fb8713b0373c13b41093a9f2184027c",
+    "unchanged": true
+  },
+  "frontend/components/layouts/Navigation.tsx": {
+    "sha256": "eb54002f65facd7da86f8396bb8708c23348654b6b650960c720eb5623d0aff9",
+    "unchanged": true
+  },
+  "frontend/components/ui/CarInventoryOverlay.jsx": {
+    "sha256": "25f737bd925e522549d8d8157a2ef463e6d79ed4c05d7063919986d38c3bba57",
+    "unchanged": true
+  }
+}
