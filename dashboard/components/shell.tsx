@@ -79,6 +79,7 @@ export function Shell({
   children: React.ReactNode;
   user?: DashboardUser;
 }) {
+  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const drawer = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLButtonElement>(null);
@@ -101,7 +102,6 @@ export function Shell({
       first?.focus();
     }
   }
-
   useEffect(() => {
     const media = window.matchMedia("(min-width: 768px)");
     const closeOnDesktop = () => {
@@ -110,6 +110,10 @@ export function Shell({
     media.addEventListener("change", closeOnDesktop);
     return () => media.removeEventListener("change", closeOnDesktop);
   }, []);
+
+  if (pathname === "/login") {
+    return <>{children}</>;
+  }
 
   return (
     <div className="shell" data-collapsed={collapsed}>

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getDashboardAccess, validateSafeRedirect } from "@/lib/server/auth";
-import { PageHeader } from "@/components/page-header";
 import { LoginForm } from "@/components/auth/LoginForm";
 
 export const metadata: Metadata = {
@@ -25,13 +24,10 @@ export default async function LoginPage({
   }
 
   return (
-    <>
-      <PageHeader
-        title="Sign in"
-        href="/login"
-        description="Authenticate with your active staff credentials to access the management workspace."
-      />
-      <LoginForm nextTarget={nextTarget} />
-    </>
+    <div className="login-page">
+      <div className="login-card">
+        <LoginForm nextTarget={nextTarget} />
+      </div>
+    </div>
   );
 }
