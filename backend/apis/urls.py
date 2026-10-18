@@ -22,6 +22,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     # apps
+    path('dashboard/', include('apps.dashboard_api.urls', namespace='dashboard_api')),
     path('home/', include('apps.home.urls', namespace='home')),
     path('inventory/', include('apps.inventory.urls', namespace='inventory')),
     path('site-config/', include('apps.seo_config.urls', namespace='seo_config')),

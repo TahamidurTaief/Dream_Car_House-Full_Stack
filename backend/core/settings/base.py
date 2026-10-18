@@ -35,6 +35,7 @@ LOCALE_APPS = [
     'apps.home',
     'apps.inventory',
     'apps.seo_config',
+    'apps.dashboard_api',
 ]
 
 THIRD_PARTY_APPS = [

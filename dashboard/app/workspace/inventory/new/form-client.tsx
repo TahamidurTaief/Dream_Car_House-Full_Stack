@@ -1,0 +1,592 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/Button";
+import { FormField } from "@/components/ui/FormField";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Textarea } from "@/components/ui/Textarea";
+import { Upload } from "@/components/ui/Upload";
+import { Tabs } from "@/components/ui/Tabs";
+import { Switch } from "@/components/ui/Switch";
+import { useToast } from "@/components/ui/Toast";
+import { Trash2, ArrowLeft } from "lucide-react";
+import {
+  createInventoryAction,
+  updateInventoryAction,
+  uploadInventoryGalleryImageAction,
+  deleteInventoryGalleryImageAction,
+} from "@/app/actions/inventory";
+import type {
+  InventoryDetailItem,
+  BrandItem,
+  ModelGenerationItem,
+  BodyStyleItem,
+} from "@/lib/types";
+
+export function InventoryFormClient({
+  initialCar,
+  brands,
+  allModels,
+  bodyStyles,
+}: {
+  initialCar?: InventoryDetailItem;
+  brands: BrandItem[];
+  allModels: ModelGenerationItem[];
+  bodyStyles: BodyStyleItem[];
+}) {
+  const router = useRouter();
+  const { showToast } = useToast();
+
+  const isEdit = !!initialCar;
+  const [activeTab, setActiveTab] = useState("general");
+  const [submitting, setSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Cascading Brand -> Model relationship state
+  const [selectedBrandId, setSelectedBrandId] = useState<string>(
+    initialCar?.brand ? String(initialCar.brand) : brands[0]?.id ? String(brands[0].id) : ""
+  );
+
+  const [selectedModelId, setSelectedModelId] = useState<string>(
+    initialCar?.model ? String(initialCar.model) : ""
+  );
+
+  const [isFeatured, setIsFeatured] = useState<boolean>(initialCar?.is_featured ?? false);
+
+  const [schemaText, setSchemaText] = useState(
+    initialCar?.schema_override ? JSON.stringify(initialCar.schema_override, null, 2) : ""
+  );
+
+  // Gallery state for edit mode
+  const [galleryImages, setGalleryImages] = useState(initialCar?.inventory_images || []);
+  const [galleryUploading, setGalleryUploading] = useState(false);
+
+  // Filter model choices dynamically by selectedBrandId
+  const filteredModels = useMemo(() => {
+    if (!selectedBrandId) return [];
+    return allModels.filter((m) => String(m.brand) === selectedBrandId);
+  }, [allModels, selectedBrandId]);
+
+  const handleBrandChange = (brandId: string) => {
+    setSelectedBrandId(brandId);
+    // If current selectedModelId does not belong to new brand, reset model
+    const stillValid = allModels.some(
+      (m) => String(m.id) === selectedModelId && String(m.brand) === brandId
+    );
+    if (!stillValid) {
+      setSelectedModelId("");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setFieldErrors({});
+
+    const formData = new FormData(e.currentTarget);
+    formData.set("is_featured", isFeatured ? "true" : "false");
+    formData.set("brand", selectedBrandId);
+    if (selectedModelId) {
+      formData.set("model", selectedModelId);
+    } else {
+      formData.delete("model");
+    }
+
+    // Validate JSON-LD override
+    if (schemaText.trim()) {
+      try {
+        JSON.parse(schemaText);
+        formData.set("schema_override", schemaText);
+      } catch {
+        setSubmitting(false);
+        setFieldErrors({ schema_override: "Invalid JSON-LD schema syntax." });
+        showToast("Invalid JSON syntax in Schema Override.", "error");
+        return;
+      }
+    } else {
+      formData.set("schema_override", "");
+    }
+
+    let res;
+    if (isEdit && initialCar) {
+      res = await updateInventoryAction(initialCar.id, formData);
+    } else {
+      res = await createInventoryAction(formData);
+    }
+    setSubmitting(false);
+
+    if (res.ok) {
+      showToast(isEdit ? "Vehicle updated successfully." : "Vehicle created successfully.", "success");
+      if (!isEdit && res.data?.id) {
+        router.push(`/workspace/inventory/${res.data.id}`);
+      } else {
+        router.refresh();
+      }
+    } else {
+      if (res.error.fieldErrors) {
+        const flat: Record<string, string> = {};
+        for (const [k, v] of Object.entries(res.error.fieldErrors)) {
+          flat[k] = Array.isArray(v) ? (v[0] ?? "") : String(v);
+        }
+        setFieldErrors(flat);
+      }
+      showToast(res.error.message || "Failed to save vehicle.", "error");
+    }
+  };
+
+  const handleUploadGalleryImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!initialCar || !e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.set("image", file);
+
+    setGalleryUploading(true);
+    const res = await uploadInventoryGalleryImageAction(initialCar.id, formData);
+    setGalleryUploading(false);
+
+    if (res.ok) {
+      showToast("Gallery image uploaded.", "success");
+      setGalleryImages((prev) => [...prev, res.data]);
+    } else {
+      showToast(res.error.message || "Failed to upload gallery image.", "error");
+    }
+    // reset input
+    e.target.value = "";
+  };
+
+  const handleDeleteGalleryImage = async (imageId: number) => {
+    if (!initialCar) return;
+    const res = await deleteInventoryGalleryImageAction(imageId, initialCar.id);
+    if (res.ok) {
+      showToast("Gallery image deleted.", "success");
+      setGalleryImages((prev) => prev.filter((img) => img.id !== imageId));
+    } else {
+      showToast(res.error.message || "Failed to delete gallery image.", "error");
+    }
+  };
+
+  const brandOptions = brands.map((b) => ({ label: b.name, value: String(b.id) }));
+  const modelOptions = [
+    { label: "-- Select Model Generation --", value: "" },
+    ...filteredModels.map((m) => ({ label: m.model, value: String(m.id) })),
+  ];
+  const bodyStyleOptions = [
+    { label: "-- Select Body Style --", value: "" },
+    ...bodyStyles.map((s) => ({ label: s.body, value: String(s.id) })),
+  ];
+
+  return (
+    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Link href="/workspace/inventory" className="button button--secondary" style={{ display: "inline-flex", alignItems: "center", gap: "var(--space-2)" }}>
+          <ArrowLeft size={16} /> Back to Inventory
+        </Link>
+        <Button type="submit" variant="primary" disabled={submitting}>
+          {submitting ? "Saving..." : isEdit ? "Save Changes" : "Create Vehicle"}
+        </Button>
+      </div>
+
+      <Tabs
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        tabs={[
+          { id: "general", label: "General" },
+          { id: "specs", label: "Specifications" },
+          { id: "pricing", label: "Pricing & Availability" },
+          { id: "media", label: "Media & Gallery" },
+          { id: "description", label: "Description" },
+          { id: "seo", label: "SEO Settings" },
+        ]}
+      />
+
+      {/* 1. General Tab */}
+      {activeTab === "general" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
+          <FormField label="Vehicle Heading / Name" required error={fieldErrors.name}>
+            <Input name="name" defaultValue={initialCar?.name || ""} required placeholder="e.g. 2023 Toyota Land Cruiser ZX" />
+          </FormField>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
+            <FormField label="Brand" required error={fieldErrors.brand}>
+              <Select
+                name="brand_select"
+                options={brandOptions}
+                value={selectedBrandId}
+                onChange={(e) => handleBrandChange(e.target.value)}
+                required
+              />
+            </FormField>
+
+            <FormField
+              label="Model Generation"
+              error={fieldErrors.model}
+              description={`Filtered to ${filteredModels.length} models for selected brand`}
+            >
+              <Select
+                name="model_select"
+                options={modelOptions}
+                value={selectedModelId}
+                onChange={(e) => setSelectedModelId(e.target.value)}
+              />
+            </FormField>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
+            <FormField label="Model Name (Override/Custom)" error={fieldErrors.model_name} description="Auto-populated from generation if left blank">
+              <Input name="model_name" defaultValue={initialCar?.model_name || ""} placeholder="e.g. LC300 ZX" />
+            </FormField>
+
+            <FormField label="Car Type" error={fieldErrors.car_type}>
+              <Select
+                name="car_type"
+                options={[
+                  { label: "Reconditioned", value: "RECONDITIONED" },
+                  { label: "Brand New", value: "BRAND_NEW" },
+                  { label: "Pre-Owned", value: "PRE_OWNED" },
+                ]}
+                defaultValue={initialCar?.car_type || "RECONDITIONED"}
+              />
+            </FormField>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
+            <FormField label="Reg. Year" error={fieldErrors.year}>
+              <Input name="year" type="number" defaultValue={initialCar?.year ? String(initialCar.year) : ""} placeholder="e.g. 2023" />
+            </FormField>
+
+            <FormField label="Condition" required error={fieldErrors.condition}>
+              <Select
+                name="condition"
+                options={[
+                  { label: "USED", value: "USED" },
+                  { label: "NEW", value: "NEW" },
+                ]}
+                defaultValue={initialCar?.condition || "USED"}
+                required
+              />
+            </FormField>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
+            <FormField label="Body Style" error={fieldErrors.body_style}>
+              <Select
+                name="body_style"
+                options={bodyStyleOptions}
+                defaultValue={initialCar?.body_style ? String(initialCar.body_style) : ""}
+              />
+            </FormField>
+
+            <FormField label="Inventory Type" error={fieldErrors.inventory_type}>
+              <Select
+                name="inventory_type"
+                options={[
+                  { label: "Budget Friendly", value: "BUDGET FRIENDLY" },
+                  { label: "Luxury", value: "LUXURY" },
+                ]}
+                defaultValue={initialCar?.inventory_type || "BUDGET FRIENDLY"}
+              />
+            </FormField>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4)", paddingTop: "var(--space-2)" }}>
+            <Switch
+              label="Feature on Homepage / Showcase"
+              checked={isFeatured}
+              onChange={(e) => setIsFeatured(e.target.checked)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 2. Specifications Tab */}
+      {activeTab === "specs" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
+            <FormField label="Engine Capacity (cc)" error={fieldErrors.engine_capacity}>
+              <Input name="engine_capacity" defaultValue={initialCar?.engine_capacity || ""} placeholder="e.g. 3500" />
+            </FormField>
+
+            <FormField label="Mileage" error={fieldErrors.mileage}>
+              <Input name="mileage" defaultValue={initialCar?.mileage || ""} placeholder="e.g. 12000" />
+            </FormField>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
+            <FormField label="Fuel Type" required error={fieldErrors.fuel_type}>
+              <Select
+                name="fuel_type"
+                options={[
+                  { label: "PETROL", value: "PETROL" },
+                  { label: "OCTANE", value: "OCTANE" },
+                  { label: "DIESEL", value: "DIESEL" },
+                  { label: "HYBRID", value: "HYBRID" },
+                  { label: "ELECTRIC", value: "ELECTRIC" },
+                  { label: "PETROL+HYBRID", value: "PETROL+HYBRID" },
+                  { label: "OCTANE+HYBRID", value: "OCTANE+HYBRID" },
+                  { label: "PETROL+PLUG-IN HYBRID", value: "PETROL+PLUG-IN HYBRID" },
+                  { label: "CNG", value: "CNG" },
+                  { label: "LPG", value: "LPG" },
+                  { label: "OTHERS", value: "OTHERS" },
+                ]}
+                defaultValue={initialCar?.fuel_type || "PETROL"}
+                required
+              />
+            </FormField>
+
+            <FormField label="Transmission" required error={fieldErrors.transmission}>
+              <Select
+                name="transmission"
+                options={[
+                  { label: "AUTOMATIC", value: "AUTOMATIC" },
+                  { label: "MANUAL", value: "MANUAL" },
+                ]}
+                defaultValue={initialCar?.transmission || "AUTOMATIC"}
+                required
+              />
+            </FormField>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "var(--space-4)" }}>
+            <FormField label="Color / Exterior" error={fieldErrors.color}>
+              <Input name="color" defaultValue={initialCar?.color || ""} placeholder="e.g. Pearl White" />
+            </FormField>
+
+            <FormField label="Drive Train / Type" error={fieldErrors.drive_type}>
+              <Input name="drive_type" defaultValue={initialCar?.drive_type || ""} placeholder="e.g. 4WD, AWD, FWD" />
+            </FormField>
+
+            <FormField label="Wheel Base" error={fieldErrors.wheel_base}>
+              <Input name="wheel_base" defaultValue={initialCar?.wheel_base || ""} placeholder="e.g. 2850mm" />
+            </FormField>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Pricing & Availability Tab */}
+      {activeTab === "pricing" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
+            <FormField label="Price (BDT)" error={fieldErrors.price} description="Decimal precision preserved (e.g. 29500000.00)">
+              <Input name="price" defaultValue={initialCar?.price ? String(initialCar.price) : ""} placeholder="e.g. 28000000.00" />
+            </FormField>
+
+            <FormField label="Is Slightly Negotiable?" error={fieldErrors.slightly_negotiable}>
+              <Select
+                name="slightly_negotiable"
+                options={[
+                  { label: "YES", value: "YES" },
+                  { label: "NO", value: "NO" },
+                ]}
+                defaultValue={initialCar?.slightly_negotiable || "YES"}
+              />
+            </FormField>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
+            <FormField
+              label="Availability in Showroom"
+              required
+              error={fieldErrors.registered}
+              description="Inventory state (Available, Sold, Booked, Pre-Order). Sold cars auto-adjust robots meta."
+            >
+              <Select
+                name="registered"
+                options={[
+                  { label: "Available", value: "Available" },
+                  { label: "Sold", value: "Sold" },
+                  { label: "Booked", value: "Booked" },
+                  { label: "Pre-Order", value: "Pre-Order" },
+                ]}
+                defaultValue={initialCar?.registered || "Available"}
+                required
+              />
+            </FormField>
+
+            <FormField
+              label="Publication Status"
+              required
+              error={fieldErrors.status}
+              description="Visibility state (Published, Unpublished, Archived, Unlisted). Distinct from availability!"
+            >
+              <Select
+                name="status"
+                options={[
+                  { label: "Published (Visible on site)", value: "PUBLISHED" },
+                  { label: "Unpublished (Draft)", value: "UNPUBLISHED" },
+                  { label: "Archived (Hidden from list)", value: "ARCHIVED" },
+                  { label: "Unlisted (Link only)", value: "UNLISTED" },
+                ]}
+                defaultValue={initialCar?.status || "PUBLISHED"}
+                required
+              />
+            </FormField>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Media & Gallery Tab */}
+      {activeTab === "media" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
+          <FormField label="Feature Primary Image" error={fieldErrors.feature_image} description="Leave blank to keep existing image">
+            {initialCar?.feature_image && (
+              <div style={{ marginBottom: "var(--space-2)" }}>
+                <img src={initialCar.feature_image} alt={initialCar.name} style={{ maxHeight: "120px", objectFit: "cover", borderRadius: "4px" }} />
+              </div>
+            )}
+            <Upload name="feature_image" accept="image/*" />
+          </FormField>
+
+          <FormField label="Youtube Video URL" error={fieldErrors.youtube}>
+            <Input name="youtube" defaultValue={initialCar?.youtube || ""} placeholder="https://www.youtube.com/watch?v=..." />
+          </FormField>
+
+          {isEdit && (
+            <div style={{ marginTop: "var(--space-4)", borderTop: "1px solid var(--border)", paddingTop: "var(--space-4)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-3)" }}>
+                <h4 style={{ margin: 0 }}>Gallery Images ({galleryImages.length})</h4>
+                <label className="button button--secondary" style={{ cursor: "pointer", fontSize: "var(--font-size-xs)" }}>
+                  {galleryUploading ? "Uploading..." : "+ Add Gallery Image"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleUploadGalleryImage}
+                    disabled={galleryUploading}
+                    style={{ display: "none" }}
+                  />
+                </label>
+              </div>
+
+              {galleryImages.length === 0 ? (
+                <p className="muted" style={{ fontSize: "var(--font-size-sm)" }}>No gallery photos uploaded yet.</p>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "var(--space-3)" }}>
+                  {galleryImages.map((img) => (
+                    <div
+                      key={img.id}
+                      style={{
+                        position: "relative",
+                        border: "1px solid var(--border)",
+                        borderRadius: "var(--radius-sm)",
+                        overflow: "hidden",
+                        background: "var(--background)",
+                      }}
+                    >
+                      <img
+                        src={img.image}
+                        alt={img.alt_text || "Vehicle gallery image"}
+                        style={{ width: "100%", height: "90px", objectFit: "cover" }}
+                      />
+                      <div style={{ padding: "4px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>Order: {img.order}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteGalleryImage(img.id)}
+                          aria-label="Delete gallery image"
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            color: "var(--danger)",
+                            cursor: "pointer",
+                            padding: "2px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 5. Description Tab */}
+      {activeTab === "description" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
+          <FormField label="Vehicle Description (HTML)" error={fieldErrors.description} description="Detailed specifications, features, accessories and options">
+            <Textarea name="description" defaultValue={initialCar?.description || ""} rows={12} />
+          </FormField>
+        </div>
+      )}
+
+      {/* 6. SEO Settings Tab */}
+      {activeTab === "seo" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
+          <FormField label="H1 Title" error={fieldErrors.h1_title} description="Heading on vehicle page; falls back to Name if blank">
+            <Input name="h1_title" defaultValue={initialCar?.h1_title || ""} placeholder="e.g. 2023 Toyota Land Cruiser ZX 3.5L Turbo" />
+          </FormField>
+
+          <FormField label="Target Primary Keyword" error={fieldErrors.target_keyword}>
+            <Input name="target_keyword" defaultValue={initialCar?.target_keyword || ""} placeholder="e.g. toyota land cruiser zx price bd" />
+          </FormField>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
+            <FormField label="Meta Title" error={fieldErrors.meta_title} description="Auto-generated if left blank (max 70 chars)">
+              <Input name="meta_title" defaultValue={initialCar?.meta_title || ""} maxLength={70} />
+            </FormField>
+
+            <FormField label="URL Slug" error={fieldErrors.slug} description="Auto-generated if left blank; immutable past redirect rules apply">
+              <Input name="slug" defaultValue={initialCar?.slug || ""} placeholder="auto-generated-from-details" />
+            </FormField>
+          </div>
+
+          <FormField label="Meta Description" error={fieldErrors.meta_description} description="Auto-generated if left blank (max 500 chars)">
+            <Textarea name="meta_description" defaultValue={initialCar?.meta_description || ""} rows={3} maxLength={500} />
+          </FormField>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
+            <FormField label="Canonical URL" error={fieldErrors.canonical_url} description="Auto-generated based on authoritative base domain">
+              <Input name="canonical_url" defaultValue={initialCar?.canonical_url || ""} />
+            </FormField>
+
+            <FormField label="Search Engine Indexing" error={fieldErrors.indexing}>
+              <Select
+                name="indexing"
+                options={[
+                  { label: "Index & follow", value: "index, follow" },
+                  { label: "Index & nofollow", value: "index, nofollow" },
+                  { label: "Noindex & nofollow", value: "noindex, nofollow" },
+                ]}
+                defaultValue={initialCar?.indexing || "index, follow"}
+              />
+            </FormField>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
+            <FormField label="Featured Image Alt Text" error={fieldErrors.featured_image_alt}>
+              <Input name="featured_image_alt" defaultValue={initialCar?.featured_image_alt || ""} />
+            </FormField>
+
+            <FormField label="Previous Slug (for 301 redirect)" error={fieldErrors.previous_slug} description="Auto-populated when slug changes">
+              <Input name="previous_slug" defaultValue={initialCar?.previous_slug || ""} readOnly />
+            </FormField>
+          </div>
+
+          <FormField label="Schema.org JSON-LD Override" error={fieldErrors.schema_override} description="Optional custom JSON-LD schema dictionary">
+            <Textarea
+              value={schemaText}
+              onChange={(e) => setSchemaText(e.target.value)}
+              rows={8}
+              style={{ fontFamily: "monospace", fontSize: "var(--font-size-xs)" }}
+              placeholder='{ "@context": "https://schema.org", "@type": "Car" }'
+            />
+          </FormField>
+        </div>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-2)" }}>
+        <Button type="submit" variant="primary" disabled={submitting}>
+          {submitting ? "Saving..." : isEdit ? "Save Changes" : "Create Vehicle"}
+        </Button>
+      </div>
+    </form>
+  );
+}
