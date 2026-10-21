@@ -17,7 +17,35 @@ from .views import (
     InventoryImageDetailView,
     StockListCreateView,
     StockDetailView,
+    InventoryQuoteListCreateView,
+    InventoryQuoteDetailView,
+    SellCarListCreateView,
+    SellCarDetailView,
+    SellCarImageDetailView,
+    ContactMessageListCreateView,
+    ContactMessageDetailView,
+    SubscriberListCreateView,
+    SubscriberDetailView,
+    SliderListCreateView,
+    SliderDetailView,
+    SocialMediaListCreateView,
+    SocialMediaDetailView,
+    PeopleTalkListCreateView,
+    PeopleTalkDetailView,
+    SalesRepresentativeListCreateView,
+    SalesRepresentativeDetailView,
+    SEOConfigListCreateView,
+    SEOConfigDetailView,
+    CategoryPageSEOListCreateView,
+    CategoryPageSEODetailView,
+    UserListCreateView,
+    UserDetailView,
+    GroupListCreateView,
+    GroupDetailView,
+    PermissionListView,
+    OverviewAggregateView,
 )
+
 
 app_name = "dashboard_api"
 
@@ -26,6 +54,7 @@ urlpatterns = [
     path("auth/login/", LoginView.as_view(), name="login"),
     path("auth/logout/", LogoutView.as_view(), name="logout"),
     path("auth/me/", MeView.as_view(), name="me"),
+    path("overview/", OverviewAggregateView.as_view(), name="overview"),
 
     # Brands
     path("brands/", BrandListCreateView.as_view(), name="brand_list_create"),
@@ -49,4 +78,60 @@ urlpatterns = [
     # Stocks
     path("stocks/", StockListCreateView.as_view(), name="stock_list_create"),
     path("stocks/<int:pk>/", StockDetailView.as_view(), name="stock_detail"),
+
+    # Quotes (Customer Enquiries)
+    path("quotes/", InventoryQuoteListCreateView.as_view(), name="quote_list_create"),
+    path("quotes/<int:pk>/", InventoryQuoteDetailView.as_view(), name="quote_detail"),
+
+    # SellCar Submissions
+    path("sell-cars/", SellCarListCreateView.as_view(), name="sell_car_list_create"),
+    path("sell-cars/<int:pk>/", SellCarDetailView.as_view(), name="sell_car_detail"),
+    path("sell-cars/<int:sellcar_pk>/images/<int:image_pk>/", SellCarImageDetailView.as_view(), name="sell_car_image_detail"),
+
+    # Customer Inbox: Contact Messages
+    path("contact-messages/", ContactMessageListCreateView.as_view(), name="contact_message_list_create"),
+    path("contact-messages/<int:pk>/", ContactMessageDetailView.as_view(), name="contact_message_detail"),
+
+    # Customer Inbox: Subscribers
+    path("subscribers/", SubscriberListCreateView.as_view(), name="subscriber_list_create"),
+    path("subscribers/<int:pk>/", SubscriberDetailView.as_view(), name="subscriber_detail"),
+
+    # Slider Video/Banner Configuration
+    path("sliders/", SliderListCreateView.as_view(), name="slider_list_create"),
+    path("sliders/<int:pk>/", SliderDetailView.as_view(), name="slider_detail"),
+
+    # Social Media Configuration
+    path("social-media/", SocialMediaListCreateView.as_view(), name="social_media_list_create"),
+    path("social-media/<int:pk>/", SocialMediaDetailView.as_view(), name="social_media_detail"),
+
+    # Social Features (PeopleTalkAboutUs)
+    path("social-features/", PeopleTalkListCreateView.as_view(), name="social_features_list_create"),
+    path("social-features/<int:pk>/", PeopleTalkDetailView.as_view(), name="social_features_detail"),
+
+    # Sales Representatives
+    path("sales-representatives/", SalesRepresentativeListCreateView.as_view(), name="sales_representative_list_create"),
+    path("sales-representatives/<int:pk>/", SalesRepresentativeDetailView.as_view(), name="sales_representative_detail"),
+
+    # SEO: General Pages (SEOConfig)
+    path("page-seo/", SEOConfigListCreateView.as_view(), name="page_seo_list_create"),
+    path("page-seo/<int:pk>/", SEOConfigDetailView.as_view(), name="page_seo_detail"),
+
+    # SEO: Category / Listing Pages (CategoryPageSEO)
+    path("category-seo/", CategoryPageSEOListCreateView.as_view(), name="category_seo_list_create"),
+    path("category-seo/<int:pk>/", CategoryPageSEODetailView.as_view(), name="category_seo_detail"),
+
+    # Users & Accounts (auth.User)
+    path("users/", UserListCreateView.as_view(), name="user_list_create"),
+    path("users/<int:pk>/", UserDetailView.as_view(), name="user_detail"),
+
+    # Groups & Roles (auth.Group)
+    path("groups/", GroupListCreateView.as_view(), name="group_list_create"),
+    path("groups/<int:pk>/", GroupDetailView.as_view(), name="group_detail"),
+
+    # Permissions Catalogue (auth.Permission)
+    path("permissions/", PermissionListView.as_view(), name="permission_list"),
 ]
+
+
+
+

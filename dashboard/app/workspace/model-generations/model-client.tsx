@@ -49,6 +49,7 @@ export function ModelGenerationListClient({
   const [editItem, setEditItem] = useState<ModelGenerationItem | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingModel, setDeletingModel] = useState<ModelGenerationItem | null>(null);
@@ -113,6 +114,7 @@ export function ModelGenerationListClient({
     e.preventDefault();
     if (!editItem) return;
     setEditSubmitting(true);
+    setEditErrors({});
 
     const formData = new FormData(e.currentTarget);
     const brandId = parseInt(String(formData.get("brand")), 10);
@@ -132,6 +134,13 @@ export function ModelGenerationListClient({
       setEditItem(null);
       router.refresh();
     } else {
+      if (res.error.fieldErrors) {
+        const flat: Record<string, string> = {};
+        for (const [k, v] of Object.entries(res.error.fieldErrors)) {
+          flat[k] = Array.isArray(v) ? (v[0] ?? "") : String(v);
+        }
+        setEditErrors(flat);
+      }
       showToast(res.error.message || "Failed to update model.", "error");
     }
   };
@@ -300,15 +309,15 @@ export function ModelGenerationListClient({
       >
         {editItem && (
           <form onSubmit={handleEditSubmit} style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
-            <FormField label="Parent Brand" required>
+            <FormField label="Parent Brand" required error={editErrors.brand}>
               <Select name="brand" options={brandOptions} defaultValue={String(editItem.brand)} required />
             </FormField>
 
-            <FormField label="Model Name" required>
+            <FormField label="Model Name" required error={editErrors.model}>
               <Input name="model" defaultValue={editItem.model} required />
             </FormField>
 
-            <FormField label="Status">
+            <FormField label="Status" error={editErrors.status}>
               <Select
                 name="status"
                 options={[

@@ -168,7 +168,7 @@ class SEOConfig(models.Model):
         max_length=100,
         blank=True,
         null=True,
-        default='Beg Autos',
+        default='Dream Car House',
         verbose_name=_('OG Site Name'),
     )
 

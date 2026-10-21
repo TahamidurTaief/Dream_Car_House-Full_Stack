@@ -24,7 +24,7 @@ export default async function PreviewPage() {
       <PageHeader
         title="UI Components Preview"
         href="/workspace/preview"
-        description="Comprehensive preview of Beg Autos reusable dashboard design system components, DataTable, and form controls."
+        description="Comprehensive preview of Dream Car House reusable dashboard design system components, DataTable, and form controls."
       />
       <ComponentPreview />
     </>

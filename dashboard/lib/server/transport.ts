@@ -13,7 +13,8 @@ export type ApiErrorCode =
   | "CSRF_REJECTED"
   | "THROTTLED"
   | "VALIDATION_ERROR"
-  | "CASCADE_IMPACT";
+  | "CASCADE_IMPACT"
+  | "PROTECTED_CASCADE";
 
 export type ApiResult<T> =
   | { ok: true; data: T; cookies?: string[] }

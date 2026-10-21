@@ -16,7 +16,7 @@ export function LoginForm({ nextTarget }: { nextTarget: string }) {
         <div className="login-brand-badge" aria-hidden="true">
           <Car size={20} />
         </div>
-        <h1 className="login-title">Beg Autos</h1>
+        <h1 className="login-title">Dream Car House</h1>
         <p className="login-subtitle">
           Sign in to the enterprise management dashboard
         </p>

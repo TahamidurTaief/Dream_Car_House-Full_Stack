@@ -201,7 +201,7 @@ class InventoryDetailSerializer(serializers.ModelSerializer, OptimizedImageSeria
                 "url": page_url,
                 "seller": {
                     "@type": "Organization",
-                    "name": "Beg Autos"
+                    "name": "Dream Car House"
                 }
             },
             "image": all_images

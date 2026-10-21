@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function StocksPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; ordering?: string; page?: string; page_size?: string }>;
 }) {
   const access = await getManagementAccess();
   if (!access.ok) {
@@ -31,7 +31,9 @@ export default async function StocksPage({
   const res = await getStocks({
     q: sp.q,
     status: sp.status,
+    ordering: sp.ordering,
     page: sp.page,
+    page_size: sp.page_size,
   });
 
   if (!res.ok) {
@@ -60,6 +62,8 @@ export default async function StocksPage({
         pageSize={page_size}
         q={sp.q || ""}
         status={sp.status || ""}
+        ordering={sp.ordering || ""}
+        userPermissions={access.data.user.permissions}
       />
     </>
   );

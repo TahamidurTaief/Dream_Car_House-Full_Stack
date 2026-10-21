@@ -385,7 +385,7 @@ class Inventory(BaseModel):
             variant = f"{engine}cc" if engine else ''
             parts = [str(year), brand_name, model_name, variant, body_style_name]
             title_base = ' '.join(p for p in parts if p).strip()
-            self.meta_title = f"{title_base} for Sale | Beg Autos"[:70]
+            self.meta_title = f"{title_base} for Sale | Dream Car House"[:70]
 
         # Auto-generate meta_description
         if not self.meta_description:
@@ -395,7 +395,7 @@ class Inventory(BaseModel):
                     price_str = f"BDT {int(float(str(price))):,}"
                 except (ValueError, TypeError):
                     price_str = str(price)
-            desc = f"Buy this {year} {brand_name} {model_name} in {color} for {price_str}. {mileage}km driven. View full details on Beg Autos."
+            desc = f"Buy this {year} {brand_name} {model_name} in {color} for {price_str}. {mileage}km driven. View full details on Dream Car House."
             self.meta_description = desc[:500]
 
         # Auto-generate canonical_url

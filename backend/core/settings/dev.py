@@ -4,6 +4,17 @@ import os
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:3100',
+    'http://127.0.0.1:3100',
+    'http://192.168.10.143:3000',
+    'http://192.168.10.143:3100',
+    'http://192.168.10.225:3000',
+    'http://192.168.10.225:3100',
+]
+
 INSTALLED_APPS = INSTALLED_APPS + [
     'django_extensions',
     'drf_yasg',

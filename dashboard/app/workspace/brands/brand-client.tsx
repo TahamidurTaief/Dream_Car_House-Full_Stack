@@ -17,7 +17,7 @@ import { Upload } from "@/components/ui/Upload";
 import { useToast } from "@/components/ui/Toast";
 import { Plus, Trash2, Edit, AlertTriangle } from "lucide-react";
 import { createBrandAction, deleteBrandAction, getBrandCascadeImpactAction } from "@/app/actions/inventory";
-import type { BrandItem } from "@/lib/types";
+import type { BrandItem, BrandCascadeImpact } from "@/lib/types";
 
 export function BrandListClient({
   initialBrands,
@@ -47,11 +47,7 @@ export function BrandListClient({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingBrand, setDeletingBrand] = useState<BrandItem | null>(null);
   const [impactLoading, setImpactLoading] = useState(false);
-  const [impactData, setImpactData] = useState<{
-    inventory_count: number;
-    model_generation_count: number;
-    has_cascades: boolean;
-  } | null>(null);
+  const [impactData, setImpactData] = useState<BrandCascadeImpact | null>(null);
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
 
@@ -95,8 +91,17 @@ export function BrandListClient({
 
   const handleDelete = async () => {
     if (!deletingBrand) return;
+
+    if (impactData?.blocked || (impactData?.inventory_count && impactData.inventory_count > 0)) {
+      showToast(
+        impactData.block_reason || "Deletion is blocked because this brand has dependent vehicles.",
+        "error"
+      );
+      return;
+    }
+
     if (impactData?.has_cascades && !deleteConfirmed) {
-      showToast("Explicit confirmation is required to delete cascading records.", "error");
+      showToast("Explicit confirmation is required to delete cascading model generation records.", "error");
       return;
     }
 
@@ -336,13 +341,25 @@ export function BrandListClient({
             <div
               style={{
                 padding: "var(--space-3)",
-                background: impactData.has_cascades ? "var(--error-surface, #ffebee)" : "var(--hover)",
-                border: impactData.has_cascades ? "1px solid var(--danger)" : "1px solid var(--border)",
+                background: impactData.blocked
+                  ? "var(--error-surface, #ffebee)"
+                  : impactData.has_cascades
+                  ? "var(--warning-surface, #fff8e1)"
+                  : "var(--hover)",
+                border: impactData.blocked
+                  ? "1px solid var(--danger)"
+                  : impactData.has_cascades
+                  ? "1px solid var(--warning, #ffb300)"
+                  : "1px solid var(--border)",
                 borderRadius: "var(--radius-sm)",
               }}
             >
-              <h4 style={{ margin: "0 0 var(--space-2) 0", color: impactData.has_cascades ? "var(--danger)" : "inherit" }}>
-                {impactData.has_cascades ? (
+              <h4 style={{ margin: "0 0 var(--space-2) 0", color: impactData.blocked ? "var(--danger)" : "inherit" }}>
+                {impactData.blocked ? (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    <AlertTriangle size={16} /> Deletion Blocked
+                  </span>
+                ) : impactData.has_cascades ? (
                   <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
                     <AlertTriangle size={16} /> Cascade Impact Warning
                   </span>
@@ -350,39 +367,55 @@ export function BrandListClient({
                   "Safe to Delete"
                 )}
               </h4>
-              <p style={{ margin: "0 0 var(--space-1) 0", fontSize: "var(--font-size-sm)" }}>
-                - Associated Inventory Vehicles: <strong>{impactData.inventory_count}</strong> (will be permanently CASCADE DELETED!)
-              </p>
-              <p style={{ margin: 0, fontSize: "var(--font-size-sm)" }}>
-                - Associated Model Generations: <strong>{impactData.model_generation_count}</strong> (will be CASCADE DELETED!)
-              </p>
 
-              {impactData.has_cascades && (
-                <div style={{ marginTop: "var(--space-3)" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", fontSize: "var(--font-size-sm)", color: "var(--danger)" }}>
-                    <input
-                      type="checkbox"
-                      checked={deleteConfirmed}
-                      onChange={(e) => setDeleteConfirmed(e.target.checked)}
-                    />
-                    I understand this permanently deletes {impactData.inventory_count} vehicle(s) and {impactData.model_generation_count} model(s).
-                  </label>
+              {impactData.blocked ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+                  <p style={{ margin: 0, fontSize: "var(--font-size-sm)", color: "var(--danger)", fontWeight: 500 }}>
+                    {impactData.block_reason || `This brand is currently linked to ${impactData.inventory_count} vehicle(s). Deletion that would remove vehicles is blocked in this phase.`}
+                  </p>
+                  <p style={{ margin: 0, fontSize: "var(--font-size-xs)", color: "var(--text-muted)" }}>
+                    To delete this brand, please reassign or delete the associated inventory vehicles first.
+                  </p>
                 </div>
+              ) : (
+                <>
+                  <p style={{ margin: "0 0 var(--space-1) 0", fontSize: "var(--font-size-sm)" }}>
+                    - Associated Inventory Vehicles: <strong>{impactData.inventory_count}</strong>
+                  </p>
+                  <p style={{ margin: 0, fontSize: "var(--font-size-sm)" }}>
+                    - Associated Model Generations: <strong>{impactData.model_generation_count}</strong> {impactData.model_generation_count > 0 ? "(will be CASCADE DELETED)" : ""}
+                  </p>
+
+                  {impactData.has_cascades && (
+                    <div style={{ marginTop: "var(--space-3)" }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", fontSize: "var(--font-size-sm)", color: "var(--danger)" }}>
+                        <input
+                          type="checkbox"
+                          checked={deleteConfirmed}
+                          onChange={(e) => setDeleteConfirmed(e.target.checked)}
+                        />
+                        I understand this permanently deletes {impactData.model_generation_count} model generation(s).
+                      </label>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           ) : null}
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-2)", marginTop: "var(--space-3)" }}>
             <Button variant="secondary" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
+              {impactData?.blocked ? "Close" : "Cancel"}
             </Button>
-            <Button
-              variant="danger"
-              onClick={handleDelete}
-              disabled={deleteSubmitting || (impactData?.has_cascades && !deleteConfirmed)}
-            >
-              {deleteSubmitting ? "Deleting..." : "Confirm Delete"}
-            </Button>
+            {!impactData?.blocked && (
+              <Button
+                variant="danger"
+                onClick={handleDelete}
+                disabled={deleteSubmitting || (impactData?.has_cascades && !deleteConfirmed)}
+              >
+                {deleteSubmitting ? "Deleting..." : "Confirm Delete"}
+              </Button>
+            )}
           </div>
         </div>
       </Dialog>

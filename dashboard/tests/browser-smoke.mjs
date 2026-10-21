@@ -1,7 +1,14 @@
 // Optional browser check; see README for isolated runner installation.
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 import assert from 'node:assert/strict';
-const browser = await chromium.launch({headless:true, args:['--no-sandbox']});
+import fs from 'node:fs';
+
+const chromePath = process.env.PLAYWRIGHT_CHROME_PATH || (fs.existsSync('/usr/bin/google-chrome') ? '/usr/bin/google-chrome' : undefined);
+const browser = await chromium.launch({
+  ...(chromePath ? { executablePath: chromePath } : {}),
+  headless: true,
+  args: ['--no-sandbox', '--disable-setuid-sandbox'],
+});
 try {
  const page = await browser.newPage({viewport:{width:1440,height:900}});
  const errors=[]; const apiRequests=[];
@@ -14,7 +21,8 @@ try {
  assert.equal(await page.locator('.sidebar').evaluate(el=>el.getBoundingClientRect().width),224);
  assert.equal(await page.locator('.topbar').evaluate(el=>el.getBoundingClientRect().height),52);
  await page.getByRole('button',{name:'Collapse sidebar'}).click();
- assert.equal(await page.locator('.sidebar').evaluate(el=>el.getBoundingClientRect().width),56);
+ await page.waitForFunction(() => Math.round(document.querySelector('.sidebar')?.getBoundingClientRect().width || 0) === 56);
+ assert.equal(Math.round(await page.locator('.sidebar').evaluate(el=>el.getBoundingClientRect().width)),56);
  await page.getByRole('button',{name:'Expand sidebar'}).click();
  await page.getByRole('link',{name:'Workspace',exact:true}).filter({visible:true}).click();
  await page.getByRole('heading',{name:'Workspace access is locked'}).waitFor();

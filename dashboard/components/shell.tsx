@@ -10,13 +10,21 @@ import {
   GitBranch,
   Shapes,
   Boxes,
+  MessageSquare,
+  Handshake,
   Layers,
   KeyRound,
+  Mail,
+  Users,
+  Clapperboard,
+  Globe,
   PanelLeftClose,
   PanelLeftOpen,
   Menu,
   X,
   User,
+  Search,
+  FileText,
 } from "lucide-react";
 import { navigation } from "@/lib/navigation";
 import type { DashboardUser } from "@/lib/types";
@@ -37,6 +45,30 @@ function getNavIcon(href: string): ReactNode {
       return <Shapes size={18} />;
     case "/workspace/stocks":
       return <Boxes size={18} />;
+    case "/workspace/quotes":
+      return <MessageSquare size={18} />;
+    case "/workspace/sell-cars":
+      return <Handshake size={18} />;
+    case "/workspace/inbox/contact":
+      return <Mail size={18} />;
+    case "/workspace/inbox/subscribers":
+      return <Users size={18} />;
+    case "/workspace/content/sliders":
+      return <Clapperboard size={18} />;
+    case "/workspace/content/social-media":
+      return <Globe size={18} />;
+    case "/workspace/content/social-features":
+      return <Users size={18} />;
+    case "/workspace/content/sales-representatives":
+      return <User size={18} />;
+    case "/workspace/seo/pages":
+      return <Search size={18} />;
+    case "/workspace/seo/categories":
+      return <FileText size={18} />;
+    case "/workspace/users":
+      return <Users size={18} />;
+    case "/workspace/groups":
+      return <ShieldCheck size={18} />;
     case "/workspace/preview":
       return <Layers size={18} />;
     case "/login":
@@ -46,12 +78,20 @@ function getNavIcon(href: string): ReactNode {
   }
 }
 
-function Navigation({ onNavigate }: { onNavigate?: () => void }) {
+
+function Navigation({ user, onNavigate }: { user?: DashboardUser; onNavigate?: () => void }) {
   const pathname = usePathname();
+  const visibleItems = navigation.filter((item) => {
+    if (!item.permission) return true;
+    if (!user) return false;
+    if (user.is_superuser || user.permissions.includes("*")) return true;
+    return user.permissions.includes(item.permission);
+  });
+
   return (
     <nav aria-label="Main navigation">
       <ul className="navigation">
-        {navigation.map((item) => (
+        {visibleItems.map((item) => (
           <li key={item.href}>
             <Link
               href={item.href}
@@ -125,9 +165,9 @@ export function Shell({
           <span className="brand-mark" aria-hidden="true" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
             <Car size={16} />
           </span>
-          <span className="nav-label">Beg Autos</span>
+          <span className="nav-label">Dream Car House</span>
         </div>
-        <Navigation />
+        <Navigation user={user} />
         <div className="sidebar-footer">
           <button
             className="icon-button"
@@ -158,7 +198,7 @@ export function Shell({
             </span>
           </button>
           <span className="topbar-title">
-            Beg Autos <span className="muted">/ Dashboard</span>
+            Dream Car House <span className="muted">/ Dashboard</span>
           </span>
           {user ? (
             <span
@@ -192,7 +232,7 @@ export function Shell({
       >
         <div className="drawer-content">
           <div className="drawer-heading">
-            <strong>Beg Autos</strong>
+            <strong>Dream Car House</strong>
             <button
               className="icon-button"
               onClick={closeDrawer}
@@ -202,7 +242,7 @@ export function Shell({
               <X size={18} />
             </button>
           </div>
-          <Navigation onNavigate={closeDrawer} />
+          <Navigation user={user} onNavigate={closeDrawer} />
         </div>
       </dialog>
     </div>
