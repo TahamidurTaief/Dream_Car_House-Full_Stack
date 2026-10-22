@@ -52,7 +52,7 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
   const waUrl = `https://wa.me/8801615121312?text=${waMessage}`;
 
   return (
-    <div className="car-detail-page-container max-w-7xl" style={{ padding: "7.5rem 1.5rem 5rem" }}>
+    <div className="car-detail-page-container max-w-7xl">
       {/* Breadcrumb Navigation */}
       <nav aria-label="Breadcrumb" style={{ marginBottom: "1.75rem", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "#9ca3af" }}>
         <Link href="/" style={{ color: "#d1d5db" }}>

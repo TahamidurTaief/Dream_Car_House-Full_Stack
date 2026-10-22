@@ -23,7 +23,7 @@ export default function SellClient() {
   const waSellUrl = `https://wa.me/8801615121312?text=${waSellMsg}`;
 
   return (
-    <div className="inventory-page-wrap max-w-7xl" style={{ padding: "8rem 1.5rem 5rem" }}>
+    <div className="inventory-page-wrap max-w-7xl">
       <div
         style={{
           maxWidth: "48rem",

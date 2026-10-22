@@ -61,7 +61,7 @@ export default async function BrandVehiclesPage({ params }: PageProps) {
   );
 
   return (
-    <div className="inventory-page-wrap max-w-7xl" style={{ padding: "8rem 1.5rem 5rem" }}>
+    <div className="inventory-page-wrap max-w-7xl">
       <nav aria-label="Breadcrumb" style={{ marginBottom: "1.5rem", fontSize: "0.85rem", color: "#9ca3af" }}>
         <Link href="/" style={{ color: "#d1d5db" }}>Home</Link>
         <span style={{ margin: "0 0.5rem" }}>/</span>

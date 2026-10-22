@@ -21,7 +21,7 @@ export default function GalleryClient() {
   };
 
   return (
-    <div className="inventory-page-wrap max-w-7xl" style={{ padding: "7.5rem 1.5rem 5rem" }}>
+    <div className="inventory-page-wrap max-w-7xl">
       {/* Gallery Page Header */}
       <div className="gallery-page-header">
         <div className="gallery-breadcrumb-row" style={{ marginBottom: "1.5rem" }}>

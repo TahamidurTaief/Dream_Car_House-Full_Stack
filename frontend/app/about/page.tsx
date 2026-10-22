@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="inventory-page-wrap max-w-7xl" style={{ padding: "8rem 1.5rem 5rem" }}>
+    <div className="inventory-page-wrap max-w-7xl">
       <div style={{ maxWidth: "56rem", margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: "3rem" }}>
           <span className="preference-badge" style={{ marginBottom: "0.35rem", display: "inline-block" }}>

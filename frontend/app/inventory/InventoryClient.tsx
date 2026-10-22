@@ -69,7 +69,7 @@ function InventoryContent() {
   };
 
   return (
-    <div className="inventory-page-wrap max-w-7xl" style={{ padding: "8rem 1.5rem 5rem" }}>
+    <div className="inventory-page-wrap max-w-7xl">
       <div style={{ marginBottom: "2rem" }}>
         <span className="preference-badge" style={{ marginBottom: "0.35rem", display: "inline-block" }}>
           OFFICIAL INVENTORY DIRECTORY

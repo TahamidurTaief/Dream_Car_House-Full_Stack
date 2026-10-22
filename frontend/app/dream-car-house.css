@@ -803,6 +803,10 @@ button {
     width: 44px;
     height: 44px;
   }
+  .wheel-disc-wrapper {
+    width: 44px !important;
+    height: 44px !important;
+  }
   .realistic-wheel-img {
     width: 40px !important;
     height: 40px !important;
@@ -951,6 +955,13 @@ button {
   }
 }
 
+@media (max-width: 640px) {
+  .hero-content {
+    margin-top: 50vh !important;
+    padding: 0 1rem !important;
+  }
+}
+
 .hero-title {
   font-size: clamp(2rem, 5vw, 4.5rem);
   font-weight: 700;
@@ -969,6 +980,27 @@ button {
 @media (min-width: 640px) {
   .hero-pills {
     gap: 1.25rem;
+  }
+}
+
+@media (max-width: 500px) {
+  .hero-pills {
+    gap: 0.35rem;
+  }
+  .hero-pill-btn {
+    padding: 0.65rem 0.25rem !important;
+    font-size: 0.72rem !important;
+    letter-spacing: -0.01em;
+  }
+}
+
+@media (max-width: 380px) {
+  .hero-pills {
+    gap: 0.25rem;
+  }
+  .hero-pill-btn {
+    padding: 0.6rem 0.15rem !important;
+    font-size: 0.66rem !important;
   }
 }
 
@@ -4818,6 +4850,32 @@ button {
   padding-top: 7rem;
   padding-bottom: 5rem;
   min-height: 100vh;
+}
+
+@media (max-width: 640px) {
+  .inventory-page-wrap {
+    padding-top: 5.5rem !important;
+    padding-bottom: 3rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
+.car-detail-page-container {
+  padding-top: 7.5rem;
+  padding-bottom: 5rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  min-height: 100vh;
+}
+
+@media (max-width: 640px) {
+  .car-detail-page-container {
+    padding-top: 5.5rem !important;
+    padding-bottom: 3rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
 }
 
 .cars-filter-row {
