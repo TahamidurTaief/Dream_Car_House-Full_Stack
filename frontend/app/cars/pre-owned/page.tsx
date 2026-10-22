@@ -1,91 +1,47 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import CarsClient from "../_components/CarsClient";
-import {
-  CategoryShortDescription,
-  CategoryLongDescription,
-} from "../_components/CategoryCopy";
-import { CAR_TYPE_CONFIGS } from "../_components/types";
-import { fetchInventoryFilters } from "@/lib/inventoryFilters";
-import { fetchInitialCars } from "../_components/fetchCars";
-import {
-  fetchCategorySEO,
-  buildCategoryMetadata,
-  isCategoryPageHidden,
-} from "@/lib/seo";
+import Link from "next/link";
+import { VEHICLE_DATA } from "@/lib/showroomData";
+import VehicleCard from "@/components/VehicleCard";
 
-const FALLBACK_METADATA: Metadata = {
-  title: "Pre-Owned Cars for Sale in Bangladesh | BEG AUTOS",
+export const metadata: Metadata = {
+  title: "Certified Pre-Owned Luxury Vehicles | DREAM CAR HOUSE",
   description:
-    "Browse quality pre-owned cars at BEG AUTOS — each unit inspected and documented in-house.",
-  robots: "index, follow",
-  alternates: { canonical: "https://www.begautos.com/cars/pre-owned/" },
-  openGraph: {
-    title: "Pre-Owned Cars for Sale | BEG AUTOS",
-    description:
-      "Browse quality pre-owned cars at BEG AUTOS — Bangladesh's finest luxury car studio.",
-    url: "https://www.begautos.com/cars/pre-owned/",
-    type: "website",
-    siteName: "BEG AUTOS",
+    "Explore 150-point certified pre-owned luxury cars in Dhaka at DREAM CAR HOUSE. Verified service history and showroom-ready condition.",
+  alternates: {
+    canonical: "https://dreamcarhouse.com/cars/pre-owned/",
   },
 };
 
-export async function generateMetadata(): Promise<Metadata> {
-  const seo = await fetchCategorySEO("pre-owned");
-  return buildCategoryMetadata(seo, FALLBACK_METADATA);
-}
-
-export default async function PreOwnedCarsPage() {
-  const config = CAR_TYPE_CONFIGS["pre-owned"];
-  const [seo, filterData, initialData] = await Promise.all([
-    fetchCategorySEO("pre-owned"),
-    fetchInventoryFilters(),
-    fetchInitialCars({ car_type: "PRE_OWNED" }, "Available"),
-  ]);
-
-  if (isCategoryPageHidden(seo)) notFound();
-
-  const { brands = [], models = [], bodyStyles = [], colors = [] } = filterData || {};
+export default function PreOwnedCarsPage() {
+  const preOwnedCars = VEHICLE_DATA.filter((c) => c.car_type === "PRE_OWNED");
 
   return (
-    <div className="bg-page text-ink min-h-screen container-responsive">
-      {seo?.schema_json && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(seo.schema_json) }}
-        />
-      )}
-      <div className="container mx-auto px-4 pt-20">
-        <h1 className="text-4xl font-bold pt-20 mb-5">
-          {seo?.h1_title || config.title}
+    <div className="inventory-page-wrap max-w-7xl" style={{ padding: "8rem 1.5rem 5rem" }}>
+      <nav aria-label="Breadcrumb" style={{ marginBottom: "1.5rem", fontSize: "0.85rem", color: "#9ca3af" }}>
+        <Link href="/" style={{ color: "#d1d5db" }}>Home</Link>
+        <span style={{ margin: "0 0.5rem" }}>/</span>
+        <Link href="/inventory" style={{ color: "#d1d5db" }}>Inventory</Link>
+        <span style={{ margin: "0 0.5rem" }}>/</span>
+        <span style={{ color: "#ffffff", fontWeight: 600 }}>Pre-Owned</span>
+      </nav>
+
+      <div style={{ marginBottom: "2.5rem" }}>
+        <span className="preference-badge" style={{ marginBottom: "0.35rem", display: "inline-block" }}>
+          150-POINT AUDITED COLLECTION
+        </span>
+        <h1 className="section-h2" style={{ marginBottom: "0.5rem" }}>
+          Certified Pre-Owned Luxury Vehicles
         </h1>
-
-        {seo?.short_description ? (
-          <CategoryShortDescription html={seo.short_description} />
-        ) : (
-          <p className="text-muted sm:w-40 md:w-3xl lg:w-4xl mb-10 text-justify">
-            {config.description}
-          </p>
-        )}
-
-        <Suspense fallback={null}>
-          <CarsClient
-            config={config}
-            brands={brands || []}
-            models={models || []}
-            bodyStyles={bodyStyles || []}
-            colors={colors || []}
-            initialCars={initialData.cars}
-            initialTotalPages={initialData.totalPages}
-          />
-        </Suspense>
-
-        {seo?.long_description && (
-          <CategoryLongDescription html={seo.long_description} />
-        )}
+        <p style={{ color: "#9ca3af", fontSize: "0.95rem" }}>
+          Explore our certified collection of {preOwnedCars.length} pristine pre-owned luxury vehicles with verified documentation and immediate handover.
+        </p>
       </div>
 
+      <div className="cars-grid-layout">
+        {preOwnedCars.map((car) => (
+          <VehicleCard key={car.id} car={car} layout="grid" />
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,111 +1,107 @@
-// app/about/page.tsx
-import Image from "next/image";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { fetchSEOConfig, buildMetadata, sanitizeSEO, isPageHidden } from "@/lib/seo";
+import Link from "next/link";
+import Image from "next/image";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const rawSeo = await fetchSEOConfig("about");
-  const seo = sanitizeSEO(rawSeo);
+export const metadata: Metadata = {
+  title: "About Us • The Atelier & Provenance | DREAM CAR HOUSE",
+  description:
+    "Learn about DREAM CAR HOUSE, Bangladesh's premier luxury automotive showroom with flagship locations in Kakrail and Gulshan, Dhaka.",
+  alternates: {
+    canonical: "https://dreamcarhouse.com/about/",
+  },
+};
 
-  return buildMetadata("about", seo);
-}
-
-export default async function AboutUs() {
-  const seo = await fetchSEOConfig("about");
-  if (isPageHidden(seo)) notFound();
-
+export default function AboutPage() {
   return (
-    <>
-      {seo?.schema_json && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(seo.schema_json) }}
-        />
-      )}
-    <div className="dream-about text-ink overflow-x-hidden">
-      <section className="dream-media relative h-screen max-h-[400px] md:max-h-[600px] md:mb-12">
-        <div className="absolute inset-0 ">
+    <div className="inventory-page-wrap max-w-7xl" style={{ padding: "8rem 1.5rem 5rem" }}>
+      <div style={{ maxWidth: "56rem", margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: "3rem" }}>
+          <span className="preference-badge" style={{ marginBottom: "0.35rem", display: "inline-block" }}>
+            ATELIER HERITAGE & PROVENANCE
+          </span>
+          <h1 className="section-h2" style={{ marginBottom: "0.85rem" }}>
+            The Story of DREAM CAR HOUSE
+          </h1>
+          <p style={{ color: "#9ca3af", fontSize: "1.05rem", lineHeight: "1.7", maxWidth: "680px", margin: "0 auto" }}>
+            Where extraordinary automotive aspirations converge with unparalleled engineering, bespoke procurement, and white-glove advisory across Dhaka.
+          </p>
+        </div>
+
+        {/* Hero Image Frame */}
+        <div style={{ borderRadius: "10px", overflow: "hidden", marginBottom: "3rem", border: "1px solid #1f2937" }}>
           <Image
-            src="/images/about/hero.png"
-            alt="Luxury cars in showroom"
-            fill
-            sizes="100vw"
-            style={{ objectFit: "cover", objectPosition: "center" }}
-            className="brightness-90"
-          />
-        </div>
-        <div className="absolute left-0 top-25 p-10 md:p-25 z-10 ">
-          <p className="text-xl font-light mb-1">Brought to you by</p>
-          <h1 className="text-5xl md:text-[64px]  font-bold">BEG AUTOS</h1>
-        </div>
-      </section>
-      {/* Second section - Our Story with car headlight */}
-      <section className="relative grid grid-cols-1 md:grid-cols-2">
-        <div className="p-10 md:p-25 flex items-center">
-          <div>
-            <h2 className="text-4xl font-bold mb-6">Our Story</h2>
-            <p className="text-muted text-sm leading-relaxed text-justify">
-              How BEG AUTOS started... well this might inspire a lot of people.
-              Being passionate and fascinated about cars has been passed down
-              ationally in the BEG family and since our fathers were already
-              involved in the automotive industry since 2007, our passion got a
-              significant implementation as we all grew up with cars. And from
-              our fascination & devotion towards cars, we decided to make our
-              passion our profession. Thus, BEG AUTOS was born & we BEG brothers
-              are the second generation continuing the business.
-            </p>
-          </div>
-        </div>
-        <div className="hidden md:block relative w-[90%] ml-auto h-64 md:h-80 lg:h-96 xl:h-[500px] rounded-tl-3xl rounded-bl-3xl overflow-hidden">
-          <Image
-            src="/images/about/car-headlight.png"
-            alt="Luxury car headlight"
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover  absolute"
-          />
-        </div>
-      </section>
-      {/* Third section - Our Story with black car in garage */}
-      <section className=" relative grid grid-cols-1 md:grid-cols-2  md:mt-[-50px]">
-        <div className="relative w-full md:w-[90%] h-64 sm:h-72 md:h-80 lg:h-96 xl:h-[500px] rounded-tr-3xl rounded-br-3xl overflow-hidden">
-          <Image
-            src="/images/about/car-dark.png"
-            alt="Black car in garage"
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover absolute "
+            src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1600&q=85"
+            alt="DREAM CAR HOUSE Showroom Ambiance"
+            width={1200}
+            height={600}
+            style={{ width: "100%", height: "auto", display: "block" }}
+            priority
           />
         </div>
 
-        <div className="p-10 md:p-25 flex items-center">
-          <div>
-            {/* <h2 className="text-4xl font-bold mb-6">Our Story</h2> */}
-            <p className="text-muted text-sm leading-relaxed text-justify">
-              From 2007 to 2013/14, the business was operated traditionally but
-              we were far from our dreams, the distance seemed long & the pace
-              was slow. BEG needed to be revolutionized. Later on, in 2015/16
-              the whole business strategy was overhauled, a wide range of
-              products were introduced & BEG leveled up their marketing game as
-              well as their online presence.
+        {/* Editorial Narrative */}
+        <div style={{ color: "#d1d5db", fontSize: "1.02rem", lineHeight: "1.8", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <p>
+            DREAM CAR HOUSE was founded with a singular, uncompromising vision: to establish Dhaka’s foremost luxury automotive destination where discerning connoisseurs can explore, acquire, and trade the world&apos;s most coveted motorcars with absolute peace of mind.
+          </p>
+          <p>
+            Operating across two flagship showrooms in <strong>Kakrail (Shaheed Captain Monsur Ali Soroni)</strong> and <strong>Gulshan Avenue (Road #127)</strong>, our curated portfolio encompasses zero-meter factory imports, bespoke executive saloons, track-bred supercars, and certified pre-owned collectors&apos; editions from Mercedes-Benz, Maybach, Rolls-Royce, Porsche, Lexus, BMW, and Toyota.
+          </p>
+        </div>
+
+        {/* 3 Pillars Grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem", margin: "3.5rem 0" }}>
+          <div style={{ background: "#0d0f12", border: "1px solid #1f2937", padding: "1.75rem", borderRadius: "8px" }}>
+            <div style={{ color: "#22c55e", fontWeight: 700, fontSize: "1.2rem", marginBottom: "0.5rem" }}>
+              150+ Point Audit
+            </div>
+            <h3 style={{ fontSize: "1.05rem", fontWeight: 600, color: "#ffffff", marginBottom: "0.5rem" }}>
+              Certified Provenance
+            </h3>
+            <p style={{ color: "#9ca3af", fontSize: "0.88rem", lineHeight: "1.6" }}>
+              Every vehicle undergoes rigorous computerized diagnostic evaluations, chassis measurements, battery health checks, and genuine paper audits.
+            </p>
+          </div>
+
+          <div style={{ background: "#0d0f12", border: "1px solid #1f2937", padding: "1.75rem", borderRadius: "8px" }}>
+            <div style={{ color: "#22c55e", fontWeight: 700, fontSize: "1.2rem", marginBottom: "0.5rem" }}>
+              Direct Global
+            </div>
+            <h3 style={{ fontSize: "1.05rem", fontWeight: 600, color: "#ffffff", marginBottom: "0.5rem" }}>
+              Bespoke Procurement
+            </h3>
+            <p style={{ color: "#9ca3af", fontSize: "0.88rem", lineHeight: "1.6" }}>
+              Exclusive relationships with authorized dealerships in London, Stuttgart, and Tokyo facilitate direct, turnkey container importation with verified manifests.
+            </p>
+          </div>
+
+          <div style={{ background: "#0d0f12", border: "1px solid #1f2937", padding: "1.75rem", borderRadius: "8px" }}>
+            <div style={{ color: "#22c55e", fontWeight: 700, fontSize: "1.2rem", marginBottom: "0.5rem" }}>
+              VIP Sanctuary
+            </div>
+            <h3 style={{ fontSize: "1.05rem", fontWeight: 600, color: "#ffffff", marginBottom: "0.5rem" }}>
+              Private Lounge
+            </h3>
+            <p style={{ color: "#9ca3af", fontSize: "0.88rem", lineHeight: "1.6" }}>
+              Discreet private handover suites, ceremonial car unveilings, champagne reception, and confidential documentation management.
             </p>
           </div>
         </div>
-      </section>
-      {/* Fourth section - Our Story with speedometer */}
-      <section className="relative  md:mt-[-50px] mb-12">
-        <div className="relative  md:w-[45%] w-full ml-auto h-64 sm:h-72 md:h-80 lg:h-96 xl:h-[500px] rounded-tl-3xl rounded-bl-3xl overflow-hidden ">
-          <Image
-            src="/images/about/car-speedometer.png"
-            alt="Luxury car headlight"
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover  absolute "
-          />
+
+        {/* Action Row */}
+        <div style={{ display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap" }}>
+          <Link href="/inventory" className="consult-primary-btn" style={{ padding: "0.85rem 1.75rem" }}>
+            <span>Explore Current Inventory</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </Link>
+
+          <Link href="/contact" className="gallery-btn-secondary" style={{ padding: "0.85rem 1.75rem" }}>
+            <span>Visit Showrooms →</span>
+          </Link>
         </div>
-      </section>
+      </div>
     </div>
-    </>
   );
 }

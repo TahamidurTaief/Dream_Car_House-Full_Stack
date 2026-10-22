@@ -1,0 +1,64 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { margin: 0; background: #000; overflow: hidden; }
+  .video-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; }
+  #player {
+    position: absolute; top: 50%; left: 50%;
+    width: 100vw; height: 56.25vw; min-height: 100vh; min-width: 177.78vh;
+    transform: translate(-50%, -50%) scale(1.4);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+  #player.is-ready { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="video-container">
+  <div id="player"></div>
+</div>
+<script>
+  let player;
+  let stateLog = [];
+  function onYouTubeIframeAPIReady() {
+    player = new YT.Player('player', {
+      videoId: '7cxfVWs4YGw',
+      playerVars: {
+        autoplay: 1,
+        mute: 1,
+        controls: 0,
+        showinfo: 0,
+        rel: 0,
+        iv_load_policy: 3,
+        disablekb: 1,
+        modestbranding: 1,
+        playsinline: 1,
+        start: 45,
+        loop: 1,
+        playlist: '7cxfVWs4YGw',
+        origin: window.location.origin
+      },
+      events: {
+        onReady: (e) => {
+          stateLog.push('onReady');
+          e.target.mute();
+          e.target.playVideo();
+        },
+        onStateChange: (e) => {
+          stateLog.push('stateChange:' + e.data);
+          if (e.data === YT.PlayerState.PLAYING) {
+            setTimeout(() => {
+              document.getElementById('player').classList.add('is-ready');
+            }, 500);
+          }
+        }
+      }
+    });
+  }
+</script>
+<script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>

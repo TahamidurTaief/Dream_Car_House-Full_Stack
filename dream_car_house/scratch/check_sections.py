@@ -1,0 +1,4 @@
+with open('index.html', 'r', encoding='utf-8') as f:
+    for line_no, line in enumerate(f, 1):
+        if '<section' in line or '</section>' in line:
+            print(f"{line_no}: {line.strip()}")

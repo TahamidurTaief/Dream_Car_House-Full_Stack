@@ -1,173 +1,111 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { fetchBrandSEO, buildCategoryMetadata } from "@/lib/seo";
-import { fetchInventoryFilters } from "@/lib/inventoryFilters";
-import CarsClient from "../../_components/CarsClient";
-import {
-  CategoryShortDescription,
-  CategoryLongDescription,
-} from "../../_components/CategoryCopy";
-import { fetchInitialCars } from "../../_components/fetchCars";
-import { CAR_TYPE_CONFIGS } from "../../_components/types";
-import { Suspense } from "react";
+import { VEHICLE_DATA } from "@/lib/showroomData";
+import VehicleCard from "@/components/VehicleCard";
 
 interface PageProps {
-  params: Promise<{ brandSlug: string }>;
+  params: Promise<{
+    brandSlug: string;
+  }>;
 }
 
-// Brand.listing_footer_text predates the long_description SEO field and is
-// plain text, not HTML — escape it and turn newlines into <br> so it can run
-// through the same CategoryLongDescription treatment as every other listing
-// page's bottom text, instead of the plain unstyled block this used to be.
-function plainTextToHtml(text: string): string {
-  const escaped = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  return escaped.replace(/\n/g, "<br />");
+const BRAND_SLUG_MAP: Record<string, string> = {
+  "mercedes-benz": "Mercedes-Benz",
+  "toyota": "Toyota",
+  "bmw": "BMW",
+  "lexus": "Lexus",
+  "nissan": "Nissan",
+  "volvo": "Volvo",
+  "porsche": "Porsche",
+  "audi": "Audi",
+  "land-rover": "Land Rover",
+  "byd": "BYD",
+};
+
+export async function generateStaticParams() {
+  return Object.keys(BRAND_SLUG_MAP).map((brandSlug) => ({
+    brandSlug,
+  }));
 }
 
-async function fetchBrandBySlug(brandSlug: string) {
-  try {
-    const base = process.env.NEXT_PUBLIC_BASE_URL || "http://127.0.0.1:8000";
-    const res = await fetch(`${base}/api/v1/inventory/brands/`, {
-      next: { revalidate: 0 },
-    });
-    if (!res.ok) return null;
-    const json = await res.json();
-    const brands = json?.success && json.data ? json.data : [];
-    return (
-      brands.find(
-        (b: { id: number; name: string; image: string }) =>
-          b.name.toLowerCase().replace(/\s+/g, "-") === brandSlug.toLowerCase(),
-      ) ?? null
-    );
-  } catch {
-    return null;
-  }
-}
-
-export async function generateMetadata({
-  params,
-}: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { brandSlug } = await params;
-  const brand = await fetchBrandBySlug(brandSlug);
+  const brandName = BRAND_SLUG_MAP[brandSlug.toLowerCase()];
 
-  if (!brand) {
+  if (!brandName) {
     return {
-      title: "Brand Not Found | BEG AUTOS",
-      robots: "noindex, nofollow",
+      title: "Marque Not Found | DREAM CAR HOUSE",
     };
   }
 
-  const seo = await fetchBrandSEO(brand.id);
-
-  const fallback: Metadata = {
-    title: `${brand.name} Cars for Sale in Bangladesh | BEG AUTOS`,
-    description: `Browse all ${brand.name} cars available at BEG AUTOS — Bangladesh's premier luxury car studio. Find the latest ${brand.name} models at competitive prices.`,
-    robots: "index, follow",
+  return {
+    title: `${brandName} Luxury Vehicles for Sale in Bangladesh | DREAM CAR HOUSE`,
+    description: `Explore certified brand new and pre-owned ${brandName} luxury vehicles at DREAM CAR HOUSE showrooms in Kakrail and Gulshan, Dhaka.`,
     alternates: {
-      canonical: `https://www.begautos.com/cars/brand/${brandSlug}/`,
-    },
-    openGraph: {
-      title: `${brand.name} Cars for Sale | BEG AUTOS`,
-      description: `Browse all ${brand.name} cars at BEG AUTOS.`,
-      url: `https://www.begautos.com/cars/brand/${brandSlug}/`,
-      type: "website",
-      siteName: "BEG AUTOS",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${brand.name} Cars for Sale | BEG AUTOS`,
-      description: `Browse all ${brand.name} cars at BEG AUTOS.`,
+      canonical: `https://dreamcarhouse.com/cars/brand/${brandSlug}/`,
     },
   };
-
-  return buildCategoryMetadata(seo, fallback);
 }
 
-export default async function BrandCarsPage({ params }: PageProps) {
+export default async function BrandVehiclesPage({ params }: PageProps) {
   const { brandSlug } = await params;
+  const brandName = BRAND_SLUG_MAP[brandSlug.toLowerCase()];
 
-  const brand = await fetchBrandBySlug(brandSlug);
-
-  if (!brand) {
+  if (!brandName) {
     notFound();
   }
 
-  const config = {
-    ...CAR_TYPE_CONFIGS["all"],
-    title: `${brand.name} Cars`,
-    heading: `Looking for <br /> Other Brands?`,
-    linkurl: "/cars",
-    baseApiParams: { brand_id: String(brand.id) },
-    seoTitle: `${brand.name} Cars for Sale | Beg Autos`,
-    seoDescription: `Browse all ${brand.name} cars at Beg Autos.`,
-    // Only the brand listing page shows every car regardless of availability
-    // (sold cars included, sorted to the bottom by the API) — every other
-    // listing page defaults to "Available" only.
-    defaultAvailability: "",
-  };
-
-  const [seo, filterData, initialData] = await Promise.all([
-    fetchBrandSEO(brand.id),
-    fetchInventoryFilters(),
-    fetchInitialCars({ brand_id: String(brand.id) }),
-  ]);
-
-  const {
-    brands = [],
-    models = [],
-    bodyStyles = [],
-    colors = [],
-  } = filterData || {};
-
-  // long_description (admin SEO field) wins when set; listing_footer_text
-  // (the older, plain-text field) is the fallback so existing admin content
-  // keeps showing, just through the same collapsible treatment.
-  const longDescriptionHtml =
-    seo?.long_description ||
-    (brand.listing_footer_text ? plainTextToHtml(brand.listing_footer_text) : null);
+  const matchingCars = VEHICLE_DATA.filter(
+    (car) => car.brand.toLowerCase() === brandName.toLowerCase()
+  );
 
   return (
-    <div className="bg-page text-ink min-h-screen container-responsive">
-      {seo?.schema_json && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(seo.schema_json) }}
-        />
-      )}
-      <div className="container mx-auto px-4 pt-20">
-        <h1 className="text-4xl font-bold pt-20 mb-5">
-          {seo?.h1_title || `${brand.name} Cars for Sale`}
+    <div className="inventory-page-wrap max-w-7xl" style={{ padding: "8rem 1.5rem 5rem" }}>
+      <nav aria-label="Breadcrumb" style={{ marginBottom: "1.5rem", fontSize: "0.85rem", color: "#9ca3af" }}>
+        <Link href="/" style={{ color: "#d1d5db" }}>Home</Link>
+        <span style={{ margin: "0 0.5rem" }}>/</span>
+        <Link href="/cars/brand" style={{ color: "#d1d5db" }}>Marques</Link>
+        <span style={{ margin: "0 0.5rem" }}>/</span>
+        <span style={{ color: "#ffffff", fontWeight: 600 }}>{brandName}</span>
+      </nav>
+
+      <div style={{ marginBottom: "2.5rem" }}>
+        <span className="preference-badge" style={{ marginBottom: "0.35rem", display: "inline-block" }}>
+          OFFICIAL MARQUE PORTFOLIO
+        </span>
+        <h1 className="section-h2" style={{ marginBottom: "0.5rem" }}>
+          {brandName} Collection
         </h1>
-
-        {seo?.short_description ? (
-          <CategoryShortDescription html={seo.short_description} />
-        ) : (
-          <p className="text-muted sm:w-40 md:w-3xl lg:w-4xl mb-10 text-justify">
-            Browse our complete collection of {brand.name} vehicles at BEG AUTOS.
-            Find the perfect {brand.name} at the best price in Bangladesh.
-          </p>
-        )}
-
-        <Suspense fallback={null}>
-          <CarsClient
-            config={config}
-            brands={brands || []}
-            models={models || []}
-            bodyStyles={bodyStyles || []}
-            colors={colors || []}
-            initialCars={initialData.cars}
-            initialTotalPages={initialData.totalPages}
-          />
-        </Suspense>
-
-        {longDescriptionHtml && (
-          <CategoryLongDescription html={longDescriptionHtml} />
-        )}
+        <p style={{ color: "#9ca3af", fontSize: "0.95rem" }}>
+          Explore our verified showroom allocations of {brandName} luxury automobiles in Dhaka.
+        </p>
       </div>
 
+      {matchingCars.length > 0 ? (
+        <div className="cars-grid-layout">
+          {matchingCars.map((car) => (
+            <VehicleCard key={car.id} car={car} layout="grid" />
+          ))}
+        </div>
+      ) : (
+        <div
+          style={{
+            background: "#0d0f12",
+            border: "1px solid #1f2937",
+            borderRadius: "8px",
+            padding: "3rem 1.5rem",
+            textAlign: "center",
+          }}
+        >
+          <p style={{ color: "#d1d5db", fontSize: "1rem", marginBottom: "1.5rem" }}>
+            New {brandName} allocations are currently being inducted into our Dhaka showroom. Contact our concierge for bespoke importation.
+          </p>
+          <Link href="/inventory" className="consult-primary-btn" style={{ margin: "0 auto" }}>
+            <span>Browse All Available Showroom Inventory</span>
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
