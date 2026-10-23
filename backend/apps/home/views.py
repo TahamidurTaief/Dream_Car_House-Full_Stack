@@ -10,14 +10,15 @@ from core.settings.restconf.pagination import PeopleTalkPagination
 
 from apps.home.models import (
     Slider, SocialMedia, SellCar, SellYourCarImages, PeopleTalkAboutUs, Subscriber, SalesRepresentative,
-    ContactMessage,
+    ContactMessage, SiteSettings, ShowroomBranch,
 )
 
 from apps.home.serializers import (
     SliderSerializer, SocialMediaSerializer, SellYourCarImageSerializer, SellCarSerializer,
     PeopleTalkAboutUsSerializer, SubscriberSerializer, SalesRepresentativeListSearchSerializer,
-    ContactMessageSerializer,
+    ContactMessageSerializer, PublicSiteSettingsSerializer, PublicShowroomBranchSerializer,
 )
+
 
 
 class SliderAPIView(APIView):
@@ -85,4 +86,32 @@ class SalesRepresentativeListAPI(generics.ListAPIView):
     serializer_class = SalesRepresentativeListSearchSerializer
     queryset = SalesRepresentative.objects.filter(status=BaseModel.StatusChoices.PUBLISHED)
     pagination_class = None
+
+
+class PublicSiteSettingsAPIView(APIView):
+    def get(self, request, format=None):
+        settings_obj = SiteSettings.objects.first()
+        if settings_obj is None:
+            return Response(
+                {
+                    "success": False,
+                    "error": {
+                        "code": "NOT_FOUND",
+                        "message": "Public site settings have not been configured.",
+                    },
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        serializer = PublicSiteSettingsSerializer(settings_obj, context={"request": request})
+        return Response({"success": True, "data": serializer.data}, status=status.HTTP_200_OK)
+
+
+class PublicShowroomBranchListAPIView(APIView):
+    def get(self, request, format=None):
+        branches = ShowroomBranch.objects.filter(
+            status=BaseModel.StatusChoices.PUBLISHED
+        ).order_by("order", "id")
+        serializer = PublicShowroomBranchSerializer(branches, many=True, context={"request": request})
+        return Response({"success": True, "data": serializer.data}, status=status.HTTP_200_OK)
+
 

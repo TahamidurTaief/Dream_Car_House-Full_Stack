@@ -44,7 +44,11 @@ from .views import (
     GroupDetailView,
     PermissionListView,
     OverviewAggregateView,
+    SiteSettingsManagementView,
+    ShowroomBranchListCreateView,
+    ShowroomBranchDetailView,
 )
+
 
 
 app_name = "dashboard_api"
@@ -130,7 +134,15 @@ urlpatterns = [
 
     # Permissions Catalogue (auth.Permission)
     path("permissions/", PermissionListView.as_view(), name="permission_list"),
+
+    # Site Settings (home.SiteSettings)
+    path("site-settings/", SiteSettingsManagementView.as_view(), name="site_settings"),
+
+    # Showroom Branches (home.ShowroomBranch)
+    path("branches/", ShowroomBranchListCreateView.as_view(), name="branch_list_create"),
+    path("branches/<int:pk>/", ShowroomBranchDetailView.as_view(), name="branch_detail"),
 ]
+
 
 
 

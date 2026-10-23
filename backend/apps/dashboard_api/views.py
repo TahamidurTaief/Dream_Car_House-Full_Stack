@@ -22,6 +22,8 @@ from apps.home.models import (
     SocialMedia,
     PeopleTalkAboutUs,
     SalesRepresentative,
+    SiteSettings,
+    ShowroomBranch,
 )
 from django.contrib.auth.models import User, Group, Permission
 from apps.seo_config.models import SEOConfig, CategoryPageSEO
@@ -49,7 +51,10 @@ from .serializers import (
     UserDetailManagementSerializer,
     GroupManagementSerializer,
     PermissionSerializer,
+    SiteSettingsManagementSerializer,
+    ShowroomBranchManagementSerializer,
 )
+
 
 
 logger = logging.getLogger(__name__)
@@ -2064,3 +2069,122 @@ class OverviewAggregateView(DashboardBaseAPIView):
             data["metrics"]["groups"] = group_counts
 
         return Response({"success": True, "data": data})
+
+
+# ==============================================================================
+# Site Settings Management Endpoints
+# ==============================================================================
+
+class SiteSettingsManagementView(DashboardBaseAPIView):
+    permission_classes = (IsActiveStaff, DashboardModelPermission)
+    model = SiteSettings
+
+    def get(self, request):
+        settings_obj = SiteSettings.objects.first()
+        if not settings_obj:
+            return Response({"success": True, "data": None})
+        serializer = SiteSettingsManagementSerializer(settings_obj, context={"request": request})
+        return Response({"success": True, "data": serializer.data})
+
+    def post(self, request):
+        settings_obj = SiteSettings.objects.first()
+        if settings_obj:
+            serializer = SiteSettingsManagementSerializer(settings_obj, data=request.data, partial=True, context={"request": request})
+        else:
+            serializer = SiteSettingsManagementSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        saved = serializer.save()
+        return Response(
+            {"success": True, "data": SiteSettingsManagementSerializer(saved, context={"request": request}).data},
+            status=status.HTTP_200_OK if settings_obj else status.HTTP_201_CREATED,
+        )
+
+    def patch(self, request):
+        settings_obj = SiteSettings.objects.first()
+        if not settings_obj:
+            return Response({"success": False, "error": {"code": "NOT_FOUND", "message": "Site settings record not found."}}, status=status.HTTP_404_NOT_FOUND)
+        serializer = SiteSettingsManagementSerializer(settings_obj, data=request.data, partial=True, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        updated = serializer.save()
+        return Response({"success": True, "data": SiteSettingsManagementSerializer(updated, context={"request": request}).data})
+
+
+# ==============================================================================
+# Showroom Branch Management Endpoints
+# ==============================================================================
+
+class ShowroomBranchListCreateView(DashboardBaseAPIView):
+    permission_classes = (IsActiveStaff, DashboardModelPermission)
+    model = ShowroomBranch
+
+    def get(self, request):
+        qs = ShowroomBranch.objects.all().order_by("order", "id")
+        query = request.query_params.get("q", "").strip()
+        if query:
+            qs = qs.filter(
+                Q(name__icontains=query)
+                | Q(branch_id__icontains=query)
+                | Q(address__icontains=query)
+                | Q(phone__icontains=query)
+            )
+
+        try:
+            page = max(1, int(request.query_params.get("page", 1)))
+            page_size = max(1, min(100, int(request.query_params.get("page_size", 15))))
+        except (ValueError, TypeError):
+            page, page_size = 1, 15
+
+        total_rows = qs.count()
+        total_pages = max(1, (total_rows + page_size - 1) // page_size)
+        offset = (page - 1) * page_size
+        results = qs[offset : offset + page_size]
+
+        serializer = ShowroomBranchManagementSerializer(results, many=True, context={"request": request})
+        return Response({
+            "success": True,
+            "data": {
+                "results": serializer.data,
+                "total_rows": total_rows,
+                "total_pages": total_pages,
+                "current_page": page,
+                "page_size": page_size,
+            }
+        })
+
+    def post(self, request):
+        serializer = ShowroomBranchManagementSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        branch = serializer.save()
+        return Response(
+            {"success": True, "data": ShowroomBranchManagementSerializer(branch, context={"request": request}).data},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class ShowroomBranchDetailView(DashboardBaseAPIView):
+    permission_classes = (IsActiveStaff, DashboardModelPermission)
+    model = ShowroomBranch
+
+    def get(self, request, pk):
+        branch = get_object_or_404(ShowroomBranch, pk=pk)
+        return Response({"success": True, "data": ShowroomBranchManagementSerializer(branch, context={"request": request}).data})
+
+    def patch(self, request, pk):
+        branch = get_object_or_404(ShowroomBranch, pk=pk)
+        serializer = ShowroomBranchManagementSerializer(branch, data=request.data, partial=True, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        updated = serializer.save()
+        return Response({"success": True, "data": ShowroomBranchManagementSerializer(updated, context={"request": request}).data})
+
+    def delete(self, request, pk):
+        branch = get_object_or_404(ShowroomBranch, pk=pk)
+        branch_name = branch.name
+        branch.delete()
+        return Response({
+            "success": True,
+            "data": {
+                "message": f"Showroom branch '{branch_name}' deleted successfully.",
+                "deleted_id": int(pk),
+            }
+        })
+

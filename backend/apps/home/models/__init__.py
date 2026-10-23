@@ -6,3 +6,6 @@ from apps.home.models.sell_your_cars_image_model import SellYourCarImages
 from apps.home.models.subscribers_model import Subscriber
 from apps.home.models.sales_representative import SalesRepresentative
 from apps.home.models.contact_message_model import ContactMessage
+from apps.home.models.site_settings_model import SiteSettings
+from apps.home.models.showroom_branch_model import ShowroomBranch
+

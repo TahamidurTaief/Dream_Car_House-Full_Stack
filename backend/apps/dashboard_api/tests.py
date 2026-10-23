@@ -14,7 +14,10 @@ from apps.home.models import (
     SocialMedia,
     PeopleTalkAboutUs,
     SalesRepresentative,
+    SiteSettings,
+    ShowroomBranch,
 )
+
 from apps.seo_config.models import SEOConfig, CategoryPageSEO
 
 
@@ -2053,5 +2056,169 @@ class DashboardContentConfigurationTests(TestCase):
         msg.delete()
         sell.delete()
         stock.delete()
+
+    def test_site_settings_management_and_public_api(self):
+        # Setup initial site settings record
+        SiteSettings.objects.create(
+            name="DREAM CAR HOUSE",
+            phone="+880 1615-121312",
+            whatsapp="+8801615121312",
+        )
+
+        # 1. Unauthenticated request denied
+        anon_client = APIClient()
+        anon_res = anon_client.get("/api/v1/dashboard/site-settings/")
+        self.assertEqual(anon_res.status_code, 403)
+
+        # 2. Staff without view_sitesettings denied
+        self.staff_read_only.user_permissions.clear()
+        staff_csrf = self._login_readonly()
+        unperm_res = self.client.get("/api/v1/dashboard/site-settings/", HTTP_X_CSRFTOKEN=staff_csrf)
+        self.assertEqual(unperm_res.status_code, 403)
+
+        # 3. Staff with view_sitesettings can read
+        self.staff_read_only.user_permissions.add(Permission.objects.get(codename="view_sitesettings"))
+        read_res = self.client.get("/api/v1/dashboard/site-settings/", HTTP_X_CSRFTOKEN=staff_csrf)
+        self.assertEqual(read_res.status_code, 200)
+        self.assertTrue(read_res.json()["success"])
+
+        # 4. Mutation without change_sitesettings denied
+        patch_denied = self.client.patch(
+            "/api/v1/dashboard/site-settings/",
+            {"name": "UNAUTHORIZED NAME"},
+            HTTP_X_CSRFTOKEN=staff_csrf,
+            format="json",
+        )
+        self.assertEqual(patch_denied.status_code, 403)
+
+        # 5. Superuser mutation succeeds
+        admin_csrf = self._login_superuser()
+        patch_res = self.client.patch(
+            "/api/v1/dashboard/site-settings/",
+            {
+                "name": "DREAM CAR HOUSE TEST ATELIER",
+                "phone": "+880 1999-999999",
+                "whatsapp": "+8801999999999",
+            },
+            HTTP_X_CSRFTOKEN=admin_csrf,
+            format="json",
+        )
+        self.assertEqual(patch_res.status_code, 200)
+        self.assertEqual(patch_res.json()["data"]["name"], "DREAM CAR HOUSE TEST ATELIER")
+
+        # 6. Public endpoint reflects updated values and hides internal fields
+        pub_res = anon_client.get("/api/v1/home/site-settings/")
+        self.assertEqual(pub_res.status_code, 200)
+        pub_data = pub_res.json()["data"]
+        self.assertEqual(pub_data["name"], "DREAM CAR HOUSE TEST ATELIER")
+        self.assertEqual(pub_data["phone"], "+880 1999-999999")
+        self.assertNotIn("id", pub_data)
+        self.assertNotIn("created_at", pub_data)
+        self.assertNotIn("updated_at", pub_data)
+
+    def test_showroom_branch_management_and_public_api(self):
+        # Create initial branch for duplicate checking
+        initial_branch = ShowroomBranch.objects.create(
+            branch_id="kakrail",
+            name="Kakrail Branch",
+            short_name="Kakrail",
+            address="18 Shaheed",
+            phone="01615-121312",
+            email="kakrail@dreamcarhouse.com",
+            hours="10 AM - 9 PM",
+            map_link="https://maps.google.com/?q=kakrail",
+            embed_map="https://maps.google.com/maps?q=kakrail",
+            order=1,
+            status="PUBLISHED",
+        )
+
+        # 1. Unauthenticated request denied
+        anon_client = APIClient()
+        anon_res = anon_client.get("/api/v1/dashboard/branches/")
+        self.assertEqual(anon_res.status_code, 403)
+
+        # 2. Staff without view_showroombranch denied
+        self.staff_read_only.user_permissions.clear()
+        staff_csrf = self._login_readonly()
+        unperm_res = self.client.get("/api/v1/dashboard/branches/", HTTP_X_CSRFTOKEN=staff_csrf)
+        self.assertEqual(unperm_res.status_code, 403)
+
+        # 3. Superuser can list and create branches
+        admin_csrf = self._login_superuser()
+        list_res = self.client.get("/api/v1/dashboard/branches/", HTTP_X_CSRFTOKEN=admin_csrf)
+        self.assertEqual(list_res.status_code, 200)
+
+        # 4. Duplicate branch_id rejected
+        dup_res = self.client.post(
+            "/api/v1/dashboard/branches/",
+            {
+                "branch_id": "kakrail",
+                "name": "Duplicate Branch",
+                "short_name": "Dup",
+                "address": "Sample Address",
+                "phone": "0123456789",
+                "email": "test@domain.com",
+                "hours": "10 AM - 9 PM",
+                "map_link": "https://maps.google.com/?q=test",
+                "embed_map": "https://maps.google.com/maps?q=test",
+            },
+            HTTP_X_CSRFTOKEN=admin_csrf,
+            format="json",
+        )
+        self.assertEqual(dup_res.status_code, 400)
+        self.assertFalse(dup_res.json()["success"])
+
+
+        # 5. Invalid map domain rejected
+        invalid_map_res = self.client.post(
+            "/api/v1/dashboard/branches/",
+            {
+                "branch_id": "test-branch",
+                "name": "Test Branch",
+                "short_name": "Test",
+                "address": "Sample Address",
+                "phone": "0123456789",
+                "email": "test@domain.com",
+                "hours": "10 AM - 9 PM",
+                "map_link": "https://malicious.com/?q=test",
+                "embed_map": "https://malicious.com/maps?q=test",
+            },
+            HTTP_X_CSRFTOKEN=admin_csrf,
+            format="json",
+        )
+        self.assertEqual(invalid_map_res.status_code, 400)
+
+        # 6. Create valid unpublished branch -> verify excluded from public endpoint
+        create_res = self.client.post(
+            "/api/v1/dashboard/branches/",
+            {
+                "branch_id": "banani-test",
+                "name": "Banani Test Branch",
+                "short_name": "Banani",
+                "address": "Road 11, Banani, Dhaka",
+                "phone": "01700-000000",
+                "email": "banani@dreamcarhouse.com",
+                "hours": "10 AM - 8 PM",
+                "map_link": "https://maps.google.com/?q=Banani",
+                "embed_map": "https://maps.google.com/maps?q=Banani",
+                "order": 3,
+                "status": "UNPUBLISHED",
+            },
+            HTTP_X_CSRFTOKEN=admin_csrf,
+            format="json",
+        )
+        self.assertEqual(create_res.status_code, 201)
+        created_id = create_res.json()["data"]["id"]
+
+        # Public list only includes published branches
+        pub_res = anon_client.get("/api/v1/home/branches/")
+        self.assertEqual(pub_res.status_code, 200)
+        pub_branches = pub_res.json()["data"]
+        self.assertFalse(any(b["branch_id"] == "banani-test" for b in pub_branches))
+
+        # Delete test branch
+        del_res = self.client.delete(f"/api/v1/dashboard/branches/{created_id}/", HTTP_X_CSRFTOKEN=admin_csrf)
+        self.assertEqual(del_res.status_code, 200)
+
 
 

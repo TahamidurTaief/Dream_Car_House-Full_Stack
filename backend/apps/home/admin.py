@@ -1,8 +1,9 @@
 from django.contrib import admin
 from apps.home.models import (
     Slider, SocialMedia, SellCar, PeopleTalkAboutUs, SellYourCarImages, Subscriber, SalesRepresentative,
-    ContactMessage,
+    ContactMessage, SiteSettings, ShowroomBranch,
 )
+
 
 
 @admin.register(Slider)
@@ -52,3 +53,18 @@ class SalesRepresentativeAdmin(admin.ModelAdmin):
     list_display = ['name', 'phone_number', 'status']
     search_fields = ['name', 'phone_number']
     list_filter = ['status']
+
+
+@admin.register(SiteSettings)
+class SiteSettingsAdmin(admin.ModelAdmin):
+    list_display = ['name', 'hotline', 'phone', 'email', 'whatsapp', 'updated_at']
+    search_fields = ['name', 'hotline', 'phone', 'email']
+
+
+@admin.register(ShowroomBranch)
+class ShowroomBranchAdmin(admin.ModelAdmin):
+    list_display = ['name', 'branch_id', 'phone', 'order', 'status', 'updated_at']
+    list_filter = ['status']
+    search_fields = ['name', 'branch_id', 'address', 'phone']
+    list_editable = ['order', 'status']
+

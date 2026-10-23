@@ -12,7 +12,10 @@ from apps.home.models import (
     SocialMedia,
     PeopleTalkAboutUs,
     SalesRepresentative,
+    SiteSettings,
+    ShowroomBranch,
 )
+
 from apps.seo_config.models import SEOConfig, CategoryPageSEO
 
 
@@ -881,3 +884,105 @@ class UserDetailManagementSerializer(serializers.ModelSerializer):
             instance.user_permissions.set(user_permissions)
 
         return instance
+
+
+class SiteSettingsManagementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SiteSettings
+        fields = [
+            "id",
+            "name",
+            "tagline",
+            "logo_text",
+            "logo_asset",
+            "hotline",
+            "phone",
+            "email",
+            "whatsapp",
+            "website",
+            "primary_address",
+            "footer_tagline",
+            "footer_copy_text",
+            "opening_hours_text",
+            "social_media",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def validate_name(self, value):
+        val = value.strip()
+        if not val:
+            raise serializers.ValidationError("Business name cannot be empty.")
+        return val
+
+    def validate_website(self, value):
+        val = value.strip()
+        if not (val.startswith("http://") or val.startswith("https://")):
+            raise serializers.ValidationError("Website URL must start with http:// or https://")
+        return val
+
+    def validate_whatsapp(self, value):
+        val = value.strip()
+        if not val:
+            raise serializers.ValidationError("WhatsApp destination cannot be empty.")
+        return val
+
+
+class ShowroomBranchManagementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShowroomBranch
+        fields = [
+            "id",
+            "branch_id",
+            "name",
+            "short_name",
+            "tag",
+            "address",
+            "phone",
+            "hotline",
+            "email",
+            "hours",
+            "map_link",
+            "embed_map",
+            "order",
+            "status",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def validate_branch_id(self, value):
+        val = value.strip().lower()
+        if not val:
+            raise serializers.ValidationError("Branch identifier cannot be empty.")
+        # Ensure only alphanumeric and hyphens/underscores
+        import re
+        if not re.match(r"^[a-z0-9_-]+$", val):
+            raise serializers.ValidationError("Branch identifier must be lowercase alphanumeric with hyphens or underscores.")
+
+        # Check uniqueness excluding self
+        instance = self.instance
+        qs = ShowroomBranch.objects.filter(branch_id=val)
+        if instance:
+            qs = qs.exclude(pk=instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError(f"Showroom branch with identifier '{val}' already exists.")
+        return val
+
+    def validate_map_link(self, value):
+        val = value.strip()
+        if not val.startswith("https://"):
+            raise serializers.ValidationError("Map link must start with https://")
+        return val
+
+    def validate_embed_map(self, value):
+        val = value.strip()
+        if not (val.startswith("https://") or "<iframe" in val):
+            raise serializers.ValidationError("Embed map must be a secure https:// URL or iframe.")
+        # Restrict map provider
+        allowed_domains = ["maps.google.com", "google.com/maps"]
+        if not any(domain in val for domain in allowed_domains):
+            raise serializers.ValidationError("Embed map must use Google Maps as the provider.")
+        return val
+

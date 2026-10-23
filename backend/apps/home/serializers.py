@@ -7,8 +7,9 @@ from core.mixins.image_optimization_mixins import OptimizedImageSerializerMixin
 
 from apps.home.models import (
     Slider, SocialMedia, SellCar, PeopleTalkAboutUs, SellYourCarImages, Subscriber, SalesRepresentative,
-    ContactMessage,
+    ContactMessage, SiteSettings, ShowroomBranch,
 )
+
 
 
 class SliderSerializer(serializers.ModelSerializer, OptimizedImageSerializerMixin):
@@ -129,3 +130,53 @@ class SalesRepresentativeListSearchSerializer(serializers.ModelSerializer):
             'name',
             'phone_number'
         ]
+
+
+class PublicSiteSettingsSerializer(serializers.ModelSerializer):
+    social_media = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SiteSettings
+        fields = [
+            'name',
+            'tagline',
+            'logo_text',
+            'logo_asset',
+            'hotline',
+            'phone',
+            'email',
+            'whatsapp',
+            'website',
+            'primary_address',
+            'footer_tagline',
+            'footer_copy_text',
+            'opening_hours_text',
+            'social_media',
+        ]
+
+    def get_social_media(self, obj):
+        sm = obj.social_media or SocialMedia.objects.order_by('id').last()
+        if sm:
+            return SocialMediaSerializer(sm, context=self.context).data
+        return None
+
+
+class PublicShowroomBranchSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShowroomBranch
+        fields = [
+            'id',
+            'branch_id',
+            'name',
+            'short_name',
+            'tag',
+            'address',
+            'phone',
+            'hotline',
+            'email',
+            'hours',
+            'map_link',
+            'embed_map',
+            'order',
+        ]
+
