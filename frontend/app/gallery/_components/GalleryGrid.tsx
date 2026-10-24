@@ -33,7 +33,7 @@ function ImageCard({
       <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60 z-10" />
       <Image
         src={image || "/images/placeholder.png"}
-        alt={title || "Beg Autos Social Talk"}
+        alt={title || "DREAM CAR HOUSE Exclusive Showcase"}
         width={400}
         height={300}
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"

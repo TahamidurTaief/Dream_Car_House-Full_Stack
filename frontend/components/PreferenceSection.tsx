@@ -18,13 +18,9 @@ export default function PreferenceSection() {
     <section className="preference-section max-w-7xl">
       <div className="preference-header-wrap">
         <div>
-          <span className="preference-badge">CURATED INVENTORY</span>
-          <h2 className="section-h2" style={{ marginTop: "0.5rem", marginBottom: "0.25rem" }}>
+          <h2 className="section-h2" style={{ margin: 0 }}>
             Choose per your preference
           </h2>
-          <p className="preference-subtext">
-            Toggle between factory-fresh zero mileage units and certified showroom pre-owned vehicles.
-          </p>
         </div>
 
         {/* Segment Switcher Controller */}

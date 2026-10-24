@@ -1,12 +1,33 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useUI } from "@/lib/UIContext";
 
 export default function NavDrawer() {
   const { isDrawerOpen, closeDrawer, openAppointmentModal } = useUI();
+  const [isOpen, setIsOpen] = useState(true);
+
+  useEffect(() => {
+    const evaluateStatus = () => {
+      const now = new Date();
+      const hour = now.getHours();
+      const minutes = now.getMinutes();
+      const currentTimeInMinutes = hour * 60 + minutes;
+      const openTimeInMinutes = 10 * 60; // 10:00 AM
+      const closeTimeInMinutes = 22 * 60; // 10:00 PM (22:00)
+
+      const currentlyOpen =
+        currentTimeInMinutes >= openTimeInMinutes &&
+        currentTimeInMinutes < closeTimeInMinutes;
+      setIsOpen(currentlyOpen);
+    };
+
+    evaluateStatus();
+    const interval = setInterval(evaluateStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
@@ -37,9 +58,14 @@ export default function NavDrawer() {
           <div className="supercar-headlight-beam"></div>
           <div className="supercar-banner-overlay">
             <div className="supercar-brand-row">
-              <span className="drawer-gold-crest"></span>
-              <div>
-                <div className="drawer-logo-text">DREAM CAR HOUSE</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                <Image
+                  src="/assets/dch-logo.webp"
+                  alt="DREAM CAR HOUSE Logo"
+                  width={150}
+                  height={56}
+                  style={{ height: "40px", width: "auto", objectFit: "contain", filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.6))" }}
+                />
                 <span className="drawer-brand-sub">
                   Premier Luxury Automotive Showroom • Kakrail & Gulshan
                 </span>
@@ -142,7 +168,7 @@ export default function NavDrawer() {
                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
                   </svg>
                 </div>
-                <span className="drawer-item-title">ABOUT THE ATELIER</span>
+                <span className="drawer-item-title">ABOUT US</span>
                 <span className="drawer-item-arrow">→</span>
               </Link>
             </li>
@@ -165,8 +191,20 @@ export default function NavDrawer() {
         {/* Drawer Footer: Live Concierge Card & Quick Actions */}
         <div className="drawer-footer-card">
           <div className="drawer-live-status">
-            <span className="drawer-status-dot"></span>
-            <span className="drawer-status-text">SHOWROOM OPEN TODAY • 10 AM - 10 PM</span>
+            <span
+              className={`drawer-status-text ${isOpen ? "status-open" : "status-closed"}`}
+              style={{
+                color: isOpen ? "#22c55e" : "#ef4444",
+                textShadow: isOpen
+                  ? "0 0 10px rgba(34, 197, 94, 0.4)"
+                  : "0 0 10px rgba(239, 68, 68, 0.4)",
+                transition: "color 0.3s ease, text-shadow 0.3s ease",
+              }}
+            >
+              {isOpen
+                ? "SHOWROOM OPEN TODAY • 10:00 AM - 10:00 PM"
+                : "SHOWROOM CLOSED NOW • 10:00 AM - 10:00 PM"}
+            </span>
           </div>
 
           <div className="drawer-concierge-phone">

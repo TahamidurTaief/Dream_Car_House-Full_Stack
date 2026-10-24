@@ -4,7 +4,7 @@ import threading
 import os
 import sys
 
-PORTS = [3000, 3001]
+PORTS = [3001]
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):

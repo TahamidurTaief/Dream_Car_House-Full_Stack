@@ -26,7 +26,6 @@ export default function VipSanctuary() {
           {/* Left Column: Editorial Invitation & Value Pillars */}
           <div className="vip-sanctuary-narrative">
             <div className="vip-sanctuary-eyebrow">
-              <span className="vip-pulse-dot"></span>
               <span>KAKRAIL & GULSHAN • DHAKA</span>
             </div>
 
@@ -102,10 +101,9 @@ export default function VipSanctuary() {
             <div className="vip-card-head">
               <div>
                 <span className="vip-card-badge">FLAGSHIP SHOWROOM</span>
-                <h3 className="vip-card-title">DREAM CAR HOUSE Atelier</h3>
+                <h3 className="vip-card-title">DREAM CAR HOUSE Flagship</h3>
               </div>
               <div className="vip-live-pill">
-                <span className="vip-status-dot"></span>
                 <span>OPEN TODAY</span>
               </div>
             </div>

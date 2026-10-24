@@ -11,11 +11,7 @@ export default function ExperiencePillars() {
     <section className="experience-section max-w-7xl" id="experience">
       <div className="experience-header">
         <div className="experience-header-text">
-          <div className="experience-eyebrow">
-            <span className="experience-pulse-dot"></span>
-            <span>ATELIER EXCELLENCE</span>
-          </div>
-          <h2 className="experience-title">Experience Beyond Ordinary at DREAM CAR HOUSE</h2>
+          <h2 className="experience-title">Experience Beyond Ordinary</h2>
           <p className="experience-subtitle">
             Dhaka's benchmark in high-luxury automotive delivery, certified diagnostic inspection, and bespoke global procurement.
           </p>

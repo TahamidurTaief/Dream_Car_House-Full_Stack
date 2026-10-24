@@ -1,26 +1,26 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Gallery | Beg Autos - Our Car Collection in Pictures",
+  title: "Visual Gallery | DREAM CAR HOUSE - Flagship Collection & Showroom Chronicles",
   description:
-    "Browse the Beg Autos gallery showcasing our stunning collection of luxury, reconditioned, and pre-owned vehicles in Bangladesh.",
+    "Browse the DREAM CAR HOUSE luxury gallery showcasing our curated collection of exotic supercars, luxury SUVs, and executive sedans in Dhaka, Bangladesh.",
   robots: "index, follow",
   alternates: {
-    canonical: "https://www.begautos.com/gallery/",
+    canonical: "https://dreamcarhouse.com/gallery/",
   },
   openGraph: {
-    title: "Gallery | Beg Autos",
+    title: "Gallery | DREAM CAR HOUSE",
     description:
-      "Browse the Beg Autos gallery showcasing our stunning vehicle collection.",
-    url: "https://www.begautos.com/gallery/",
+      "Browse the DREAM CAR HOUSE gallery showcasing our stunning vehicle collection.",
+    url: "https://dreamcarhouse.com/gallery/",
     type: "website",
-    siteName: "Beg Autos",
+    siteName: "DREAM CAR HOUSE",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gallery | Beg Autos",
+    title: "Gallery | DREAM CAR HOUSE",
     description:
-      "Browse the Beg Autos gallery showcasing our stunning vehicle collection.",
+      "Browse the DREAM CAR HOUSE gallery showcasing our stunning vehicle collection.",
   },
 };
 

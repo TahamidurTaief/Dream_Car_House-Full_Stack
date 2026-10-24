@@ -1,26 +1,26 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Sell Your Car | Beg Autos - Get the Best Price for Your Vehicle",
+  title: "Sell Your Car | DREAM CAR HOUSE - Premium Showroom Valuation",
   description:
-    "Want to sell your car? Submit your vehicle details to Beg Autos and get the best price. We buy luxury, reconditioned, and pre-owned cars in Bangladesh.",
+    "Want to sell your luxury vehicle? Submit your car details to DREAM CAR HOUSE for verified market valuation and immediate seamless settlement.",
   robots: "index, follow",
   alternates: {
-    canonical: "https://www.begautos.com/sell/",
+    canonical: "https://dreamcarhouse.com/sell/",
   },
   openGraph: {
-    title: "Sell Your Car | Beg Autos",
+    title: "Sell Your Car | DREAM CAR HOUSE",
     description:
-      "Submit your vehicle details to Beg Autos and get the best price for your car.",
-    url: "https://www.begautos.com/sell/",
+      "Submit your vehicle details to DREAM CAR HOUSE and get the best valuation for your car.",
+    url: "https://dreamcarhouse.com/sell/",
     type: "website",
-    siteName: "Beg Autos",
+    siteName: "DREAM CAR HOUSE",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sell Your Car | Beg Autos",
+    title: "Sell Your Car | DREAM CAR HOUSE",
     description:
-      "Submit your vehicle details to Beg Autos and get the best price for your car.",
+      "Submit your vehicle details to DREAM CAR HOUSE and get the best price for your car.",
   },
 };
 

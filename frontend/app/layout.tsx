@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import "./dream-car-house.css";
@@ -13,6 +13,13 @@ const poppins = Poppins({
   display: "swap",
   variable: "--font-poppins",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#050608",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://dreamcarhouse.com"),
@@ -45,7 +52,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "https://www.begautos.com/media/temp/298_CAR_WEB-2026-10-04-11-15-48_optimized.webp",
+        url: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1600&q=85",
         width: 1200,
         height: 630,
         alt: "DREAM CAR HOUSE Flagship Luxury Automobiles",
@@ -66,7 +73,7 @@ const autoDealerSchema = {
   "@context": "https://schema.org",
   "@type": "AutoDealer",
   name: "DREAM CAR HOUSE",
-  image: "https://www.begautos.com/media/temp/298_CAR_WEB-2026-10-04-11-15-48_optimized.webp",
+  image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1600&q=85",
   telephone: "+8801615121312",
   email: "dreamcarhouse101@gmail.com",
   url: "https://dreamcarhouse.com",

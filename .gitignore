@@ -15,3 +15,7 @@ dashboard/.env*
 dashboard/*.tsbuildinfo
 
 LastPromptsOutput.txt
+scratch/
+*/scratch/
+frontend/scratch/
+dream_car_house/scratch/

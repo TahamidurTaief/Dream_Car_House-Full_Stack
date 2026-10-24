@@ -127,7 +127,7 @@ export default function SellYourCarClient() {
             Old Is Not needed?
           </h1>
           <p className="text-3xl md:text-6xl font-bold leading-tight">
-            <span className="text-accent">BEG AUTOS</span> got you covered
+            <span className="text-accent">DREAM CAR HOUSE</span> got you covered
           </p>
         </div>
       </section>

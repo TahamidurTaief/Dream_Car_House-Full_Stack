@@ -18,10 +18,6 @@ export default function VisualChronicles() {
     <section className="socials-section max-w-7xl" id="socials">
       <div className="socials-header">
         <div className="socials-header-text">
-          <div className="socials-eyebrow">
-            <span className="social-pulse-dot"></span>
-            <span>SHOWROOM ATELIER ARCHIVES</span>
-          </div>
           <h2 className="section-h2" style={{ marginBottom: "0.35rem" }}>
             DREAM CAR HOUSE Visual Chronicles
           </h2>
@@ -45,7 +41,7 @@ export default function VisualChronicles() {
           <div className="atelier-flip-inner">
             <div className="atelier-flip-front">
               <Image
-                src="https://www.begautos.com/media/temp/91_20-2026-07-06-12-49-04_optimized.webp"
+                src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1600&q=85"
                 alt="Mercedes-Maybach S 680"
                 width={1200}
                 height={700}
@@ -54,8 +50,7 @@ export default function VisualChronicles() {
               <div className="atelier-front-overlay"></div>
               <div className="atelier-front-top">
                 <span className="atelier-front-badge">
-                  <span className="atelier-front-dot"></span>
-                  <span>ATELIER FLAGSHIP SPOTLIGHT</span>
+                  <span>SHOWROOM FLAGSHIP SPOTLIGHT</span>
                 </span>
               </div>
             </div>
@@ -125,7 +120,6 @@ export default function VisualChronicles() {
               <div className="atelier-front-overlay"></div>
               <div className="atelier-front-top">
                 <span className="atelier-front-badge">
-                  <span className="atelier-front-dot"></span>
                   <span>BESPOKE SANCTUARY</span>
                 </span>
               </div>
@@ -196,7 +190,6 @@ export default function VisualChronicles() {
               <div className="atelier-front-overlay"></div>
               <div className="atelier-front-top">
                 <span className="atelier-front-badge">
-                  <span className="atelier-front-dot"></span>
                   <span>STUTTGART PERFORMANCE</span>
                 </span>
               </div>
@@ -254,7 +247,6 @@ export default function VisualChronicles() {
               <div className="atelier-front-overlay"></div>
               <div className="atelier-front-top">
                 <span className="atelier-front-badge">
-                  <span className="atelier-front-dot"></span>
                   <span>CABIN ARTISANSHIP</span>
                 </span>
               </div>
@@ -312,7 +304,6 @@ export default function VisualChronicles() {
               <div className="atelier-front-overlay"></div>
               <div className="atelier-front-top">
                 <span className="atelier-front-badge">
-                  <span className="atelier-front-dot"></span>
                   <span>FLAGSHIP OFF-ROAD</span>
                 </span>
               </div>
@@ -358,7 +349,6 @@ export default function VisualChronicles() {
       <div className="atelier-media-footer">
         <div className="media-footer-info">
           <div className="media-live-status">
-            <span className="media-live-dot"></span>
             <span className="media-count-tag">19+ SHOWROOM ARCHIVE EDITIONS</span>
           </div>
           <p className="media-footer-desc">
