@@ -50,8 +50,8 @@ export default function GalleryClient({
   return (
     <div className="dream-gallery min-h-screen text-ink px-4 py-8 md:px-12 lg:px-16">
       <div className="max-w-7xl mx-auto mt-15">
-        <h1 className="text-4xl font-bold mb-3">BEG across socials</h1>
-        <p className="mb-10 text-muted max-w-3xl"></p>
+        <h1 className="text-4xl font-bold mb-3">DREAM CAR HOUSE Across Socials</h1>
+        <p className="mb-10 text-muted max-w-3xl">Exclusive moments, showroom arrivals, and automotive excellence captured from our Dhaka headquarters.</p>
 
         {/* Render each batch with same GalleryGrid structure */}
         {batches.map((batch, index) => (

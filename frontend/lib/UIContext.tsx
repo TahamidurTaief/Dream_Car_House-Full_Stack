@@ -35,6 +35,11 @@ interface UIContextType {
   isCompareOpen: boolean;
   openCompareModal: () => void;
   closeCompareModal: () => void;
+
+  // Showroom Stories Modal
+  isStoriesOpen: boolean;
+  openStories: () => void;
+  closeStories: () => void;
 }
 
 const UIContext = createContext<UIContextType | null>(null);
@@ -52,9 +57,13 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
   const [galleryLightboxIndex, setGalleryLightboxIndex] = useState<number | null>(null);
   const [galleryPhotos, setGalleryPhotos] = useState<GalleryPhoto[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const [isStoriesOpen, setIsStoriesOpen] = useState(false);
 
   const openDrawer = () => setIsDrawerOpen(true);
   const closeDrawer = () => setIsDrawerOpen(false);
+
+  const openStories = () => setIsStoriesOpen(true);
+  const closeStories = () => setIsStoriesOpen(false);
 
   const openCarModal = (car: Vehicle) => setSelectedCar(car);
   const closeCarModal = () => setSelectedCar(null);
@@ -88,7 +97,8 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
       isAppointmentOpen ||
       activeVideo !== null ||
       galleryLightboxIndex !== null ||
-      isCompareOpen;
+      isCompareOpen ||
+      isStoriesOpen;
 
     if (isAnyOpen) {
       document.body.style.overflow = "hidden";
@@ -98,13 +108,14 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isDrawerOpen, selectedCar, isAppointmentOpen, activeVideo, galleryLightboxIndex, isCompareOpen]);
+  }, [isDrawerOpen, selectedCar, isAppointmentOpen, activeVideo, galleryLightboxIndex, isCompareOpen, isStoriesOpen]);
 
   // Handle ESC key globally
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        if (galleryLightboxIndex !== null) closeGalleryLightbox();
+        if (isStoriesOpen) closeStories();
+        else if (galleryLightboxIndex !== null) closeGalleryLightbox();
         else if (selectedCar !== null) closeCarModal();
         else if (isAppointmentOpen) closeAppointmentModal();
         else if (activeVideo !== null) closeVideoModal();
@@ -114,7 +125,7 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [galleryLightboxIndex, selectedCar, isAppointmentOpen, activeVideo, isCompareOpen, isDrawerOpen]);
+  }, [galleryLightboxIndex, selectedCar, isAppointmentOpen, activeVideo, isCompareOpen, isDrawerOpen, isStoriesOpen]);
 
   return (
     <UIContext.Provider
@@ -139,6 +150,9 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
         isCompareOpen,
         openCompareModal,
         closeCompareModal,
+        isStoriesOpen,
+        openStories,
+        closeStories,
       }}
     >
       {children}

@@ -2,12 +2,13 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { VEHICLE_DATA, Vehicle } from "@/lib/showroomData";
-import VehicleCard from "@/components/VehicleCard";
+import { VEHICLE_DATA, Vehicle, SHOWROOM_BRANCHES } from "@/lib/showroomData";
+import { useUI } from "@/lib/UIContext";
 
 function InventoryContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { openCarModal } = useUI();
 
   const [query, setQuery] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("all");
@@ -36,8 +37,7 @@ function InventoryContent() {
           car.name.toLowerCase().includes(q) ||
           car.brand.toLowerCase().includes(q) ||
           car.model.toLowerCase().includes(q) ||
-          car.year.toString().includes(q) ||
-          car.engine_capacity.toLowerCase().includes(q);
+          car.year.toString().includes(q);
         if (!matchesQuery) return false;
       }
 
@@ -69,35 +69,35 @@ function InventoryContent() {
   };
 
   return (
-    <div className="inventory-page-wrap max-w-7xl">
+    <div
+      id="view-inventory"
+      className="inventory-page-wrap max-w-7xl"
+    >
       <div style={{ marginBottom: "2rem" }}>
-        <span className="preference-badge" style={{ marginBottom: "0.35rem", display: "inline-block" }}>
-          OFFICIAL INVENTORY DIRECTORY
-        </span>
         <h1 className="section-h2" style={{ marginBottom: "0.5rem" }}>
-          Complete Luxury Vehicle Inventory
+          Choose per your preference
         </h1>
         <p style={{ color: "#9ca3af", fontSize: "0.95rem" }}>
-          Browse all {VEHICLE_DATA.length} available luxury vehicles across our Kakrail and Gulshan showrooms in Dhaka.
+          Browse all available luxury vehicles across our Kakrail and Gulshan showrooms.
         </p>
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="cars-filter-row" style={{ display: "flex", flexWrap: "wrap", gap: "0.85rem", marginBottom: "2.5rem" }}>
+      <div className="cars-filter-row">
         <input
           type="text"
+          id="cars-search-input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="cars-search-input"
           placeholder="Search by brand or model (e.g. Mercedes, Land Cruiser, BMW)..."
-          style={{ flex: "1 1 240px", minWidth: "220px" }}
         />
 
         <select
+          id="cars-filter-brand"
           value={selectedBrand}
           onChange={(e) => setSelectedBrand(e.target.value)}
           className="filter-select"
-          style={{ flex: "1 1 140px" }}
         >
           <option value="all">All Brands</option>
           <option value="Mercedes-Benz">Mercedes-Benz</option>
@@ -113,21 +113,21 @@ function InventoryContent() {
         </select>
 
         <select
+          id="cars-filter-type"
           value={selectedType}
           onChange={(e) => setSelectedType(e.target.value)}
           className="filter-select"
-          style={{ flex: "1 1 140px" }}
         >
-          <option value="all">All Conditions</option>
+          <option value="all">All Types</option>
           <option value="BRAND_NEW">Brand New</option>
-          <option value="PRE_OWNED">Certified Pre-Owned</option>
+          <option value="PRE_OWNED">Pre-Owned</option>
         </select>
 
         <select
+          id="cars-filter-branch"
           value={selectedBranch}
           onChange={(e) => setSelectedBranch(e.target.value)}
           className="filter-select"
-          style={{ flex: "1 1 180px" }}
         >
           <option value="all">All Showroom Branches</option>
           <option value="kakrail">Kakrail Branch (18, Monsur Ali Soroni)</option>
@@ -138,59 +138,108 @@ function InventoryContent() {
           type="button"
           onClick={resetFilters}
           className="hero-pill-btn"
-          style={{ padding: "0.65rem 1.25rem", fontSize: "0.88rem", whiteSpace: "nowrap" }}
+          style={{ padding: "0.65rem 1.25rem", fontSize: "0.9rem" }}
         >
           Reset Filters
         </button>
       </div>
 
-      {/* Results Count */}
-      <div style={{ marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontSize: "0.85rem", color: "#9ca3af" }}>
-          Showing <strong>{filteredVehicles.length}</strong> of {VEHICLE_DATA.length} luxury vehicles
-        </span>
-      </div>
-
-      {/* Vehicles Grid */}
-      {filteredVehicles.length > 0 ? (
-        <div id="inventory-grid" className="cars-grid-layout">
-          {filteredVehicles.map((car) => (
-            <VehicleCard key={car.id} car={car} layout="grid" />
-          ))}
-        </div>
-      ) : (
-        <div
-          style={{
-            background: "#0d0f12",
-            border: "1px solid #1f2937",
-            borderRadius: "8px",
-            padding: "3rem 1.5rem",
-            textAlign: "center",
-          }}
-        >
-          <svg
-            width="42"
-            height="42"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#9ca3af"
-            strokeWidth="1.5"
-            style={{ margin: "0 auto 1rem", display: "block" }}
+      {/* Cars Grid */}
+      <div id="inventory-grid" className="cars-grid-layout">
+        {filteredVehicles.length > 0 ? (
+          filteredVehicles.map((car) => {
+            const branch =
+              SHOWROOM_BRANCHES[car.branch_id] || SHOWROOM_BRANCHES.kakrail;
+            return (
+              <div
+                key={car.id}
+                className="group inventory-card-box"
+                onClick={() => openCarModal(car)}
+                style={{
+                  background: "#0d0f12",
+                  padding: "0.75rem",
+                  borderRadius: "8px",
+                  border: "1px solid #1f2937",
+                  cursor: "pointer",
+                  transition: "transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease",
+                }}
+              >
+                <div
+                  className="portrait-image-wrapper"
+                  style={{ marginBottom: "0.5rem", position: "relative" }}
+                >
+                  <img src={car.image} alt={car.name} loading="lazy" />
+                  <span className="card-branch-tag">{branch.short_name}</span>
+                </div>
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "#9ca3af",
+                    textTransform: "uppercase",
+                    marginBottom: "0.25rem",
+                  }}
+                >
+                  {car.brand} • {car.year}
+                </div>
+                <h3 className="card-car-title" style={{ marginBottom: "0.5rem" }}>
+                  {car.name}
+                </h3>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    borderTop: "1px solid #1f2937",
+                    paddingTop: "0.5rem",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "#e5e7eb",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {car.mileage}
+                  </span>
+                  <span style={{ fontSize: "0.8rem", color: "#9ca3af" }}>
+                    {car.fuel_type}
+                  </span>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div
+            style={{
+              gridColumn: "1 / -1",
+              textAlign: "center",
+              padding: "4rem 1rem",
+            }}
           >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <h3 style={{ fontSize: "1.15rem", fontWeight: 600, color: "#ffffff", marginBottom: "0.5rem" }}>
-            No Vehicles Match Your Search
-          </h3>
-          <p style={{ color: "#9ca3af", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
-            Try adjusting your search terms, clearing brand filters, or contacting our concierge for bespoke procurement.
-          </p>
-          <button type="button" onClick={resetFilters} className="consult-primary-btn" style={{ margin: "0 auto" }}>
-            Reset All Filters
-          </button>
-        </div>
-      )}
+            <h3
+              style={{
+                fontSize: "1.25rem",
+                color: "#fff",
+                marginBottom: "0.5rem",
+              }}
+            >
+              No vehicles found
+            </h3>
+            <p style={{ color: "#9ca3af", marginBottom: "1.5rem" }}>
+              Try resetting your filters or search keyword.
+            </p>
+            <button
+              type="button"
+              className="hero-pill-btn"
+              onClick={resetFilters}
+              style={{ margin: "0 auto", display: "inline-block" }}
+            >
+              Reset
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

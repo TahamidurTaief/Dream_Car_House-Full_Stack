@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { SHOWROOM_BRANCHES } from "@/lib/showroomData";
 import { useUI } from "@/lib/UIContext";
 
@@ -17,7 +18,15 @@ export default function Footer() {
         <div className="footer-grid-3col">
           {/* Col 1: Contact Info */}
           <div className="footer-col-contact">
-            <div className="footer-brand-title">DREAM CAR HOUSE</div>
+            <div style={{ marginBottom: "0.85rem" }}>
+              <Image
+                src="/assets/dch-logo.webp"
+                alt="DREAM CAR HOUSE Logo"
+                width={170}
+                height={64}
+                style={{ height: "48px", width: "auto", objectFit: "contain", filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.5))" }}
+              />
+            </div>
             <p className="footer-brand-tagline">
               Where Extraordinary Dreams Meet The Road • Kakrail & Gulshan, Dhaka.
             </p>
@@ -254,7 +263,7 @@ export default function Footer() {
             </span>
             <span className="sep">•</span>
             <Link href="/about" style={{ color: "#9ca3af", fontSize: "0.85rem" }}>
-              Atelier Heritage
+              Showroom Heritage
             </Link>
             <span className="sep">•</span>
             <a href="#hero-section" className="back-to-top-link">

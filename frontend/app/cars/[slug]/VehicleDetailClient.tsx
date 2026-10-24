@@ -17,7 +17,44 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
   const [activeImgIdx, setActiveImgIdx] = useState(0);
 
   const branch = SHOWROOM_BRANCHES[car.branch_id] || SHOWROOM_BRANCHES["kakrail"];
+  const [isCopied, setIsCopied] = useState(false);
   const isBrandNew = car.car_type === "BRAND_NEW";
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const origin =
+      typeof window !== "undefined" && window.location.origin
+        ? window.location.origin
+        : "https://dreamcarhouse.com";
+    const shareUrl = `${origin}/cars/${car.slug}`;
+    const shareTitle = `${car.name} (${car.year}) | DREAM CAR HOUSE`;
+    const shareText = `Explore this ${car.name} (${car.year}) at DREAM CAR HOUSE:`;
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        if ((err as Error)?.name === "AbortError") {
+          return;
+        }
+      }
+    }
+
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2400);
+      }
+    } catch (clipErr) {
+      console.error("Clipboard copy failed", clipErr);
+    }
+  };
 
   const galleryList =
     car.images && car.images.length > 0
@@ -78,7 +115,7 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
               <span className="pill-dot"></span>CERTIFIED PRE-OWNED
             </span>
           )}
-          <span className="beg-showroom-beacon" style={{ display: "inline-flex" }}>
+          <span className="dch-showroom-beacon" style={{ display: "inline-flex" }}>
             <span className="beacon-pulse"></span>
             <span>{branch.name.toUpperCase()} • PHYSICAL ALLOCATION</span>
           </span>
@@ -97,11 +134,11 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
       </div>
 
       {/* Main 2-Column Grid */}
-      <div className="beg-car-grid">
+      <div className="dch-car-grid">
         {/* Left Column: Visual Showcase */}
-        <div className="beg-car-visual-col">
+        <div className="dch-car-visual-col">
           <div
-            className="beg-car-img-frame"
+            className="dch-car-img-frame"
             onClick={handleExpandToCinema}
             style={{ cursor: "pointer", borderRadius: "10px", overflow: "hidden" }}
             title="Inspect in Full Cinema Mode"
@@ -111,18 +148,18 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
               alt={car.name}
               width={900}
               height={560}
-              className="beg-car-img"
+              className="dch-car-img"
               priority
             />
-            <div className="beg-car-img-overlay"></div>
+            <div className="dch-car-img-overlay"></div>
 
-            <div className="beg-img-counter-wrap">
-              <span className="beg-img-counter-pill">
+            <div className="dch-img-counter-wrap">
+              <span className="dch-img-counter-pill">
                 {activeImgIdx + 1} / {galleryList.length}
               </span>
               <button
                 type="button"
-                className="beg-img-expand-btn"
+                className="dch-img-expand-btn"
                 onClick={handleExpandToCinema}
                 title="Inspect in Full Cinema Mode"
                 aria-label="Inspect in Full Cinema Mode"
@@ -140,7 +177,7 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
               <>
                 <button
                   type="button"
-                  className="beg-gallery-arrow beg-gallery-prev"
+                  className="dch-gallery-arrow dch-gallery-prev"
                   onClick={(e) => {
                     e.stopPropagation();
                     prevImg();
@@ -153,7 +190,7 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
                 </button>
                 <button
                   type="button"
-                  className="beg-gallery-arrow beg-gallery-next"
+                  className="dch-gallery-arrow dch-gallery-next"
                   onClick={(e) => {
                     e.stopPropagation();
                     nextImg();
@@ -167,18 +204,18 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
               </>
             )}
 
-            <div className="beg-photo-angle-pill">{currentImage.caption}</div>
+            <div className="dch-photo-angle-pill">{currentImage.caption}</div>
           </div>
 
           {/* Thumbnail Strip */}
           {galleryList.length > 1 && (
-            <div className="beg-thumbnail-strip-wrap" style={{ marginTop: "1rem" }}>
-              <div className="beg-thumbnail-strip">
+            <div className="dch-thumbnail-strip-wrap" style={{ marginTop: "1rem" }}>
+              <div className="dch-thumbnail-strip">
                 {galleryList.map((img, idx) => (
                   <button
                     key={idx}
                     type="button"
-                    className={`beg-thumb-btn ${idx === activeImgIdx ? "active" : ""}`}
+                    className={`dch-thumb-btn ${idx === activeImgIdx ? "active" : ""}`}
                     onClick={() => setActiveImgIdx(idx)}
                     aria-label={`View photo ${idx + 1}: ${img.caption}`}
                   >
@@ -191,7 +228,7 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
           )}
 
           {/* Branch Allocation Box */}
-          <div className="beg-branch-allocation-box" style={{ marginTop: "1.5rem" }}>
+          <div className="dch-branch-allocation-box" style={{ marginTop: "1.5rem" }}>
             <div className="branch-alloc-head">
               <div className="branch-alloc-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5">
@@ -228,15 +265,15 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
           </div>
 
           {/* Dealership Trust Verification */}
-          <div className="beg-trust-strip" style={{ marginTop: "1rem" }}>
-            <div className="beg-trust-pill">
+          <div className="dch-trust-strip" style={{ marginTop: "1rem" }}>
+            <div className="dch-trust-pill">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 <path d="M9 12l2 2 4-4" />
               </svg>
-              <span>100% Genuine Mileage</span>
+              <span>Genuine Mileage</span>
             </div>
-            <div className="beg-trust-pill">
+            <div className="dch-trust-pill">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5">
                 <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
@@ -245,7 +282,7 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
               </svg>
               <span>Dhaka Metro Papers</span>
             </div>
-            <div className="beg-trust-pill">
+            <div className="dch-trust-pill">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5">
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
               </svg>
@@ -255,26 +292,57 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
         </div>
 
         {/* Right Column: Specifications & Action Suite */}
-        <div className="beg-car-info-col">
-          <div className="beg-car-header">
-            <div className="beg-brand-year-tag">
+        <div className="dch-car-info-col">
+          <div className="dch-car-header">
+            <div className="dch-brand-year-tag">
               {car.brand.toUpperCase()} • PRODUCTION {car.year}
             </div>
-            <h1 className="beg-car-title" style={{ fontSize: "2rem", lineHeight: "1.25", marginTop: "0.35rem" }}>
+            <h1 className="dch-car-title" style={{ fontSize: "2rem", lineHeight: "1.25", marginTop: "0.35rem" }}>
               {car.name}
             </h1>
-            <div className="beg-car-price-row" style={{ marginTop: "0.85rem" }}>
-              <span className="beg-price-label">SHOWROOM VALUATION</span>
-              <span className="beg-price-value" style={{ fontSize: "1.4rem" }}>
+            <div className="dch-car-price-row" style={{ marginTop: "0.85rem" }}>
+              <div className="dch-valuation-top-bar">
+                <span className="dch-price-label">SHOWROOM VALUATION</span>
+                <button
+                  type="button"
+                  id="vehicle-detail-share-btn"
+                  className={`dch-share-car-btn ${isCopied ? "is-copied" : ""}`}
+                  onClick={handleShare}
+                  title="Share this vehicle (WhatsApp, Social, or Copy Direct Link)"
+                  aria-label="Share this vehicle"
+                >
+                  {isCopied ? (
+                    <>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      <span>Link Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="18" cy="5" r="3" />
+                        <circle cx="6" cy="12" r="3" />
+                        <circle cx="18" cy="19" r="3" />
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                      </svg>
+                      <span>Share</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="dch-price-value" style={{ fontSize: "1.4rem" }}>
                 {car.price === "Call for Price" ? "Price Upon Request • VIP Consultation" : car.price}
-              </span>
+              </div>
             </div>
           </div>
 
           {/* Specifications Table */}
-          <div className="beg-specs-table-wrap" style={{ marginTop: "1.5rem" }}>
-            <span className="beg-specs-heading">OFFICIAL FACTORY SPECIFICATIONS</span>
-            <div className="beg-specs-grid-modern">
+          <div className="dch-specs-table-wrap" style={{ marginTop: "1.5rem" }}>
+            <span className="dch-specs-heading">OFFICIAL FACTORY SPECIFICATIONS</span>
+            <div className="dch-specs-grid-modern">
               <div className="spec-card-cell">
                 <span className="spec-cell-label">Brand Marque</span>
                 <span className="spec-cell-val">{car.brand}</span>
@@ -318,28 +386,28 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
                 </span>
               </div>
               <div className="spec-card-cell">
-                <span className="spec-cell-label">Showroom Location</span>
+                <span className="spec-cell-label">Vehicle Status</span>
                 <span className="spec-cell-val" style={{ color: "#22c55e", fontWeight: 600 }}>
-                  {branch.short_name}
+                  Physically Available
                 </span>
               </div>
             </div>
           </div>
 
           {/* Description */}
-          <div className="beg-editorial-desc" style={{ marginTop: "1.5rem" }}>
+          <div className="dch-editorial-desc" style={{ marginTop: "1.5rem" }}>
             <h3 style={{ fontSize: "1.05rem", fontWeight: 600, color: "#ffffff", marginBottom: "0.5rem" }}>
               Atelier Overview & Provenance
             </h3>
             <p>{car.description}</p>
           </div>
 
-          {/* Action Suite */}
-          <div className="beg-cta-suite" style={{ marginTop: "2rem" }}>
+          {/* Twin VIP Action Suite */}
+          <div className="dch-vip-actions" style={{ marginTop: "2rem" }}>
+            {/* 1. Titanium White Schedule Private Viewing Button */}
             <button
               type="button"
-              className="consult-primary-btn"
-              style={{ flex: 1, justifyContent: "center" }}
+              className="dch-viewing-vip-btn"
               onClick={() =>
                 openAppointmentModal({
                   carName: car.name,
@@ -348,23 +416,63 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
                 })
               }
             >
-              <span>Book Private Viewing</span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
+              <div className="dch-viewing-icon-box">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#0a0c10"
+                  strokeWidth="2.2"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+              </div>
+              <div className="dch-btn-text-wrap">
+                <span
+                  className="dch-btn-main"
+                  style={{ color: "#0a0c10" }}
+                >
+                  BOOK PRIVATE VIEWING
+                </span>
+                <span
+                  className="dch-btn-sub"
+                  style={{ color: "#475569" }}
+                >
+                  Showroom Appointment
+                </span>
+              </div>
             </button>
 
+            {/* 2. VIP WhatsApp Concierge Button */}
             <a
               href={waUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="consult-whatsapp-btn"
-              style={{ padding: "0.85rem 1.5rem" }}
+              className="dch-wa-vip-btn"
+              id="dch-wa-action-btn-detail"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-              </svg>
-              <span>WhatsApp Concierge</span>
+              <div className="dch-wa-icon-box">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="19"
+                  height="19"
+                  fill="#ffffff"
+                >
+                  <path d="M12.031 2C6.496 2 2 6.496 2 12.031c0 1.838.497 3.633 1.442 5.213L2 22l4.908-1.408c1.517.854 3.238 1.439 5.123 1.439 5.535 0 10.031-4.496 10.031-10.031C22.062 6.496 17.566 2 12.031 2zm5.795 14.285c-.244.686-1.42 1.321-1.956 1.378-.536.057-1.196.229-3.957-.869-3.327-1.323-5.46-4.717-5.626-4.94-.166-.223-1.352-1.8-1.352-3.433 0-1.633.856-2.438 1.161-2.771.305-.333.666-.416.888-.416.222 0 .444.002.638.012.206.01.482-.078.754.577.28.674.957 2.33.1042 2.502.085.172.142.374.028.6-.114.226-.172.367-.342.566-.17.199-.358.444-.512.597-.171.171-.349.356-.15.698.199.342.887 1.464 1.902 2.37 1.309 1.168 2.413 1.53 2.756 1.701.343.171.543.143.744-.086.2-.229.856-.998 1.085-1.341.229-.343.457-.286.771-.171.314.114 1.996.941 2.339 1.112.343.171.571.257.657.4.086.143.086.828-.158 1.514z" />
+                </svg>
+              </div>
+              <div className="dch-btn-text-wrap">
+                <span className="dch-btn-main">
+                  INQUIRE ON WHATSAPP
+                </span>
+                <span className="dch-btn-sub">
+                  Direct Concierge Desk
+                </span>
+              </div>
             </a>
           </div>
         </div>

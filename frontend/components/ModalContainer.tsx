@@ -7,6 +7,7 @@ import AppointmentModal from "./AppointmentModal";
 import VideoModal from "./VideoModal";
 import GalleryLightbox from "./GalleryLightbox";
 import CompareModal from "./CompareModal";
+import ShowroomStories from "./ShowroomStories";
 
 export default function ModalContainer() {
   return (
@@ -17,6 +18,7 @@ export default function ModalContainer() {
       <VideoModal />
       <GalleryLightbox />
       <CompareModal />
+      <ShowroomStories />
     </>
   );
 }
