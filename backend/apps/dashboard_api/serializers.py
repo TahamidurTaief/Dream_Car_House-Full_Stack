@@ -1365,7 +1365,15 @@ class ExperiencePillarManagementSerializer(serializers.ModelSerializer, Optimize
                 raise serializers.ValidationError("Only jpg, jpeg, png, and webp images are permitted.")
             if value.size > 10 * 1024 * 1024:
                 raise serializers.ValidationError("Image file size cannot exceed 10MB.")
-        return value
+    def validate(self, attrs):
+        if "is_active" in attrs and attrs["is_active"] is False and self.instance:
+            if self.instance.section and self.instance.section.is_active:
+                remaining_active = self.instance.section.pillars.filter(is_active=True).exclude(pk=self.instance.pk).count()
+                if remaining_active < 3:
+                    raise serializers.ValidationError({
+                        "is_active": "Cannot deactivate pillar: published Experience Section requires at least 3 active pillars."
+                    })
+        return attrs
 
 
 class ExperienceSectionManagementSerializer(serializers.ModelSerializer):
@@ -1384,6 +1392,22 @@ class ExperienceSectionManagementSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "pillars", "updated_at"]
+
+    def validate(self, attrs):
+        is_active = attrs.get("is_active", self.instance.is_active if self.instance else False)
+        if is_active:
+            section = self.instance or ExperienceSection.objects.first()
+            if section:
+                active_count = section.pillars.filter(is_active=True).count()
+                if active_count < 3:
+                    raise serializers.ValidationError({
+                        "is_active": "Cannot publish Experience Section with fewer than 3 active pillars. Please ensure at least 3 pillars are active."
+                    })
+            else:
+                raise serializers.ValidationError({
+                    "is_active": "Cannot publish Experience Section with fewer than 3 active pillars. Please create and activate at least 3 pillars first."
+                })
+        return attrs
 
     def get_pillars(self, obj):
         pillars = obj.pillars.all().order_by("order", "id")

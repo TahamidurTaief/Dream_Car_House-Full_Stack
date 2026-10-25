@@ -1,16 +1,22 @@
 "use client";
 
 import React, { useState } from "react";
-import { SHOWROOM_BRANCHES, SHOWROOM } from "@/lib/showroomData";
+import type { PublicShowroomBranch, PublicSiteSettings } from "@/lib/types";
 import { useUI } from "@/lib/UIContext";
 
-export default function ContactClient() {
-  const { openAppointmentModal } = useUI();
-  const [activeTab, setActiveTab] = useState<"kakrail" | "gulshan">("kakrail");
+interface ContactClientProps {
+  branches?: PublicShowroomBranch[];
+  settings?: PublicSiteSettings | null;
+}
 
-  const kakrail = SHOWROOM_BRANCHES.kakrail;
-  const gulshan = SHOWROOM_BRANCHES.gulshan;
-  const currentBranch = SHOWROOM_BRANCHES[activeTab];
+export default function ContactClient({ branches = [], settings }: ContactClientProps) {
+  const { openAppointmentModal } = useUI();
+  const [activeTab, setActiveTab] = useState<string>(branches[0]?.branch_id || "");
+
+  const currentBranch = branches.find((b) => b.branch_id === activeTab) || branches[0];
+  const hotline = settings?.hotline || currentBranch?.hotline || currentBranch?.phone || "";
+  const email = settings?.email || currentBranch?.email || "";
+  const whatsappNumber = settings?.whatsapp || "";
 
   return (
     <div className="inventory-page-wrap max-w-7xl">
@@ -27,161 +33,129 @@ export default function ContactClient() {
           </p>
         </div>
 
-        {/* 2 Showroom Branch Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", marginBottom: "3rem" }}>
-          {/* Kakrail */}
-          <div
-            style={{
-              background: "#0d0f12",
-              border: activeTab === "kakrail" ? "1px solid #ffffff" : "1px solid #1f2937",
-              borderRadius: "10px",
-              padding: "2rem",
-              transition: "border-color 0.3s ease",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <span className="car-badge-pill pill-brandnew" style={{ fontSize: "0.72rem" }}>
-                FLAGSHIP SHOWROOM
-              </span>
-              <span style={{ fontSize: "0.78rem", color: "#22c55e", fontWeight: 600 }}>● OPEN TODAY</span>
-            </div>
-            <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#ffffff", marginBottom: "0.5rem" }}>
-              {kakrail.name}
-            </h3>
-            <p style={{ color: "#9ca3af", fontSize: "0.88rem", lineHeight: "1.6", marginBottom: "1.25rem" }}>
-              {kakrail.address}
-            </p>
-            <div style={{ fontSize: "0.88rem", color: "#d1d5db", marginBottom: "0.5rem" }}>
-              <strong>Direct Phone:</strong>{" "}
-              <a href={`tel:${kakrail.phone}`} style={{ color: "#ffffff", textDecoration: "underline" }}>
-                {kakrail.phone}
-              </a>
-            </div>
-            <div style={{ fontSize: "0.88rem", color: "#d1d5db", marginBottom: "1.5rem" }}>
-              <strong>Hours:</strong> {kakrail.hours}
-            </div>
-            <div style={{ display: "flex", gap: "0.75rem" }}>
-              <button
-                type="button"
-                className="consult-primary-btn"
-                style={{ padding: "0.6rem 1rem", fontSize: "0.82rem" }}
-                onClick={() => openAppointmentModal({ branchId: "kakrail" })}
-              >
-                Book Kakrail Viewing
-              </button>
-              <button
-                type="button"
-                className="gallery-btn-secondary"
-                style={{ padding: "0.6rem 1rem", fontSize: "0.82rem" }}
-                onClick={() => setActiveTab("kakrail")}
-              >
-                View Map
-              </button>
-            </div>
+        {/* Dynamic Showroom Branch Cards */}
+        {branches.length > 0 ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", marginBottom: "3rem" }}>
+            {branches.map((b) => {
+              const isActive = (currentBranch?.branch_id || "") === b.branch_id;
+              return (
+                <div
+                  key={b.id || b.branch_id}
+                  style={{
+                    background: "#0d0f12",
+                    border: isActive ? "1px solid #ffffff" : "1px solid #1f2937",
+                    borderRadius: "10px",
+                    padding: "2rem",
+                    transition: "border-color 0.3s ease",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                    <span className="car-badge-pill pill-brandnew" style={{ fontSize: "0.72rem" }}>
+                      {b.tag || "SHOWROOM ATELIER"}
+                    </span>
+                    <span style={{ fontSize: "0.78rem", color: "#22c55e", fontWeight: 600 }}>● OPEN TODAY</span>
+                  </div>
+                  <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#ffffff", marginBottom: "0.5rem" }}>
+                    {b.name}
+                  </h3>
+                  {b.address && (
+                    <p style={{ color: "#9ca3af", fontSize: "0.88rem", lineHeight: "1.6", marginBottom: "1.25rem" }}>
+                      {b.address}
+                    </p>
+                  )}
+                  {b.phone && (
+                    <div style={{ fontSize: "0.88rem", color: "#d1d5db", marginBottom: "0.5rem" }}>
+                      <strong>Direct Phone:</strong>{" "}
+                      <a href={`tel:${b.phone}`} style={{ color: "#ffffff", textDecoration: "underline" }}>
+                        {b.phone}
+                      </a>
+                    </div>
+                  )}
+                  {b.hours && (
+                    <div style={{ fontSize: "0.88rem", color: "#d1d5db", marginBottom: "1.5rem" }}>
+                      <strong>Hours:</strong> {b.hours}
+                    </div>
+                  )}
+                  <div style={{ display: "flex", gap: "0.75rem" }}>
+                    <button
+                      type="button"
+                      className="consult-primary-btn"
+                      style={{ padding: "0.6rem 1rem", fontSize: "0.82rem" }}
+                      onClick={() => openAppointmentModal({ branchId: b.branch_id })}
+                    >
+                      Book {b.short_name || b.name} Viewing
+                    </button>
+                    {b.embed_map && (
+                      <button
+                        type="button"
+                        className="gallery-btn-secondary"
+                        style={{ padding: "0.6rem 1rem", fontSize: "0.82rem" }}
+                        onClick={() => setActiveTab(b.branch_id)}
+                      >
+                        View Map
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-
-          {/* Gulshan */}
-          <div
-            style={{
-              background: "#0d0f12",
-              border: activeTab === "gulshan" ? "1px solid #ffffff" : "1px solid #1f2937",
-              borderRadius: "10px",
-              padding: "2rem",
-              transition: "border-color 0.3s ease",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <span className="car-badge-pill pill-preowned" style={{ fontSize: "0.72rem" }}>
-                GULSHAN AVENUE ATELIER
-              </span>
-              <span style={{ fontSize: "0.78rem", color: "#22c55e", fontWeight: 600 }}>● OPEN TODAY</span>
-            </div>
-            <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#ffffff", marginBottom: "0.5rem" }}>
-              {gulshan.name}
-            </h3>
-            <p style={{ color: "#9ca3af", fontSize: "0.88rem", lineHeight: "1.6", marginBottom: "1.25rem" }}>
-              {gulshan.address}
-            </p>
-            <div style={{ fontSize: "0.88rem", color: "#d1d5db", marginBottom: "0.5rem" }}>
-              <strong>Direct Phone:</strong>{" "}
-              <a href={`tel:${gulshan.phone}`} style={{ color: "#ffffff", textDecoration: "underline" }}>
-                {gulshan.phone}
-              </a>
-            </div>
-            <div style={{ fontSize: "0.88rem", color: "#d1d5db", marginBottom: "1.5rem" }}>
-              <strong>Hours:</strong> {gulshan.hours}
-            </div>
-            <div style={{ display: "flex", gap: "0.75rem" }}>
-              <button
-                type="button"
-                className="consult-primary-btn"
-                style={{ padding: "0.6rem 1rem", fontSize: "0.82rem" }}
-                onClick={() => openAppointmentModal({ branchId: "gulshan" })}
-              >
-                Book Gulshan Viewing
-              </button>
-              <button
-                type="button"
-                className="gallery-btn-secondary"
-                style={{ padding: "0.6rem 1rem", fontSize: "0.82rem" }}
-                onClick={() => setActiveTab("gulshan")}
-              >
-                View Map
-              </button>
-            </div>
-          </div>
-        </div>
+        ) : null}
 
         {/* Interactive Google Map Section */}
-        <div style={{ background: "#0d0f12", border: "1px solid #1f2937", borderRadius: "10px", padding: "1.5rem", marginBottom: "3rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "1rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#ffffff", margin: 0 }}>
-              Live Map: {currentBranch.name}
-            </h3>
-            <div className="footer-branch-tabs" style={{ margin: 0 }}>
-              <button
-                type="button"
-                className={`footer-branch-tab ${activeTab === "kakrail" ? "active" : ""}`}
-                onClick={() => setActiveTab("kakrail")}
-              >
-                Kakrail Branch
-              </button>
-              <button
-                type="button"
-                className={`footer-branch-tab ${activeTab === "gulshan" ? "active" : ""}`}
-                onClick={() => setActiveTab("gulshan")}
-              >
-                Gulshan Branch
-              </button>
+        {currentBranch && (currentBranch.embed_map || currentBranch.map_link) ? (
+          <div style={{ background: "#0d0f12", border: "1px solid #1f2937", borderRadius: "10px", padding: "1.5rem", marginBottom: "3rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "1rem" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#ffffff", margin: 0 }}>
+                Live Map: {currentBranch.name}
+              </h3>
+              {branches.length > 1 && (
+                <div className="footer-branch-tabs" style={{ margin: 0 }}>
+                  {branches.map((b) => (
+                    <button
+                      key={b.id || b.branch_id}
+                      type="button"
+                      className={`footer-branch-tab ${(currentBranch?.branch_id || "") === b.branch_id ? "active" : ""}`}
+                      onClick={() => setActiveTab(b.branch_id)}
+                    >
+                      {b.short_name || b.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {currentBranch.embed_map ? (
+              <div className="map-embed-wrapper-modern" style={{ height: "380px" }}>
+                <iframe
+                  src={currentBranch.embed_map}
+                  loading="lazy"
+                  title={`DREAM CAR HOUSE Location - ${currentBranch.name}`}
+                  allowFullScreen
+                />
+              </div>
+            ) : null}
+
+            <div style={{ marginTop: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+              <span style={{ fontSize: "0.85rem", color: "#9ca3af" }}>
+                {currentBranch.address}
+              </span>
+              {currentBranch.map_link && (
+                <a
+                  href={currentBranch.map_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="map-directions-btn"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                  </svg>
+                  <span>Get Live Directions</span>
+                </a>
+              )}
             </div>
           </div>
-
-          <div className="map-embed-wrapper-modern" style={{ height: "380px" }}>
-            <iframe
-              src={currentBranch.embed_map}
-              loading="lazy"
-              title={`DREAM CAR HOUSE Location - ${currentBranch.name}`}
-              allowFullScreen
-            />
-          </div>
-
-          <div style={{ marginTop: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
-            <span style={{ fontSize: "0.85rem", color: "#9ca3af" }}>
-              {currentBranch.address}
-            </span>
-            <a
-              href={currentBranch.map_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="map-directions-btn"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polygon points="3 11 22 2 13 21 11 13 3 11" />
-              </svg>
-              <span>Get Live Directions</span>
-            </a>
-          </div>
-        </div>
+        ) : null}
 
         {/* Global WhatsApp & Hotline Direct Contact Banner */}
         <div
@@ -202,12 +176,12 @@ export default function ContactClient() {
               Connect with Corporate VIP Concierge
             </h3>
             <p style={{ color: "#9ca3af", fontSize: "0.9rem", margin: 0 }}>
-              Official Hotline: <strong>01615-121312</strong> • Email: <strong>dreamcarhouse101@gmail.com</strong>
+              Official Hotline: <strong>{hotline}</strong> • Email: <strong>{email}</strong>
             </p>
           </div>
 
           <a
-            href="https://wa.me/8801615121312?text=Hello%20DREAM%20CAR%20HOUSE,%20I%20am%20inquiring%20about%20a%20luxury%20vehicle%20at%20your%20Dhaka%20showroom."
+            href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, "")}?text=Hello%20DREAM%20CAR%20HOUSE,%20I%20am%20inquiring%20about%20a%20luxury%20vehicle%20at%20your%20Dhaka%20showroom.`}
             target="_blank"
             rel="noopener noreferrer"
             className="consult-whatsapp-btn"

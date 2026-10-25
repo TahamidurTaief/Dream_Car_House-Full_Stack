@@ -40,24 +40,19 @@ export default function Hero({ initialData }: HeroProps) {
     return () => clearTimeout(timer);
   }, []);
 
-  const heading = initialData?.heading || "The Pinnacle of Luxury Automobiles";
-  const poster = initialData?.poster || "/assets/maybach_hero_poster.jpg";
-  const provider = initialData?.video_provider || "youtube";
-  const source = initialData?.video_source || "7cxfVWs4YGw";
-  const startTime = initialData?.video_start_time ?? 45;
-  const videoTitle = initialData?.video_title || "DREAM CAR HOUSE Flagship Cinema";
-  const scrollLabel = initialData?.scroll_link_label || "Scroll to Current Inventory";
-  const scrollTarget = initialData?.scroll_link_target || "#carousel-section";
+  if (!initialData || initialData.is_published === false) {
+    return null;
+  }
 
-  const defaultButtons: PublicHeroCta[] = [
-    { label: "Brand New", action: "link", destination: "/inventory?type=BRAND_NEW" },
-    { label: "Pre-Owned", action: "link", destination: "/inventory?type=PRE_OWNED" },
-    { label: "Connect to Consult", action: "appointment_modal", destination: "" },
-  ];
-  const ctaButtons =
-    initialData?.cta_buttons && initialData.cta_buttons.length > 0
-      ? initialData.cta_buttons
-      : defaultButtons;
+  const heading = initialData.heading || "";
+  const poster = initialData.poster || "";
+  const provider = initialData.video_provider || "youtube";
+  const source = initialData.video_source || "";
+  const startTime = initialData.video_start_time ?? 0;
+  const videoTitle = initialData.video_title || "DREAM CAR HOUSE Flagship Cinema";
+  const scrollLabel = initialData.scroll_link_label || "";
+  const scrollTarget = initialData.scroll_link_target || "#carousel-section";
+  const ctaButtons: PublicHeroCta[] = initialData.cta_buttons || [];
 
   // Build embed URL based on provider
   let embedUrl = "";

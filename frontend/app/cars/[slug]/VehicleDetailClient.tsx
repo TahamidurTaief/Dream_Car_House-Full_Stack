@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Vehicle, SHOWROOM_BRANCHES, GalleryPhoto } from "@/lib/showroomData";
+import { Vehicle, GalleryPhoto } from "@/lib/showroomData";
 import { useUI } from "@/lib/UIContext";
 import VehicleCard from "@/components/VehicleCard";
 
@@ -18,19 +18,31 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
 
   const branch = car.branch
     ? {
-        id: car.branch.branch_id || car.branch_id || "kakrail",
-        name: car.branch.name || car.branch_name || "Kakrail Branch & Showroom",
-        short_name: car.branch.short_name || "Kakrail Branch",
-        tag: car.branch.tag || "Flagship Showroom",
-        address: car.branch.address || car.branch_address || "18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000",
-        phone: car.branch.phone || "01615-121312",
-        hotline: car.branch.hotline || "+880 1615-121312",
-        email: car.branch.email || "dreamcarhouse101@gmail.com",
-        hours: car.branch.hours || "Saturday – Thursday: 10:00 AM – 9:00 PM (Friday Closed)",
-        map_link: car.branch.map_link || "https://maps.google.com/?q=18+Shaheed+Captain+Mansur+Ali+Soroni+Kakrail+Dhaka",
-        embed_map: "",
+        id: car.branch.branch_id || car.branch_id || "",
+        name: car.branch.name || car.branch_name || "",
+        short_name: car.branch.short_name || car.branch.name || "",
+        tag: car.branch.tag || "Showroom Allocation",
+        address: car.branch.address || car.branch_address || "",
+        phone: car.branch.phone || "",
+        hotline: car.branch.hotline || "",
+        email: car.branch.email || "",
+        hours: car.branch.hours || "",
+        map_link: car.branch.map_link || "",
+        embed_map: car.branch.embed_map || "",
       }
-    : SHOWROOM_BRANCHES[car.branch_id] || SHOWROOM_BRANCHES["kakrail"];
+    : (car.branch_name ? {
+        id: car.branch_id || "",
+        name: car.branch_name,
+        short_name: car.branch_name,
+        tag: "Showroom Allocation",
+        address: car.branch_address || "",
+        phone: "",
+        hotline: "",
+        email: "",
+        hours: "",
+        map_link: "",
+        embed_map: "",
+      } : null);
   const [isCopied, setIsCopied] = useState(false);
   const isBrandNew = car.car_type === "BRAND_NEW";
 
@@ -98,7 +110,9 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
   };
 
   const waMessage = encodeURIComponent(
-    `Hello DREAM CAR HOUSE, I am inquiring about the ${car.name} (${car.year}) allocated at your ${branch.name}. Please share the official spec sheet, availability, and confidential valuation.`
+    branch?.name
+      ? `Hello DREAM CAR HOUSE, I am inquiring about the ${car.name} (${car.year}) allocated at your ${branch.name}. Please share the official spec sheet, availability, and confidential valuation.`
+      : `Hello DREAM CAR HOUSE, I am inquiring about the ${car.name} (${car.year}). Please share the official spec sheet, availability, and confidential valuation.`
   );
   const waUrl = `https://wa.me/8801615121312?text=${waMessage}`;
 
@@ -129,10 +143,12 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
               <span className="pill-dot"></span>CERTIFIED PRE-OWNED
             </span>
           )}
-          <span className="dch-showroom-beacon" style={{ display: "inline-flex" }}>
-            <span className="beacon-pulse"></span>
-            <span>{branch.name.toUpperCase()} • PHYSICAL ALLOCATION</span>
-          </span>
+          {branch?.name ? (
+            <span className="dch-showroom-beacon" style={{ display: "inline-flex" }}>
+              <span className="beacon-pulse"></span>
+              <span>{branch.name.toUpperCase()} • PHYSICAL ALLOCATION</span>
+            </span>
+          ) : null}
         </div>
 
         <Link
@@ -242,41 +258,47 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
           )}
 
           {/* Branch Allocation Box */}
-          <div className="dch-branch-allocation-box" style={{ marginTop: "1.5rem" }}>
-            <div className="branch-alloc-head">
-              <div className="branch-alloc-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
+          {branch?.name ? (
+            <div className="dch-branch-allocation-box" style={{ marginTop: "1.5rem" }}>
+              <div className="branch-alloc-head">
+                <div className="branch-alloc-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                </div>
+                <div className="branch-alloc-meta">
+                  <div className="branch-alloc-eyebrow">PHYSICAL VEHICLE ALLOCATION</div>
+                  <div className="branch-alloc-name">{branch.name}</div>
+                  {branch.address ? <div className="branch-alloc-address">{branch.address}</div> : null}
+                </div>
               </div>
-              <div className="branch-alloc-meta">
-                <div className="branch-alloc-eyebrow">PHYSICAL VEHICLE ALLOCATION</div>
-                <div className="branch-alloc-name">{branch.name}</div>
-                <div className="branch-alloc-address">{branch.address}</div>
+              <div className="branch-alloc-actions">
+                {branch.hours ? (
+                  <div className="branch-alloc-hours">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <span>{branch.hours}</span>
+                  </div>
+                ) : null}
+                {branch.map_link ? (
+                  <a
+                    href={branch.map_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="branch-alloc-map-btn"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                    </svg>
+                    <span>Get Directions</span>
+                  </a>
+                ) : null}
               </div>
             </div>
-            <div className="branch-alloc-actions">
-              <div className="branch-alloc-hours">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-                <span>{branch.hours}</span>
-              </div>
-              <a
-                href={branch.map_link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="branch-alloc-map-btn"
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polygon points="3 11 22 2 13 21 11 13 3 11" />
-                </svg>
-                <span>Get Directions</span>
-              </a>
-            </div>
-          </div>
+          ) : null}
 
           {/* Dealership Trust Verification */}
           <div className="dch-trust-strip" style={{ marginTop: "1rem" }}>

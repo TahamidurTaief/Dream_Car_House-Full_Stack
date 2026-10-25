@@ -114,20 +114,23 @@ export default function CarModal() {
 
   if (!selectedCar) return null;
 
-  const branch =
-    SHOWROOM_BRANCHES[selectedCar.branch_id] || {
-      id: selectedCar.branch_id || "kakrail",
-      name: selectedCar.branch_name || "Kakrail Branch & Showroom",
-      short_name: selectedCar.branch_name || "Kakrail Branch",
-      tag: "Showroom Allocation",
-      address: selectedCar.branch_address || "18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000",
-      phone: "01615-121312",
-      hotline: "+880 1615-121312",
-      email: "dreamcarhouse101@gmail.com",
-      hours: "Saturday – Thursday: 10:00 AM – 9:00 PM (Friday Closed)",
-      map_link: "https://maps.google.com/?q=DREAM+CAR+HOUSE+Dhaka",
-      embed_map: "",
-    };
+  const branch = selectedCar.branch
+    ? selectedCar.branch
+    : selectedCar.branch_name
+    ? {
+        id: selectedCar.branch_id || "",
+        name: selectedCar.branch_name,
+        short_name: selectedCar.branch_name,
+        tag: "Showroom Allocation",
+        address: selectedCar.branch_address || "",
+        phone: "",
+        hotline: "",
+        email: "",
+        hours: "",
+        map_link: "",
+        embed_map: "",
+      }
+    : null;
   const isBrandNew = selectedCar.car_type === "BRAND_NEW";
   const drivetrain = selectedCar.drivetrain || getCarDrivetrain(selectedCar);
   const regText = (selectedCar as { registration_number?: string }).registration_number || (isBrandNew
@@ -175,7 +178,9 @@ export default function CarModal() {
   };
 
   const waMessage = encodeURIComponent(
-    `Hello DREAM CAR HOUSE, I am inquiring about the ${selectedCar.name} (${selectedCar.year}) allocated at your ${branch.name}. Please share the official spec sheet, showroom availability, and confidential valuation.`
+    branch?.name
+      ? `Hello DREAM CAR HOUSE, I am inquiring about the ${selectedCar.name} (${selectedCar.year}) allocated at your ${branch.name}. Please share the official spec sheet, showroom availability, and confidential valuation.`
+      : `Hello DREAM CAR HOUSE, I am inquiring about the ${selectedCar.name} (${selectedCar.year}). Please share the official spec sheet, showroom availability, and confidential valuation.`
   );
   const waUrl = `https://wa.me/8801615121312?text=${waMessage}`;
 
@@ -335,66 +340,74 @@ export default function CarModal() {
                 )}
 
                 {/* Physical Showroom Branch Allocation Box */}
-                <div className="dch-branch-allocation-box">
-                  <div className="branch-alloc-head">
-                    <div className="branch-alloc-icon">
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#22c55e"
-                        strokeWidth="2.5"
-                      >
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                        <circle cx="12" cy="10" r="3" />
-                      </svg>
+                {branch?.name ? (
+                  <div className="dch-branch-allocation-box">
+                    <div className="branch-alloc-head">
+                      <div className="branch-alloc-icon">
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#22c55e"
+                          strokeWidth="2.5"
+                        >
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                          <circle cx="12" cy="10" r="3" />
+                        </svg>
+                      </div>
+                      <div className="branch-alloc-meta">
+                        <div className="branch-alloc-eyebrow">
+                          PHYSICAL VEHICLE ALLOCATION
+                        </div>
+                        <div className="branch-alloc-name">{branch.name}</div>
+                        {branch.address ? (
+                          <div className="branch-alloc-address">
+                            {branch.address}
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
-                    <div className="branch-alloc-meta">
-                      <div className="branch-alloc-eyebrow">
-                        PHYSICAL VEHICLE ALLOCATION
-                      </div>
-                      <div className="branch-alloc-name">{branch.name}</div>
-                      <div className="branch-alloc-address">
-                        {branch.address}
-                      </div>
+                    <div className="branch-alloc-actions">
+                      {branch.hours ? (
+                        <div className="branch-alloc-hours">
+                          <svg
+                            width="13"
+                            height="13"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                          </svg>
+                          <span>{branch.hours}</span>
+                        </div>
+                      ) : null}
+                      {branch.map_link ? (
+                        <a
+                          href={branch.map_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="branch-alloc-map-btn"
+                        >
+                          <svg
+                            width="13"
+                            height="13"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                          </svg>
+                          <span>Get Directions</span>
+                        </a>
+                      ) : null}
                     </div>
                   </div>
-                  <div className="branch-alloc-actions">
-                    <div className="branch-alloc-hours">
-                      <svg
-                        width="13"
-                        height="13"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                      </svg>
-                      <span>{branch.hours}</span>
-                    </div>
-                    <a
-                      href={branch.map_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="branch-alloc-map-btn"
-                    >
-                      <svg
-                        width="13"
-                        height="13"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <polygon points="3 11 22 2 13 21 11 13 3 11" />
-                      </svg>
-                      <span>Get Directions</span>
-                    </a>
-                  </div>
-                </div>
+                ) : null}
 
                 {/* Dealership Trust Verification (DREAM CAR HOUSE Flagship Standard) */}
                 <div className="dch-trust-strip">

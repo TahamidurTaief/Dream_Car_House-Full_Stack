@@ -2390,6 +2390,13 @@ class ExperiencePillarDetailView(DashboardBaseAPIView):
 
     def delete(self, request, pk):
         pillar = get_object_or_404(ExperiencePillar, pk=pk)
+        if pillar.section and pillar.section.is_active and pillar.is_active:
+            remaining = pillar.section.pillars.filter(is_active=True).exclude(pk=pillar.pk).count()
+            if remaining < 3:
+                return Response(
+                    {"success": False, "error": "Cannot delete pillar: published Experience Section requires at least 3 active pillars. Unpublish the section or add another active pillar first."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         title = pillar.title
         pillar.delete()
         return Response({

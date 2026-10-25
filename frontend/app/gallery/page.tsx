@@ -21,7 +21,7 @@ export default async function GalleryPage() {
   let initialPhotos: GalleryPhoto[] | undefined = undefined;
   try {
     const chronicles = await getVisualChroniclesSection();
-    if (chronicles.items && chronicles.items.length > 0) {
+    if (chronicles?.items && chronicles.items.length > 0) {
       initialPhotos = chronicles.items.map((item, idx) => {
         const cat: GalleryPhoto["category"] =
           item.card_type === "portrait"

@@ -19,63 +19,11 @@ export default function PreferenceSection({
   vehicles = [],
   sectionData,
 }: PreferenceSectionProps) {
-  const fallbackCategories: PublicPreferenceCategory[] = [
-    {
-      id: 1,
-      category_key: "BRAND_NEW",
-      label: "Brand New & Reconditioned",
-      badge: "ZERO METER",
-      subtext: "Factory-fresh imported luxury vehicles with complete documentation.",
-      image: null,
-      cta_text: "Explore All Brand New & Reconditioned Collection",
-      cta_url: "/inventory?type=BRAND_NEW",
-      highlights: [
-        {
-          title: "Zero / Minimal Mileage",
-          description: "Factory-fresh original condition, untouched luxury and precision.",
-        },
-        {
-          title: "Direct Global Import",
-          description: "Handpicked auction grades with verified import manifests.",
-        },
-        {
-          title: "Full Showroom Warranty",
-          description: "Complete documentation & personalized post-delivery support.",
-        },
-      ],
-      order: 1,
-    },
-    {
-      id: 2,
-      category_key: "PRE_OWNED",
-      label: "Certified Pre-Owned",
-      badge: "SHOWROOM CERTIFIED",
-      subtext: "Multi-point inspected certified luxury vehicles ready for ownership.",
-      image: null,
-      cta_text: "Explore All Certified Pre-Owned Collection",
-      cta_url: "/inventory?type=PRE_OWNED",
-      highlights: [
-        {
-          title: "150+ Point Multi-Inspection",
-          description: "Comprehensive engine, transmission, suspension & ECU check.",
-        },
-        {
-          title: "Dhaka Metro Registered",
-          description: "100% verified legal papers with authentic ownership history.",
-        },
-        {
-          title: "Showroom Ready",
-          description: "Immediate physical test drive & instant ownership handover.",
-        },
-      ],
-      order: 2,
-    },
-  ];
+  if (!sectionData || !sectionData.categories || sectionData.categories.length === 0) {
+    return null;
+  }
 
-  const categories =
-    sectionData?.categories && sectionData.categories.length > 0
-      ? sectionData.categories
-      : fallbackCategories;
+  const categories = sectionData.categories;
 
   const [activeTabKey, setActiveTabKey] = useState<string>(
     categories[0]?.category_key || "BRAND_NEW"

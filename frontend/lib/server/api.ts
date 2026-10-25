@@ -80,36 +80,20 @@ function sanitizeCtaButtons(buttons: unknown): PublicHeroCta[] {
 }
 
 function normalizeHeroPayload(data: unknown): PublicHeroSlider {
-  const fallback: PublicHeroSlider = {
-    id: null,
-    heading: "The Pinnacle of Luxury Automobiles",
-    poster: "/assets/maybach_hero_poster.jpg",
-    video_provider: "youtube",
-    video_source: "7cxfVWs4YGw",
-    video_start_time: 45,
-    video_title: "DREAM CAR HOUSE Flagship Cinema",
-    cta_buttons: [
-      { label: "Brand New", action: "link", destination: "/inventory?type=BRAND_NEW" },
-      { label: "Pre-Owned", action: "link", destination: "/inventory?type=PRE_OWNED" },
-      { label: "Connect to Consult", action: "appointment_modal", destination: "" },
-    ],
-    scroll_link_label: "Scroll to Current Inventory",
-    scroll_link_target: "#carousel-section",
-    is_published: true,
-  };
-
-  if (!data || typeof data !== "object") return fallback;
+  if (!data || typeof data !== "object") {
+    throw new Error("Invalid hero slider payload: expected non-empty object.");
+  }
   const s = data as Record<string, unknown>;
 
-  const heading = typeof s.heading === "string" && s.heading.trim().length > 0 ? s.heading.trim() : fallback.heading;
-  const poster = typeof s.poster === "string" && s.poster.trim().length > 0 ? s.poster.trim() : fallback.poster;
+  const heading = typeof s.heading === "string" ? s.heading.trim() : "";
+  const poster = typeof s.poster === "string" ? s.poster.trim() : "";
   const provider = s.video_provider === "vimeo" || s.video_provider === "direct" ? s.video_provider : "youtube";
-  const source = typeof s.video_source === "string" && s.video_source.trim().length > 0 ? s.video_source.trim() : fallback.video_source;
-  const startTime = typeof s.video_start_time === "number" ? Math.max(0, s.video_start_time) : fallback.video_start_time;
-  const videoTitle = typeof s.video_title === "string" && s.video_title.trim().length > 0 ? s.video_title.trim() : fallback.video_title;
+  const source = typeof s.video_source === "string" ? s.video_source.trim() : "";
+  const startTime = typeof s.video_start_time === "number" ? Math.max(0, s.video_start_time) : 0;
+  const videoTitle = typeof s.video_title === "string" ? s.video_title.trim() : "";
   const ctas = sanitizeCtaButtons(s.cta_buttons);
-  const scrollLabel = typeof s.scroll_link_label === "string" && s.scroll_link_label.trim().length > 0 ? s.scroll_link_label.trim() : fallback.scroll_link_label;
-  const scrollTarget = typeof s.scroll_link_target === "string" && s.scroll_link_target.trim().length > 0 ? s.scroll_link_target.trim() : fallback.scroll_link_target;
+  const scrollLabel = typeof s.scroll_link_label === "string" ? s.scroll_link_label.trim() : "";
+  const scrollTarget = typeof s.scroll_link_target === "string" ? s.scroll_link_target.trim() : "";
 
   return {
     id: typeof s.id === "number" ? s.id : null,
@@ -119,7 +103,7 @@ function normalizeHeroPayload(data: unknown): PublicHeroSlider {
     video_source: source,
     video_start_time: startTime,
     video_title: videoTitle,
-    cta_buttons: ctas.length > 0 ? ctas : fallback.cta_buttons,
+    cta_buttons: ctas,
     scroll_link_label: scrollLabel,
     scroll_link_target: scrollTarget,
     image: typeof s.image === "string" ? s.image : null,
@@ -227,7 +211,7 @@ export const fetchLayoutData = cache(
  * - Deduplicated within a single request via React cache()
  * - Never forwards staff credentials or cookies
  */
-export const getHeroSlider = cache(async (): Promise<PublicHeroSlider> => {
+export const getHeroSlider = cache(async (): Promise<PublicHeroSlider | null> => {
   const origin = getBackendOrigin();
   const url = `${origin}/api/v1/home/slider/`;
 
@@ -245,12 +229,16 @@ export const getHeroSlider = cache(async (): Promise<PublicHeroSlider> => {
     throw new Error(`Backend unavailable at ${origin}: ${message}`);
   }
 
+  if (res.status === 404) {
+    return null;
+  }
+
   if (!res.ok) {
     throw new Error(`Failed to fetch hero slider configuration: HTTP ${res.status}`);
   }
 
   const json = (await res.json()) as { success?: boolean; data?: unknown };
-  if (!json || json.success !== true) {
+  if (!json || json.success !== true || !json.data) {
     throw new Error("Invalid hero slider response payload.");
   }
 
@@ -262,12 +250,9 @@ export const getHeroSlider = cache(async (): Promise<PublicHeroSlider> => {
  */
 export function mapBackendCarToVehicle(car: Record<string, unknown>): PublicVehicle {
   const branchRaw = car.branch && typeof car.branch === "object" ? (car.branch as Record<string, unknown>) : null;
-  const branchId = typeof branchRaw?.branch_id === "string" && branchRaw.branch_id ? branchRaw.branch_id : "kakrail";
-  const branchName = typeof branchRaw?.name === "string" && branchRaw.name ? branchRaw.name : "Kakrail Branch & Showroom";
-  const branchAddress =
-    typeof branchRaw?.address === "string" && branchRaw.address
-      ? branchRaw.address
-      : "18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000";
+  const branchId = typeof branchRaw?.branch_id === "string" ? branchRaw.branch_id : "";
+  const branchName = typeof branchRaw?.name === "string" ? branchRaw.name : "";
+  const branchAddress = typeof branchRaw?.address === "string" ? branchRaw.address : "";
 
   const carType = car.car_type === "PRE_OWNED" ? "PRE_OWNED" : "BRAND_NEW";
 
@@ -579,65 +564,9 @@ export const getInventoryFilters = cache(async (): Promise<PublicInventoryFilter
  * - Deduplicated within a single request via React cache()
  * - Fresh reads initially (cache: 'no-store')
  */
-export const getPreferenceSection = cache(async (): Promise<PublicPreferenceSection> => {
+export const getPreferenceSection = cache(async (): Promise<PublicPreferenceSection | null> => {
   const origin = getBackendOrigin();
   const url = `${origin}/api/v1/home/preference-section/`;
-
-  const fallback: PublicPreferenceSection = {
-    heading: "Choose per your preference",
-    badge: "CURATED INVENTORY",
-    subtext: "Toggle between factory-fresh zero mileage units and certified showroom pre-owned vehicles.",
-    categories: [
-      {
-        id: 1,
-        category_key: "BRAND_NEW",
-        label: "Brand New & Reconditioned",
-        badge: "ZERO METER",
-        subtext: "Factory-fresh imported luxury vehicles with complete documentation.",
-        cta_text: "Explore All Brand New & Reconditioned Collection",
-        cta_url: "/inventory?type=BRAND_NEW",
-        order: 1,
-        highlights: [
-          {
-            title: "Zero / Minimal Mileage",
-            description: "Factory-fresh original condition, untouched luxury and precision.",
-          },
-          {
-            title: "Direct Global Import",
-            description: "Handpicked auction grades with verified import manifests.",
-          },
-          {
-            title: "Full Showroom Warranty",
-            description: "Complete documentation & personalized post-delivery support.",
-          },
-        ],
-      },
-      {
-        id: 2,
-        category_key: "PRE_OWNED",
-        label: "Certified Pre-Owned",
-        badge: "SHOWROOM CERTIFIED",
-        subtext: "Multi-point inspected certified luxury vehicles ready for ownership.",
-        cta_text: "Explore All Certified Pre-Owned Collection",
-        cta_url: "/inventory?type=PRE_OWNED",
-        order: 2,
-        highlights: [
-          {
-            title: "150+ Point Multi-Inspection",
-            description: "Comprehensive engine, transmission, suspension & ECU check.",
-          },
-          {
-            title: "Dhaka Metro Registered",
-            description: "100% verified legal papers with authentic ownership history.",
-          },
-          {
-            title: "Showroom Ready",
-            description: "Immediate physical test drive & instant ownership handover.",
-          },
-        ],
-      },
-    ],
-  };
 
   let res: Response;
   try {
@@ -646,17 +575,22 @@ export const getPreferenceSection = cache(async (): Promise<PublicPreferenceSect
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(5000),
     });
-  } catch {
-    return fallback;
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`Backend unavailable at ${origin}: ${message}`);
+  }
+
+  if (res.status === 404) {
+    return null;
   }
 
   if (!res.ok) {
-    return fallback;
+    throw new Error(`Failed to fetch preference section: HTTP ${res.status}`);
   }
 
   const json = (await res.json()) as { success?: boolean; data?: PublicPreferenceSection };
   if (!json || json.success !== true || !json.data) {
-    return fallback;
+    throw new Error("Invalid preference section response payload.");
   }
 
   return json.data;
@@ -678,45 +612,27 @@ export const getRunwayBrands = cache(async (): Promise<PublicBrand[]> => {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(5000),
     });
-  } catch {
-    return [];
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`Backend unavailable at ${origin}: ${message}`);
   }
 
   if (!res.ok) {
-    return [];
+    throw new Error(`Failed to fetch runway brands: HTTP ${res.status}`);
   }
 
   const json = (await res.json()) as { success?: boolean; data?: PublicBrand[] };
   if (!json || json.success !== true || !Array.isArray(json.data)) {
-    return [];
+    throw new Error("Invalid runway brands response payload.");
   }
 
   return json.data;
 });
 
-const defaultConsultationFallback: PublicConsultationSection = {
-  tag: "PRIVATE AUTOMOTIVE CONCIERGE",
-  heading: "Connect to Consult",
-  description:
-    "Our dedicated automotive advisors offer bespoke consultations—whether you seek an exclusive allocation, custom reconditioned import, or confidential valuation for your vehicle trade-in.",
-  trust_pills: [
-    { title: "1-on-1 Dedicated Specialist", icon: "specialist" },
-    { title: "VIP Handover Lounge Access", icon: "vip" },
-    { title: "Confidential Valuation & Quota", icon: "shield" },
-  ],
-  primary_cta_label: "Book Private Appointment",
-  primary_cta_action: "appointment_modal",
-  primary_cta_url: "",
-  whatsapp_cta_label: "Chat on WhatsApp",
-  whatsapp_url:
-    "https://wa.me/8801615121312?text=Hello%20Dream%20Car%20House%2C%20I%20would%20like%20to%20consult%20regarding%20a%20luxury%20vehicle.",
-  status_beacon_text: "Showroom Open Today • Kakrail & Gulshan, Dhaka",
-};
-
 /**
  * Deduplicated, server-only public Consultation Section fetcher.
  */
-export const getConsultationSection = cache(async (): Promise<PublicConsultationSection> => {
+export const getConsultationSection = cache(async (): Promise<PublicConsultationSection | null> => {
   const origin = getBackendOrigin();
   const url = `${origin}/api/v1/home/consultation/`;
 
@@ -727,83 +643,45 @@ export const getConsultationSection = cache(async (): Promise<PublicConsultation
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(5000),
     });
-  } catch {
-    return defaultConsultationFallback;
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`Backend unavailable at ${origin}: ${message}`);
+  }
+
+  if (res.status === 404) {
+    return null;
   }
 
   if (!res.ok) {
-    return defaultConsultationFallback;
+    throw new Error(`Failed to fetch consultation section: HTTP ${res.status}`);
   }
 
   const json = (await res.json()) as { success?: boolean; data?: PublicConsultationSection };
   if (!json || json.success !== true || !json.data) {
-    return defaultConsultationFallback;
+    throw new Error("Invalid consultation section response payload.");
   }
 
   const d = json.data;
   return {
-    tag: typeof d.tag === "string" ? d.tag : defaultConsultationFallback.tag,
-    heading: typeof d.heading === "string" && d.heading.trim().length > 0 ? d.heading : defaultConsultationFallback.heading,
-    description: typeof d.description === "string" && d.description.trim().length > 0 ? d.description : defaultConsultationFallback.description,
-    trust_pills: Array.isArray(d.trust_pills) && d.trust_pills.length > 0 ? d.trust_pills : defaultConsultationFallback.trust_pills,
-    primary_cta_label: typeof d.primary_cta_label === "string" && d.primary_cta_label.trim().length > 0 ? d.primary_cta_label : defaultConsultationFallback.primary_cta_label,
-    primary_cta_action: d.primary_cta_action || defaultConsultationFallback.primary_cta_action,
+    tag: typeof d.tag === "string" ? d.tag : "",
+    heading: typeof d.heading === "string" ? d.heading : "",
+    description: typeof d.description === "string" ? d.description : "",
+    trust_pills: Array.isArray(d.trust_pills) ? d.trust_pills : [],
+    primary_cta_label: typeof d.primary_cta_label === "string" ? d.primary_cta_label : "",
+    primary_cta_action: d.primary_cta_action || "appointment_modal",
     primary_cta_url: d.primary_cta_url || "",
-    whatsapp_cta_label: typeof d.whatsapp_cta_label === "string" && d.whatsapp_cta_label.trim().length > 0 ? d.whatsapp_cta_label : defaultConsultationFallback.whatsapp_cta_label,
-    whatsapp_url: typeof d.whatsapp_url === "string" && d.whatsapp_url.trim().length > 0 ? d.whatsapp_url : defaultConsultationFallback.whatsapp_url,
-    status_beacon_text: typeof d.status_beacon_text === "string" ? d.status_beacon_text : defaultConsultationFallback.status_beacon_text,
+    whatsapp_cta_label: typeof d.whatsapp_cta_label === "string" ? d.whatsapp_cta_label : "",
+    whatsapp_url: typeof d.whatsapp_url === "string" ? d.whatsapp_url : "",
+    status_beacon_text: typeof d.status_beacon_text === "string" ? d.status_beacon_text : "",
   };
 });
 
-const defaultExperienceFallback: PublicExperienceSection = {
-  title: "Experience Beyond Ordinary",
-  subtitle:
-    "Dhaka's benchmark in high-luxury automotive delivery, certified diagnostic inspection, and bespoke global procurement.",
-  video_cta_label: "Watch Showroom Reel",
-  video_target: "reel",
-  pillars: [
-    {
-      id: 1,
-      pillar_number: "01",
-      badge: "PRIVATE SANCTUARY",
-      title: "The VIP Delivery Vault",
-      description:
-        "An exclusive private handover suite featuring theatrical automotive unveiling, champagne reception, and confidential documentation transfer.",
-      image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1000&q=80",
-      tags: ["Soundproof Suite", "Ceremonial Reveal"],
-      order: 1,
-    },
-    {
-      id: 2,
-      pillar_number: "02",
-      badge: "PRECISION AUDIT",
-      title: "150-Point Certified Audit",
-      description:
-        "Exhaustive computerized diagnostics, chassis integrity checks, battery health analysis, and robotic paint-depth verification before showroom induction.",
-      image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1000&q=80",
-      tags: ["Computer Diagnostics", "Zero Imperfection"],
-      order: 2,
-    },
-    {
-      id: 3,
-      pillar_number: "03",
-      badge: "BESPOKE IMPORT",
-      title: "Global Bespoke Concierge",
-      description:
-        "Direct sourcing of rare luxury allocations from London, Stuttgart, and Tokyo. Secured container logistics, customs facilitation, and doorstep delivery.",
-      image: "https://images.unsplash.com/photo-1520031441872-265e4ff70366?auto=format&fit=crop&w=1000&q=80",
-      tags: ["UK & Japan Sourcing", "Turnkey Import"],
-      order: 3,
-    },
-  ],
-};
-
 /**
  * Deduplicated, server-only public Experience Section fetcher.
- * Guarantees that at least 3 pillars are provided (filling missing ones from baseline fallback)
- * so the 3-pillar layout and visual balance never breaks.
+ * Validates that at least 3 active pillars exist for published content.
+ * Never fabricates or backfills pillars from fallbacks.
  */
-export const getExperienceSection = cache(async (): Promise<PublicExperienceSection> => {
+export const getExperienceSection = cache(async (): Promise<PublicExperienceSection | null> => {
   const origin = getBackendOrigin();
   const url = `${origin}/api/v1/home/experience/`;
 
@@ -814,163 +692,55 @@ export const getExperienceSection = cache(async (): Promise<PublicExperienceSect
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(5000),
     });
-  } catch {
-    return defaultExperienceFallback;
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`Backend unavailable at ${origin}: ${message}`);
+  }
+
+  if (res.status === 404) {
+    return null;
+  }
+
+  if (res.status === 422) {
+    const errorJson = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(
+      errorJson.error ||
+        "Published Experience Section requires at least 3 active pillars (HTTP 422 Unprocessable Entity)."
+    );
   }
 
   if (!res.ok) {
-    return defaultExperienceFallback;
+    throw new Error(`Failed to fetch experience section: HTTP ${res.status}`);
   }
 
   const json = (await res.json()) as { success?: boolean; data?: PublicExperienceSection };
   if (!json || json.success !== true || !json.data) {
-    return defaultExperienceFallback;
+    throw new Error("Invalid experience section response payload.");
   }
 
   const d = json.data;
-  let pillars = Array.isArray(d.pillars) ? [...d.pillars] : [];
+  const pillars = Array.isArray(d.pillars) ? d.pillars : [];
 
-  // Edge case: if fewer than 3 pillars in database, backfill from fallback to preserve 3-pillar layout
   if (pillars.length < 3) {
-    const fallbackPillars = defaultExperienceFallback.pillars;
-    for (let i = pillars.length; i < 3; i++) {
-      if (fallbackPillars[i]) {
-        pillars.push(fallbackPillars[i]);
-      }
-    }
+    throw new Error(
+      `Experience Section has fewer than 3 active pillars (${pillars.length} found). At least 3 active pillars are required for publication.`
+    );
   }
 
   return {
-    title: typeof d.title === "string" && d.title.trim().length > 0 ? d.title : defaultExperienceFallback.title,
-    subtitle: typeof d.subtitle === "string" ? d.subtitle : defaultExperienceFallback.subtitle,
-    video_cta_label: typeof d.video_cta_label === "string" && d.video_cta_label.trim().length > 0 ? d.video_cta_label : defaultExperienceFallback.video_cta_label,
-    video_target: d.video_target || defaultExperienceFallback.video_target,
+    title: typeof d.title === "string" ? d.title : "",
+    subtitle: typeof d.subtitle === "string" ? d.subtitle : "",
+    video_cta_label: typeof d.video_cta_label === "string" ? d.video_cta_label : "",
+    video_target: d.video_target || "reel",
     pillars,
   };
 });
-
-const defaultChroniclesFallback: PublicVisualChroniclesSection = {
-  heading: "DREAM CAR HOUSE Visual Chronicles",
-  subtitle:
-    "Curated high-resolution photography, delivery spotlights, and automotive cinema from our Kakrail & Gulshan showrooms.",
-  stats_number: "19+",
-  stats_label: "Curated Masterpieces",
-  archive_tag: "19+ SHOWROOM ARCHIVE EDITIONS",
-  archive_description:
-    "Explore high-definition exterior profiles, handcrafted cockpits, and delivery chronicles.",
-  archive_cta_label: "See All Gallery & Media (19+ Photos)",
-  archive_cta_url: "/gallery",
-  items: [
-    {
-      id: 1,
-      card_type: "hero",
-      order: 1,
-      image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1600&q=85",
-      front_alt: "Mercedes-Maybach S 680",
-      front_badge: "SHOWROOM FLAGSHIP SPOTLIGHT",
-      back_pill: "FIRST-CLASS COMMISSION",
-      back_number: "01",
-      title: "Mercedes-Maybach S 680 Bi-Turbo V12",
-      description:
-        "Obsidian Black over Silk Nappa leather. Exclusive rear executive lounge featuring heated massage ottomans, active road noise cancellation, and handcrafted champagne flutes.",
-      specs: [
-        { label: "Engine", value: "6.0L V12 Bi-Turbo" },
-        { label: "Drivetrain", value: "4MATIC All-Wheel" },
-        { label: "Interior", value: "First-Class Lounge" },
-        { label: "Induction", value: "Showroom Vault" },
-      ],
-      cta_label: "Explore Available Inventory",
-      cta_url: "/inventory",
-    },
-    {
-      id: 2,
-      card_type: "portrait",
-      order: 2,
-      image: "https://images.unsplash.com/photo-1631295868223-63265b40d9e4?auto=format&fit=crop&w=1200&q=95",
-      front_alt: "Rolls-Royce Ghost Extended",
-      front_badge: "BESPOKE SANCTUARY",
-      back_pill: "GRAND TOURER",
-      back_number: "02",
-      title: "Rolls-Royce Ghost Extended",
-      description:
-        "Silver Dawn coachwork with handcrafted fiber-optic Starlight headliner and self-closing coach doors. The ultimate pinnacle of Goodwood coachbuilding.",
-      specs: [
-        { label: "Engine", value: "6.75L Twin-Turbo V12" },
-        { label: "Suspension", value: "Planar Magic Carpet" },
-        { label: "Doors", value: "Power Coach Doors" },
-        { label: "Acoustics", value: "Whisper Studio 100kg+" },
-      ],
-      cta_label: "View Media Spotlight",
-      cta_url: "/gallery",
-    },
-    {
-      id: 3,
-      card_type: "tri",
-      order: 3,
-      image: "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=800&q=95",
-      front_alt: "Porsche 911 Carrera GTS",
-      front_badge: "STUTTGART PERFORMANCE",
-      back_pill: "TRACK BENCHMARK",
-      back_number: "03",
-      title: "Porsche 911 Carrera GTS",
-      description:
-        "Carrara White track stance. 4.0L naturally aspirated flat-6 with razor-sharp response, center-lock wheels, and track precision.",
-      specs: [
-        { label: "Spec 1", value: "3.0L Flat-6" },
-        { label: "Spec 2", value: "Center-Lock" },
-        { label: "Spec 3", value: "Sport Chrono" },
-      ],
-      cta_label: "View Spotlight",
-      cta_url: "/inventory",
-    },
-    {
-      id: 4,
-      card_type: "tri",
-      order: 4,
-      image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=95",
-      front_alt: "Executive Cockpit Craftsmanship",
-      front_badge: "CABIN ARTISANSHIP",
-      back_pill: "VIP FIRST-CLASS SUITE",
-      back_number: "04",
-      title: "Bespoke Lounge Cockpit",
-      description:
-        "Handcrafted semi-aniline hides, open-pore walnut trim, and multi-contour active hot-stone massage chairs.",
-      specs: [
-        { label: "Spec 1", value: "Burmester 4D" },
-        { label: "Spec 2", value: "Heated Ottomans" },
-        { label: "Spec 3", value: "Ambient 64" },
-      ],
-      cta_label: "View Spotlight",
-      cta_url: "/gallery",
-    },
-    {
-      id: 5,
-      card_type: "tri",
-      order: 5,
-      image: "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=800&q=95",
-      front_alt: "Range Rover SV Autobiography",
-      front_badge: "FLAGSHIP OFF-ROAD",
-      back_pill: "BRITISH LUXURY",
-      back_number: "05",
-      title: "Range Rover SV Autobiography",
-      description:
-        "Long wheelbase executive edition in Santorini Black. All-wheel steering, electronic air suspension, and deployable executive tables.",
-      specs: [
-        { label: "Spec 1", value: "4.4L Twin-Turbo" },
-        { label: "Spec 2", value: "Air Suspension" },
-        { label: "Spec 3", value: "All-Wheel Steer" },
-      ],
-      cta_label: "View Spotlight",
-      cta_url: "/inventory",
-    },
-  ],
-};
 
 /**
  * Deduplicated, server-only public Visual Chronicles Section fetcher.
  */
 export const getVisualChroniclesSection = cache(
-  async (): Promise<PublicVisualChroniclesSection> => {
+  async (): Promise<PublicVisualChroniclesSection | null> => {
     const origin = getBackendOrigin();
     const url = `${origin}/api/v1/home/visual-chronicles/`;
 
@@ -981,12 +751,17 @@ export const getVisualChroniclesSection = cache(
         headers: { Accept: "application/json" },
         signal: AbortSignal.timeout(5000),
       });
-    } catch {
-      return defaultChroniclesFallback;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`Backend unavailable at ${origin}: ${message}`);
+    }
+
+    if (res.status === 404) {
+      return null;
     }
 
     if (!res.ok) {
-      return defaultChroniclesFallback;
+      throw new Error(`Failed to fetch visual chronicles section: HTTP ${res.status}`);
     }
 
     const json = (await res.json()) as {
@@ -994,102 +769,31 @@ export const getVisualChroniclesSection = cache(
       data?: PublicVisualChroniclesSection;
     };
     if (!json || json.success !== true || !json.data) {
-      return defaultChroniclesFallback;
+      throw new Error("Invalid visual chronicles response payload.");
     }
 
     const d = json.data;
-    const items =
-      Array.isArray(d.items) && d.items.length > 0
-        ? d.items
-        : defaultChroniclesFallback.items;
+    const items = Array.isArray(d.items) ? d.items : [];
 
     return {
-      heading:
-        typeof d.heading === "string" && d.heading.trim().length > 0
-          ? d.heading
-          : defaultChroniclesFallback.heading,
-      subtitle:
-        typeof d.subtitle === "string"
-          ? d.subtitle
-          : defaultChroniclesFallback.subtitle,
-      stats_number:
-        typeof d.stats_number === "string" && d.stats_number.trim().length > 0
-          ? d.stats_number
-          : defaultChroniclesFallback.stats_number,
-      stats_label:
-        typeof d.stats_label === "string"
-          ? d.stats_label
-          : defaultChroniclesFallback.stats_label,
-      archive_tag:
-        typeof d.archive_tag === "string"
-          ? d.archive_tag
-          : defaultChroniclesFallback.archive_tag,
-      archive_description:
-        typeof d.archive_description === "string"
-          ? d.archive_description
-          : defaultChroniclesFallback.archive_description,
-      archive_cta_label:
-        typeof d.archive_cta_label === "string"
-          ? d.archive_cta_label
-          : defaultChroniclesFallback.archive_cta_label,
-      archive_cta_url:
-        typeof d.archive_cta_url === "string"
-          ? d.archive_cta_url
-          : defaultChroniclesFallback.archive_cta_url,
+      heading: typeof d.heading === "string" ? d.heading : "",
+      subtitle: typeof d.subtitle === "string" ? d.subtitle : "",
+      stats_number: typeof d.stats_number === "string" ? d.stats_number : "",
+      stats_label: typeof d.stats_label === "string" ? d.stats_label : "",
+      archive_tag: typeof d.archive_tag === "string" ? d.archive_tag : "",
+      archive_description: typeof d.archive_description === "string" ? d.archive_description : "",
+      archive_cta_label: typeof d.archive_cta_label === "string" ? d.archive_cta_label : "",
+      archive_cta_url: typeof d.archive_cta_url === "string" ? d.archive_cta_url : "",
       items,
     };
   }
 );
 
-const defaultSanctuaryFallback: PublicVipSanctuarySection = {
-  background_image:
-    "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=2560&q=95",
-  eyebrow: "KAKRAIL & GULSHAN • DHAKA",
-  title: "Step Into The Realm of Automotive Excellence",
-  description:
-    "DREAM CAR HOUSE specializes in bringing you the finest selection of luxury cars from around the world. With a handpicked collection of the most prestigious brands, DREAM CAR HOUSE takes pride in offering only the highest quality vehicles that combine sophistication, performance, and innovation. Whether you're searching for a sleek sports coupe, a refined executive sedan, or an iconic luxury SUV, DREAM CAR HOUSE is your ultimate destination in Dhaka.",
-  value_pillars: [
-    {
-      title: "100% Certified Provenance",
-      subtitle: "Verified mechanical inspection & auction grades",
-      icon: "shield",
-    },
-    {
-      title: "Global Bespoke Sourcing",
-      subtitle: "Direct official imports from UK, DE & Japan",
-      icon: "globe",
-    },
-    {
-      title: "White-Glove VIP Advisory",
-      subtitle: "Personalized acquisition & dedicated concierge",
-      icon: "star",
-    },
-  ],
-  primary_cta_label: "Schedule Private Viewing",
-  primary_cta_action: "appointment_modal",
-  primary_cta_url: "",
-  secondary_cta_label: "Browse Available Vault →",
-  secondary_cta_url: "/inventory",
-  card_badge: "FLAGSHIP SHOWROOM",
-  card_title: "DREAM CAR HOUSE Flagship",
-  card_live_pill: "OPEN TODAY",
-  location_text:
-    "18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000",
-  hours_text:
-    "Daily 10:00 AM – 10:00 PM (Private Viewings by Reservation)",
-  phone_text: "01615-121312",
-  whatsapp_cta_label: "WhatsApp Concierge",
-  whatsapp_url:
-    "https://wa.me/8801615121312?text=Hello%20DREAM%20CAR%20HOUSE,%20I%20would%20like%20to%20inquire%20about%20a%20luxury%20vehicle",
-  tour_cta_label: "Showroom Tour",
-  tour_video_target: "tour",
-};
-
 /**
  * Deduplicated, server-only public VIP Sanctuary Section fetcher.
  */
 export const getVipSanctuarySection = cache(
-  async (): Promise<PublicVipSanctuarySection> => {
+  async (): Promise<PublicVipSanctuarySection | null> => {
     const origin = getBackendOrigin();
     const url = `${origin}/api/v1/home/vip-sanctuary/`;
 
@@ -1100,12 +804,17 @@ export const getVipSanctuarySection = cache(
         headers: { Accept: "application/json" },
         signal: AbortSignal.timeout(5000),
       });
-    } catch {
-      return defaultSanctuaryFallback;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new Error(`Backend unavailable at ${origin}: ${message}`);
+    }
+
+    if (res.status === 404) {
+      return null;
     }
 
     if (!res.ok) {
-      return defaultSanctuaryFallback;
+      throw new Error(`Failed to fetch VIP sanctuary section: HTTP ${res.status}`);
     }
 
     const json = (await res.json()) as {
@@ -1113,82 +822,31 @@ export const getVipSanctuarySection = cache(
       data?: PublicVipSanctuarySection;
     };
     if (!json || json.success !== true || !json.data) {
-      return defaultSanctuaryFallback;
+      throw new Error("Invalid VIP sanctuary response payload.");
     }
 
     const d = json.data;
     return {
-      background_image:
-        d.background_image || defaultSanctuaryFallback.background_image,
-      eyebrow:
-        typeof d.eyebrow === "string" && d.eyebrow.trim().length > 0
-          ? d.eyebrow
-          : defaultSanctuaryFallback.eyebrow,
-      title:
-        typeof d.title === "string" && d.title.trim().length > 0
-          ? d.title
-          : defaultSanctuaryFallback.title,
-      description:
-        typeof d.description === "string" && d.description.trim().length > 0
-          ? d.description
-          : defaultSanctuaryFallback.description,
-      value_pillars:
-        Array.isArray(d.value_pillars) && d.value_pillars.length > 0
-          ? d.value_pillars
-          : defaultSanctuaryFallback.value_pillars,
-      primary_cta_label:
-        typeof d.primary_cta_label === "string" &&
-        d.primary_cta_label.trim().length > 0
-          ? d.primary_cta_label
-          : defaultSanctuaryFallback.primary_cta_label,
-      primary_cta_action:
-        d.primary_cta_action || defaultSanctuaryFallback.primary_cta_action,
+      background_image: d.background_image || null,
+      eyebrow: typeof d.eyebrow === "string" ? d.eyebrow : "",
+      title: typeof d.title === "string" ? d.title : "",
+      description: typeof d.description === "string" ? d.description : "",
+      value_pillars: Array.isArray(d.value_pillars) ? d.value_pillars : [],
+      primary_cta_label: typeof d.primary_cta_label === "string" ? d.primary_cta_label : "",
+      primary_cta_action: d.primary_cta_action || "appointment_modal",
       primary_cta_url: d.primary_cta_url || "",
-      secondary_cta_label:
-        typeof d.secondary_cta_label === "string" &&
-        d.secondary_cta_label.trim().length > 0
-          ? d.secondary_cta_label
-          : defaultSanctuaryFallback.secondary_cta_label,
-      secondary_cta_url:
-        d.secondary_cta_url || defaultSanctuaryFallback.secondary_cta_url,
-      card_badge:
-        typeof d.card_badge === "string"
-          ? d.card_badge
-          : defaultSanctuaryFallback.card_badge,
-      card_title:
-        typeof d.card_title === "string"
-          ? d.card_title
-          : defaultSanctuaryFallback.card_title,
-      card_live_pill:
-        typeof d.card_live_pill === "string"
-          ? d.card_live_pill
-          : defaultSanctuaryFallback.card_live_pill,
-      location_text:
-        typeof d.location_text === "string" && d.location_text.trim().length > 0
-          ? d.location_text
-          : defaultSanctuaryFallback.location_text,
-      hours_text:
-        typeof d.hours_text === "string" && d.hours_text.trim().length > 0
-          ? d.hours_text
-          : defaultSanctuaryFallback.hours_text,
-      phone_text:
-        typeof d.phone_text === "string" && d.phone_text.trim().length > 0
-          ? d.phone_text
-          : defaultSanctuaryFallback.phone_text,
-      whatsapp_cta_label:
-        typeof d.whatsapp_cta_label === "string"
-          ? d.whatsapp_cta_label
-          : defaultSanctuaryFallback.whatsapp_cta_label,
-      whatsapp_url:
-        typeof d.whatsapp_url === "string" && d.whatsapp_url.trim().length > 0
-          ? d.whatsapp_url
-          : defaultSanctuaryFallback.whatsapp_url,
-      tour_cta_label:
-        typeof d.tour_cta_label === "string"
-          ? d.tour_cta_label
-          : defaultSanctuaryFallback.tour_cta_label,
-      tour_video_target:
-        d.tour_video_target || defaultSanctuaryFallback.tour_video_target,
+      secondary_cta_label: typeof d.secondary_cta_label === "string" ? d.secondary_cta_label : "",
+      secondary_cta_url: d.secondary_cta_url || "",
+      card_badge: typeof d.card_badge === "string" ? d.card_badge : "",
+      card_title: typeof d.card_title === "string" ? d.card_title : "",
+      card_live_pill: typeof d.card_live_pill === "string" ? d.card_live_pill : "",
+      location_text: typeof d.location_text === "string" ? d.location_text : null,
+      hours_text: typeof d.hours_text === "string" ? d.hours_text : null,
+      phone_text: typeof d.phone_text === "string" ? d.phone_text : null,
+      whatsapp_cta_label: typeof d.whatsapp_cta_label === "string" ? d.whatsapp_cta_label : "",
+      whatsapp_url: typeof d.whatsapp_url === "string" ? d.whatsapp_url : "",
+      tour_cta_label: typeof d.tour_cta_label === "string" ? d.tour_cta_label : "",
+      tour_video_target: d.tour_video_target || "tour",
     };
   }
 );

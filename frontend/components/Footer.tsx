@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { SHOWROOM_BRANCHES, type ShowroomBranch } from "@/lib/showroomData";
 import { useUI } from "@/lib/UIContext";
 import type { PublicSiteSettings, PublicShowroomBranch } from "@/lib/types";
 
@@ -16,7 +15,7 @@ export default function Footer({
 }) {
   const { openCompareModal } = useUI();
   const [activeBranchId, setActiveBranchId] = useState<string>(
-    branches[0]?.branch_id || "kakrail"
+    branches[0]?.branch_id || ""
   );
 
   const activeBranch = branches.find((b) => b.branch_id === activeBranchId) || branches[0];

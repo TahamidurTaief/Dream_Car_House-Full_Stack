@@ -114,18 +114,24 @@ class VipSanctuarySection(models.Model):
     )
     location_text = models.CharField(
         max_length=255,
-        default="18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000",
+        blank=True,
+        default="",
         verbose_name=_("Showroom Location Text"),
+        help_text=_("Optional custom address override. If left blank, inherits from associated branch."),
     )
     hours_text = models.CharField(
         max_length=255,
-        default="Daily 10:00 AM – 10:00 PM (Private Viewings by Reservation)",
+        blank=True,
+        default="",
         verbose_name=_("Viewing Hours Text"),
+        help_text=_("Optional custom viewing hours. If left blank, inherits from associated branch."),
     )
     phone_text = models.CharField(
         max_length=50,
-        default="01615-121312",
+        blank=True,
+        default="",
         verbose_name=_("Direct Concierge Hotline"),
+        help_text=_("Optional custom hotline. If left blank, inherits from associated branch or site settings."),
     )
     whatsapp_cta_label = models.CharField(
         max_length=100,

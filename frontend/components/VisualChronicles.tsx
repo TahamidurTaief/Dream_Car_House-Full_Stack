@@ -19,21 +19,21 @@ export default function VisualChronicles({ chronicles }: VisualChroniclesProps) 
     }));
   };
 
-  const title = chronicles?.heading || "DREAM CAR HOUSE Visual Chronicles";
-  const subtitle =
-    chronicles?.subtitle ||
-    "Curated high-resolution photography, delivery spotlights, and automotive cinema from our Kakrail & Gulshan showrooms.";
-  const statsCount = chronicles?.stats_number || "19+";
-  const statsLabel = chronicles?.stats_label || "Curated Masterpieces";
+  if (!chronicles || !chronicles.items || chronicles.items.length === 0) {
+    return null;
+  }
 
-  const footerTag = chronicles?.archive_tag || "19+ SHOWROOM ARCHIVE EDITIONS";
-  const footerDesc =
-    chronicles?.archive_description ||
-    "Explore high-definition exterior profiles, handcrafted cockpits, and delivery chronicles.";
-  const footerCtaLabel = chronicles?.archive_cta_label || "See All Gallery & Media (19+ Photos)";
-  const footerCtaLink = chronicles?.archive_cta_url || "/gallery";
+  const title = chronicles.heading || "";
+  const subtitle = chronicles.subtitle || "";
+  const statsCount = chronicles.stats_number || "";
+  const statsLabel = chronicles.stats_label || "";
 
-  const items = chronicles?.items && chronicles.items.length > 0 ? chronicles.items : null;
+  const footerTag = chronicles.archive_tag || "";
+  const footerDesc = chronicles.archive_description || "";
+  const footerCtaLabel = chronicles.archive_cta_label || "";
+  const footerCtaLink = chronicles.archive_cta_url || "/gallery";
+
+  const items = chronicles.items;
 
   return (
     <section className="socials-section max-w-7xl" id="socials">

@@ -251,9 +251,9 @@ export interface PublicVipSanctuarySection {
   card_badge: string;
   card_title: string;
   card_live_pill: string;
-  location_text: string;
-  hours_text: string;
-  phone_text: string;
+  location_text?: string | null;
+  hours_text?: string | null;
+  phone_text?: string | null;
   whatsapp_cta_label: string;
   whatsapp_url: string;
   tour_cta_label: string;

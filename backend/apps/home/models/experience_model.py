@@ -30,6 +30,16 @@ class ExperienceSection(models.Model):
     )
     updated_at = models.DateTimeField(auto_now=True)
 
+    def clean(self):
+        super().clean()
+        if self.is_active and self.pk:
+            from django.core.exceptions import ValidationError
+            active_pillars = self.pillars.filter(is_active=True).count()
+            if active_pillars < 3:
+                raise ValidationError({
+                    "is_active": _(f"Cannot publish Experience Section with fewer than 3 active pillars (currently has {active_pillars}).")
+                })
+
     def __str__(self):
         return f"Experience Section: {self.title}"
 

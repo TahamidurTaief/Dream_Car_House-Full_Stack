@@ -13,52 +13,31 @@ interface VipSanctuaryProps {
 export default function VipSanctuary({ sanctuary }: VipSanctuaryProps) {
   const { openAppointmentModal, openVideoModal } = useUI();
 
+  if (!sanctuary) {
+    return null;
+  }
+
   const bgImageUrl =
-    sanctuary?.background_image ||
+    sanctuary.background_image ||
     "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=2560&q=95";
-  const eyebrow = sanctuary?.eyebrow || "KAKRAIL & GULSHAN • DHAKA";
-  const title = sanctuary?.title || "Step Into The Realm of Automotive Excellence";
-  const narrative =
-    sanctuary?.description ||
-    "DREAM CAR HOUSE specializes in bringing you the finest selection of luxury cars from around the world. With a handpicked collection of the most prestigious brands, DREAM CAR HOUSE takes pride in offering only the highest quality vehicles that combine sophistication, performance, and innovation. Whether you're searching for a sleek sports coupe, a refined executive sedan, or an iconic luxury SUV, DREAM CAR HOUSE is your ultimate destination in Dhaka.";
+  const eyebrow = sanctuary.eyebrow || "";
+  const title = sanctuary.title || "";
+  const narrative = sanctuary.description || "";
 
-  const primaryCtaLabel = sanctuary?.primary_cta_label || "Schedule Private Viewing";
-  const secondaryCtaLabel = sanctuary?.secondary_cta_label || "Browse Available Vault →";
-  const secondaryCtaLink = sanctuary?.secondary_cta_url || "/inventory";
+  const primaryCtaLabel = sanctuary.primary_cta_label || "Schedule Private Viewing";
+  const secondaryCtaLabel = sanctuary.secondary_cta_label || "Browse Available Vault →";
+  const secondaryCtaLink = sanctuary.secondary_cta_url || "/inventory";
 
-  const cardBadge = sanctuary?.card_badge || "FLAGSHIP SHOWROOM";
-  const cardTitle = sanctuary?.card_title || "DREAM CAR HOUSE Flagship";
-  const liveStatusText = sanctuary?.card_live_pill || "OPEN TODAY";
-  const showroomLocation =
-    sanctuary?.location_text || "18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000";
-  const viewingHours =
-    sanctuary?.hours_text || "Daily 10:00 AM – 10:00 PM (Private Viewings by Reservation)";
-  const hotline = sanctuary?.phone_text || "01615-121312";
-  const whatsappUrl =
-    sanctuary?.whatsapp_url ||
-    "https://wa.me/8801615121312?text=Hello%20DREAM%20CAR%20HOUSE,%20I%20would%20like%20to%20inquire%20about%20a%20luxury%20vehicle";
-  const videoTourTarget = sanctuary?.tour_video_target === "reel" ? "reel" : "tour";
+  const cardBadge = sanctuary.card_badge || "";
+  const cardTitle = sanctuary.card_title || "";
+  const liveStatusText = sanctuary.card_live_pill || "";
+  const showroomLocation = sanctuary.location_text || "";
+  const viewingHours = sanctuary.hours_text || "";
+  const hotline = sanctuary.phone_text || "";
+  const whatsappUrl = sanctuary.whatsapp_url || "";
+  const videoTourTarget = sanctuary.tour_video_target === "reel" ? "reel" : "tour";
 
-  const pillars =
-    sanctuary?.value_pillars && sanctuary.value_pillars.length > 0
-      ? sanctuary.value_pillars
-      : [
-          {
-            title: "100% Certified Provenance",
-            subtitle: "Verified mechanical inspection & auction grades",
-            icon: "shield",
-          },
-          {
-            title: "Global Bespoke Sourcing",
-            subtitle: "Direct official imports from UK, DE & Japan",
-            icon: "globe",
-          },
-          {
-            title: "White-Glove VIP Advisory",
-            subtitle: "Personalized acquisition & dedicated concierge",
-            icon: "star",
-          },
-        ];
+  const pillars = sanctuary.value_pillars || [];
 
   // Helper to render pillar icons
   const renderPillarIcon = (iconName?: string) => {
@@ -171,45 +150,51 @@ export default function VipSanctuary({ sanctuary }: VipSanctuaryProps) {
             </div>
 
             <div className="vip-studio-features">
-              <div className="vip-feature-row">
-                <div className="vip-feature-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
+              {showroomLocation ? (
+                <div className="vip-feature-row">
+                  <div className="vip-feature-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                  </div>
+                  <div className="vip-feature-text">
+                    <span className="vip-feat-label">Showroom Location</span>
+                    <span className="vip-feat-val">{showroomLocation}</span>
+                  </div>
                 </div>
-                <div className="vip-feature-text">
-                  <span className="vip-feat-label">Showroom Location</span>
-                  <span className="vip-feat-val">{showroomLocation}</span>
-                </div>
-              </div>
+              ) : null}
 
-              <div className="vip-feature-row">
-                <div className="vip-feature-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
+              {viewingHours ? (
+                <div className="vip-feature-row">
+                  <div className="vip-feature-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                  </div>
+                  <div className="vip-feature-text">
+                    <span className="vip-feat-label">VIP Viewing Hours</span>
+                    <span className="vip-feat-val">{viewingHours}</span>
+                  </div>
                 </div>
-                <div className="vip-feature-text">
-                  <span className="vip-feat-label">VIP Viewing Hours</span>
-                  <span className="vip-feat-val">{viewingHours}</span>
-                </div>
-              </div>
+              ) : null}
 
-              <div className="vip-feature-row">
-                <div className="vip-feature-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                  </svg>
+              {hotline ? (
+                <div className="vip-feature-row">
+                  <div className="vip-feature-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                  </div>
+                  <div className="vip-feature-text">
+                    <span className="vip-feat-label">Direct Concierge Hotline</span>
+                    <a href={`tel:${hotline.replace(/[^0-9+]/g, "")}`} className="vip-feat-val vip-phone-link">
+                      {hotline}
+                    </a>
+                  </div>
                 </div>
-                <div className="vip-feature-text">
-                  <span className="vip-feat-label">Direct Concierge Hotline</span>
-                  <a href={`tel:${hotline.replace(/[^0-9+]/g, "")}`} className="vip-feat-val vip-phone-link">
-                    {hotline}
-                  </a>
-                </div>
-              </div>
+              ) : null}
             </div>
 
             {/* Card Bottom Quick Connect Buttons */}

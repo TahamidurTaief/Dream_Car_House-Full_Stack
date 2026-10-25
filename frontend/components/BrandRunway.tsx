@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ALL_RUNWAY_BRANDS } from "@/lib/showroomData";
 import { PublicBrand } from "@/lib/types";
 
 export interface RunwayItem {
@@ -124,26 +123,21 @@ const CAR_SVG_DEPLOYER = `
 export default function BrandRunway({ brands }: BrandRunwayProps = {}) {
   const router = useRouter();
 
-  // Normalize database brands with static fallback
-  const brandList: RunwayItem[] =
-    brands && brands.length > 0
-      ? brands.map((b, idx) => ({
-          name: b.name.toUpperCase(),
-          filterBrand: b.name,
-          destination_url:
-            b.destination_url ||
-            `/inventory?brand=${encodeURIComponent(b.name)}`,
-          image: b.image || null,
-          logo_alt: b.logo_alt || `${b.name} luxury marque`,
-          originalIndex: idx,
-        }))
-      : ALL_RUNWAY_BRANDS.map((b, idx) => ({
-          name: b.name,
-          filterBrand: b.filterBrand,
-          destination_url: `/inventory?brand=${encodeURIComponent(b.filterBrand)}`,
-          svg: b.svg,
-          originalIndex: idx,
-        }));
+  if (!brands || brands.length === 0) {
+    return null;
+  }
+
+  // Normalize database brands
+  const brandList: RunwayItem[] = brands.map((b, idx) => ({
+    name: b.name.toUpperCase(),
+    filterBrand: b.name,
+    destination_url:
+      b.destination_url ||
+      `/inventory?brand=${encodeURIComponent(b.name)}`,
+    image: b.image || null,
+    logo_alt: b.logo_alt || `${b.name} luxury marque`,
+    originalIndex: idx,
+  }));
 
   // Responsive page size: Mobile = 3, Tablet = 6, Desktop = 8
   const [pageSize, setPageSize] = useState<number>(8);

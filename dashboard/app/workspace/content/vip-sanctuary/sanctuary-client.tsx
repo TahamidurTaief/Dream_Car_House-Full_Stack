@@ -351,7 +351,19 @@ export function SanctuaryClient({ initialData, branches, userPermissions }: Sanc
               <label style={{ fontSize: "0.85rem", color: "#a1a1aa" }}>Associated Showroom Branch (Auto-populates if fields empty)</label>
               <select
                 value={branchId}
-                onChange={(e) => setBranchId(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setBranchId(val);
+                  const selectedBranch = branches.find((b) => String(b.id) === String(val));
+                  if (selectedBranch) {
+                    if (selectedBranch.address) setLocationText(selectedBranch.address);
+                    if (selectedBranch.hours) setHoursText(selectedBranch.hours);
+                    if (selectedBranch.hotline || selectedBranch.phone) {
+                      setPhoneText(selectedBranch.hotline || selectedBranch.phone || "");
+                    }
+                    if (selectedBranch.name) setCardTitle(selectedBranch.name);
+                  }
+                }}
                 style={{ background: "#09090b", border: "1px solid #3f3f46", color: "#f4f4f5", padding: "0.5rem" }}
               >
                 <option value="">None / Custom Override</option>

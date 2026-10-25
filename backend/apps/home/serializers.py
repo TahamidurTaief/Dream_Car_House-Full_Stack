@@ -379,6 +379,8 @@ class PublicVipSanctuarySectionSerializer(serializers.ModelSerializer, Optimized
     location_text = serializers.SerializerMethodField()
     hours_text = serializers.SerializerMethodField()
     phone_text = serializers.SerializerMethodField()
+    card_title = serializers.SerializerMethodField()
+    card_badge = serializers.SerializerMethodField()
 
     class Meta:
         model = VipSanctuarySection
@@ -411,27 +413,41 @@ class PublicVipSanctuarySectionSerializer(serializers.ModelSerializer, Optimized
         return obj.background_image_url or None
 
     def get_location_text(self, obj):
-        if obj.location_text and obj.location_text.strip():
-            return obj.location_text
         if obj.branch and obj.branch.address:
             return obj.branch.address
-        return "18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000"
+        if obj.location_text and obj.location_text.strip():
+            return obj.location_text.strip()
+        return None
 
     def get_hours_text(self, obj):
-        if obj.hours_text and obj.hours_text.strip():
-            return obj.hours_text
         if obj.branch and obj.branch.hours:
             return obj.branch.hours
-        return "Daily 10:00 AM – 10:00 PM (Private Viewings by Reservation)"
+        if obj.hours_text and obj.hours_text.strip():
+            return obj.hours_text.strip()
+        return None
 
     def get_phone_text(self, obj):
-        if obj.phone_text and obj.phone_text.strip():
-            return obj.phone_text
         if obj.branch and obj.branch.hotline:
             return obj.branch.hotline
+        if obj.phone_text and obj.phone_text.strip():
+            return obj.phone_text.strip()
         site_settings = SiteSettings.objects.first()
         if site_settings and site_settings.hotline:
             return site_settings.hotline
-        return "01615-121312"
+        return None
+
+    def get_card_title(self, obj):
+        if obj.card_title and obj.card_title.strip() and obj.card_title.strip() != "DREAM CAR HOUSE Flagship":
+            return obj.card_title.strip()
+        if obj.branch and obj.branch.name:
+            return obj.branch.name
+        return obj.card_title or "DREAM CAR HOUSE Flagship"
+
+    def get_card_badge(self, obj):
+        if obj.card_badge and obj.card_badge.strip() and obj.card_badge.strip() != "FLAGSHIP SHOWROOM":
+            return obj.card_badge.strip()
+        if obj.branch and obj.branch.tag:
+            return obj.branch.tag
+        return obj.card_badge or "FLAGSHIP SHOWROOM"
 
 
