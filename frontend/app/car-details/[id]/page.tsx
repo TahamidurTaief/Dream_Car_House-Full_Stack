@@ -1,6 +1,5 @@
-import { notFound } from "next/navigation";
-import { VEHICLE_DATA, getVehicleById, getRelatedVehicles } from "@/lib/showroomData";
-import VehicleDetailClient from "../../cars/[slug]/VehicleDetailClient";
+import { permanentRedirect, notFound } from "next/navigation";
+import { getBackendOrigin } from "@/lib/server/api";
 
 interface PageProps {
   params: Promise<{
@@ -8,22 +7,41 @@ interface PageProps {
   }>;
 }
 
-export async function generateStaticParams() {
-  return VEHICLE_DATA.map((car) => ({
-    id: car.id.toString(),
-  }));
-}
-
 export default async function CarDetailByIdPage({ params }: PageProps) {
   const { id } = await params;
-  const numId = parseInt(id, 10);
-  const car = getVehicleById(numId);
+  const origin = getBackendOrigin();
 
-  if (!car) {
+  let res: Response;
+  try {
+    res = await fetch(`${origin}/api/v1/inventory/detail/${encodeURIComponent(id)}/`, {
+      cache: "no-store",
+      redirect: "manual",
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch {
     notFound();
   }
 
-  const relatedCars = getRelatedVehicles(car.id, car.brand, 3);
+  if (res.status === 301 || res.status === 302) {
+    const loc = res.headers.get("location");
+    if (loc) {
+      const match = loc.match(/\/api\/v1\/inventory\/detail\/([^/]+)\/?/);
+      if (match && match[1]) {
+        permanentRedirect(`/cars/${match[1]}`);
+      }
+    }
+  }
 
-  return <VehicleDetailClient car={car} relatedCars={relatedCars} />;
+  if (res.ok) {
+    try {
+      const json = await res.json();
+      if (json?.data?.slug) {
+        permanentRedirect(`/cars/${json.data.slug}`);
+      }
+    } catch {
+      notFound();
+    }
+  }
+
+  notFound();
 }

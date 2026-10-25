@@ -18,9 +18,10 @@ class InventoryFilter(django_filters.FilterSet):
     model_id = django_filters.NumberFilter(field_name="model_id", lookup_expr='exact')
     color = django_filters.CharFilter(field_name="color", lookup_expr='iexact')
     body_style = django_filters.ModelChoiceFilter(queryset=BodyStyle.objects.all())
-    inventory_type = django_filters.ChoiceFilter(choices=Inventory.InventoryTypeChoices.choices)
     registered = CharInFilter(field_name="registered", lookup_expr='in')
     car_type = CharInFilter(field_name="car_type", lookup_expr='in')
+    branch = django_filters.CharFilter(field_name="branch__branch_id", lookup_expr='iexact')
+    branch_id = django_filters.NumberFilter(field_name="branch_id", lookup_expr='exact')
 
     class Meta:
         model = Inventory
@@ -36,4 +37,6 @@ class InventoryFilter(django_filters.FilterSet):
             'registered',
             'inventory_type',
             'car_type',
+            'branch',
+            'branch_id',
         ]

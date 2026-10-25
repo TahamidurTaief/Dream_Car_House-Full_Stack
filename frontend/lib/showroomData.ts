@@ -87,15 +87,49 @@ export interface Vehicle {
   engine_capacity: string;
   mileage: string;
   price: string;
+  raw_price?: string | null;
+  is_call_for_price?: boolean;
   registered: string;
-  branch_id: "kakrail" | "gulshan";
+  branch_id: string;
   branch_name: string;
   branch_address: string;
+  branch?: {
+    id?: number;
+    branch_id?: string;
+    name?: string;
+    short_name?: string;
+    tag?: string;
+    address?: string;
+    phone?: string;
+    hotline?: string;
+    email?: string;
+    hours?: string;
+    map_link?: string;
+    embed_map?: string;
+  } | null;
   image: string;
   images: VehicleImage[];
   description: string;
   slug: string;
   drivetrain?: string;
+  registration_number?: string;
+  is_featured?: boolean;
+  transmission?: string;
+  color?: string;
+  wheel_base?: string;
+  condition?: string;
+  body_style?: string;
+  youtube?: string;
+  slightly_negotiable?: string;
+  h1_title?: string;
+  target_keyword?: string;
+  meta_title?: string;
+  meta_description?: string;
+  canonical_url?: string;
+  featured_image_alt?: string;
+  indexing?: string;
+  schema_data?: Record<string, unknown>;
+  previous_slug?: string;
 }
 
 export const VEHICLE_DATA: Vehicle[] = [

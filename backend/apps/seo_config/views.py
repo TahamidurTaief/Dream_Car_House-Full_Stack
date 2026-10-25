@@ -6,6 +6,17 @@ from apps.seo_config.models import SEOConfig, CategoryPageSEO
 from apps.seo_config.serializers import SEOConfigSerializer, CategoryPageSEOSerializer
 
 
+class SEOConfigListView(APIView):
+    """
+    GET /api/v1/site-config/seo/
+    Returns all page SEO configurations.
+    """
+    def get(self, request, format=None):
+        configs = SEOConfig.objects.all()
+        serializer = SEOConfigSerializer(configs, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class SEOConfigDetailView(APIView):
     """
     GET /api/v1/site-config/seo/<page>/
@@ -23,6 +34,17 @@ class SEOConfigDetailView(APIView):
             )
 
         serializer = SEOConfigSerializer(seo_config, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CategoryPageSEOListView(APIView):
+    """
+    GET /api/v1/site-config/category-seo/
+    Returns all category SEO configurations.
+    """
+    def get(self, request, format=None):
+        configs = CategoryPageSEO.objects.all()
+        serializer = CategoryPageSEOSerializer(configs, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

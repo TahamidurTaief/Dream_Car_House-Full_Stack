@@ -4,8 +4,15 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useUI } from "@/lib/UIContext";
+import type { PublicSiteSettings, PublicShowroomBranch } from "@/lib/types";
 
-export default function NavDrawer() {
+export default function NavDrawer({
+  settings,
+  branches,
+}: {
+  settings?: PublicSiteSettings;
+  branches?: PublicShowroomBranch[];
+}) {
   const { isDrawerOpen, closeDrawer, openAppointmentModal } = useUI();
   const [isOpen, setIsOpen] = useState(true);
 
@@ -61,13 +68,13 @@ export default function NavDrawer() {
               <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
                 <Image
                   src="/assets/dch-logo.webp"
-                  alt="DREAM CAR HOUSE Logo"
+                  alt={`${settings?.name || "DREAM CAR HOUSE"} Logo`}
                   width={150}
                   height={56}
                   style={{ height: "40px", width: "auto", objectFit: "contain", filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.6))" }}
                 />
                 <span className="drawer-brand-sub">
-                  Premier Luxury Automotive Showroom • Kakrail & Gulshan
+                  {settings?.tagline || "Premier Luxury Automotive Showroom • Kakrail & Gulshan"}
                 </span>
               </div>
             </div>
@@ -202,14 +209,14 @@ export default function NavDrawer() {
               }}
             >
               {isOpen
-                ? "SHOWROOM OPEN TODAY • 10:00 AM - 10:00 PM"
-                : "SHOWROOM CLOSED NOW • 10:00 AM - 10:00 PM"}
+                ? `SHOWROOM OPEN TODAY • ${settings?.opening_hours_text || "10:00 AM - 10:00 PM"}`
+                : `SHOWROOM CLOSED NOW • ${settings?.opening_hours_text || "10:00 AM - 10:00 PM"}`}
             </span>
           </div>
 
           <div className="drawer-concierge-phone">
             <span className="drawer-phone-label">VIP Concierge Line</span>
-            <a href="tel:01615-121312" className="drawer-phone-val">
+            <a href={`tel:${(settings?.hotline || "01615-121312").replace(/\s+/g, "")}`} className="drawer-phone-val">
               <svg
                 width="15"
                 height="15"
@@ -221,7 +228,7 @@ export default function NavDrawer() {
               >
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
               </svg>
-              01615-121312
+              {settings?.hotline || "01615-121312"}
             </a>
           </div>
 
@@ -240,7 +247,7 @@ export default function NavDrawer() {
             </button>
 
             <a
-              href="https://wa.me/8801615121312?text=Hello%20DREAM%20CAR%20HOUSE,%20I%20would%20like%20to%20inquire%20about%20a%20luxury%20vehicle"
+              href={`https://wa.me/${(settings?.whatsapp || "8801615121312").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(settings?.name || "DREAM CAR HOUSE")},%20I%20would%20like%20to%20inquire%20about%20a%20luxury%20vehicle`}
               target="_blank"
               rel="noopener noreferrer"
               className="drawer-wa-btn"

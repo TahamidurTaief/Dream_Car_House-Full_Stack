@@ -161,8 +161,13 @@ class InventoryDetailByIdView(generics.RetrieveAPIView):
 class BrandListView(generics.ListAPIView):
     permission_classes = []
     serializer_class = BrandListSerializer
-    queryset = Brand.objects.filter(status=BaseModel.StatusChoices.PUBLISHED).order_by('name')
     pagination_class = None
+
+    def get_queryset(self):
+        qs = Brand.objects.filter(status=BaseModel.StatusChoices.PUBLISHED)
+        if self.request.query_params.get('runway') in ('true', '1'):
+            qs = qs.filter(is_in_runway=True).exclude(image='').exclude(image__isnull=True)
+        return qs.order_by('order', 'name')
 
 
 class BrandSEODetailView(APIView):

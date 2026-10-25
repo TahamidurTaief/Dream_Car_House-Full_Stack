@@ -115,14 +115,26 @@ export default function CarModal() {
   if (!selectedCar) return null;
 
   const branch =
-    SHOWROOM_BRANCHES[selectedCar.branch_id] || SHOWROOM_BRANCHES["kakrail"];
+    SHOWROOM_BRANCHES[selectedCar.branch_id] || {
+      id: selectedCar.branch_id || "kakrail",
+      name: selectedCar.branch_name || "Kakrail Branch & Showroom",
+      short_name: selectedCar.branch_name || "Kakrail Branch",
+      tag: "Showroom Allocation",
+      address: selectedCar.branch_address || "18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000",
+      phone: "01615-121312",
+      hotline: "+880 1615-121312",
+      email: "dreamcarhouse101@gmail.com",
+      hours: "Saturday – Thursday: 10:00 AM – 9:00 PM (Friday Closed)",
+      map_link: "https://maps.google.com/?q=DREAM+CAR+HOUSE+Dhaka",
+      embed_map: "",
+    };
   const isBrandNew = selectedCar.car_type === "BRAND_NEW";
-  const drivetrain = getCarDrivetrain(selectedCar);
-  const regText = isBrandNew
+  const drivetrain = selectedCar.drivetrain || getCarDrivetrain(selectedCar);
+  const regText = (selectedCar as { registration_number?: string }).registration_number || (isBrandNew
     ? "Unregistered Direct Import"
     : selectedCar.registered && selectedCar.registered !== "Available"
     ? selectedCar.registered
-    : "Dhaka Metro Verified Papers";
+    : "Dhaka Metro Verified Papers");
 
   const galleryList =
     selectedCar.images && selectedCar.images.length > 0

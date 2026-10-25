@@ -1,19 +1,43 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { VEHICLE_DATA } from "@/lib/showroomData";
+import { getPublicInventory, getCategorySEO, buildMetadataFromSEO } from "@/lib/server/api";
 import VehicleCard from "@/components/VehicleCard";
 
-export const metadata: Metadata = {
-  title: "Brand New & Reconditioned Luxury Vehicles | DREAM CAR HOUSE",
-  description:
-    "Explore factory-fresh, zero-mileage brand new luxury automobiles in Bangladesh at DREAM CAR HOUSE Kakrail and Gulshan showrooms.",
-  alternates: {
-    canonical: "https://dreamcarhouse.com/cars/brand-new/",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getCategorySEO("brand-new").catch(() => null);
+  const fallback: Metadata = {
+    title: "Brand New & Reconditioned Luxury Vehicles | DREAM CAR HOUSE",
+    description:
+      "Explore factory-fresh, zero-mileage brand new luxury automobiles in Bangladesh at DREAM CAR HOUSE Kakrail and Gulshan showrooms.",
+    alternates: {
+      canonical: "https://dreamcarhouse.com/cars/brand-new/",
+    },
+    openGraph: {
+      title: "Brand New & Reconditioned Luxury Vehicles | DREAM CAR HOUSE",
+      description:
+        "Explore factory-fresh, zero-mileage brand new luxury automobiles in Bangladesh.",
+      url: "https://dreamcarhouse.com/cars/brand-new/",
+      siteName: "DREAM CAR HOUSE",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Brand New & Reconditioned Luxury Vehicles | DREAM CAR HOUSE",
+      description:
+        "Explore factory-fresh, zero-mileage brand new luxury automobiles in Bangladesh.",
+    },
+  };
+  return buildMetadataFromSEO(seo, fallback);
+}
 
-export default function BrandNewCarsPage() {
-  const brandNewCars = VEHICLE_DATA.filter((c) => c.car_type === "BRAND_NEW");
+export default async function BrandNewCarsPage() {
+  let brandNewCars: import("@/lib/types").PublicVehicle[] = [];
+  try {
+    const res = await getPublicInventory({ type: "BRAND_NEW" });
+    brandNewCars = res.items;
+  } catch (error) {
+    console.error("[BrandNewCarsPage] Failed to fetch inventory:", error);
+  }
 
   return (
     <div className="inventory-page-wrap max-w-7xl">
@@ -38,9 +62,15 @@ export default function BrandNewCarsPage() {
       </div>
 
       <div className="cars-grid-layout">
-        {brandNewCars.map((car) => (
-          <VehicleCard key={car.id} car={car} layout="grid" />
-        ))}
+        {brandNewCars.length > 0 ? (
+          brandNewCars.map((car) => (
+            <VehicleCard key={car.id} car={car} layout="grid" />
+          ))
+        ) : (
+          <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "4rem 1rem", color: "#9ca3af" }}>
+            No brand new luxury vehicles currently listed.
+          </div>
+        )}
       </div>
     </div>
   );

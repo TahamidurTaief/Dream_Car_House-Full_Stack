@@ -2,48 +2,79 @@
 
 import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { VEHICLE_DATA, Vehicle, SHOWROOM_BRANCHES } from "@/lib/showroomData";
+import { Vehicle } from "@/lib/showroomData";
+import { PublicShowroomBranch, PublicInventoryFilterOptions } from "@/lib/types";
 import { useUI } from "@/lib/UIContext";
 
-function InventoryContent() {
+interface InventoryClientProps {
+  initialVehicles: Vehicle[];
+  totalRows?: number;
+  filterOptions?: PublicInventoryFilterOptions;
+  branches?: PublicShowroomBranch[];
+  initialParams?: {
+    brand?: string;
+    type?: string;
+    branch?: string;
+    q?: string;
+  };
+}
+
+function InventoryContent({
+  initialVehicles = [],
+  filterOptions,
+  branches = [],
+  initialParams,
+}: InventoryClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { openCarModal } = useUI();
 
-  const [query, setQuery] = useState("");
-  const [selectedBrand, setSelectedBrand] = useState("all");
-  const [selectedType, setSelectedType] = useState("all");
-  const [selectedBranch, setSelectedBranch] = useState("all");
+  const [query, setQuery] = useState(initialParams?.q || "");
+  const [selectedBrand, setSelectedBrand] = useState(initialParams?.brand || "all");
+  const [selectedType, setSelectedType] = useState(initialParams?.type || "all");
+  const [selectedBranch, setSelectedBranch] = useState(initialParams?.branch || "all");
 
-  // Sync with URL parameters on initial load
+  // Sync with URL parameters on browser navigation
   useEffect(() => {
     const brandParam = searchParams.get("brand");
     const typeParam = searchParams.get("type");
     const branchParam = searchParams.get("branch");
     const qParam = searchParams.get("q");
 
-    if (brandParam) setSelectedBrand(brandParam);
-    if (typeParam) setSelectedType(typeParam);
-    if (branchParam) setSelectedBranch(branchParam);
-    if (qParam) setQuery(qParam);
+    if (brandParam !== null) setSelectedBrand(brandParam);
+    if (typeParam !== null) setSelectedType(typeParam);
+    if (branchParam !== null) setSelectedBranch(branchParam);
+    if (qParam !== null) setQuery(qParam);
   }, [searchParams]);
 
+  // Compute available brands dynamically
+  const availableBrands = useMemo(() => {
+    if (filterOptions?.brands && filterOptions.brands.length > 0) {
+      return filterOptions.brands.map((b) => b.name);
+    }
+    const set = new Set<string>();
+    initialVehicles.forEach((car) => {
+      if (car.brand) set.add(car.brand);
+    });
+    return Array.from(set).sort();
+  }, [filterOptions, initialVehicles]);
+
   const filteredVehicles = useMemo(() => {
-    return VEHICLE_DATA.filter((car) => {
+    return initialVehicles.filter((car) => {
       // Text search
       if (query.trim()) {
         const q = query.toLowerCase();
         const matchesQuery =
-          car.name.toLowerCase().includes(q) ||
-          car.brand.toLowerCase().includes(q) ||
-          car.model.toLowerCase().includes(q) ||
-          car.year.toString().includes(q);
+          (car.name || "").toLowerCase().includes(q) ||
+          (car.brand || "").toLowerCase().includes(q) ||
+          (car.model || "").toLowerCase().includes(q) ||
+          String(car.year || "").includes(q);
         if (!matchesQuery) return false;
       }
 
       // Brand filter
       if (selectedBrand !== "all") {
-        if (car.brand.toLowerCase() !== selectedBrand.toLowerCase()) return false;
+        if ((car.brand || "").toLowerCase() !== selectedBrand.toLowerCase()) return false;
       }
 
       // Type filter
@@ -53,12 +84,24 @@ function InventoryContent() {
 
       // Branch filter
       if (selectedBranch !== "all") {
-        if (car.branch_id !== selectedBranch) return false;
+        const carBranchId = car.branch_id || car.branch?.branch_id;
+        if (carBranchId !== selectedBranch) return false;
       }
 
       return true;
     });
-  }, [query, selectedBrand, selectedType, selectedBranch]);
+  }, [initialVehicles, query, selectedBrand, selectedType, selectedBranch]);
+
+  const updateFilters = (key: string, value: string) => {
+    const nextParams = new URLSearchParams(searchParams.toString());
+    if (value === "all" || !value.trim()) {
+      nextParams.delete(key);
+    } else {
+      nextParams.set(key, value);
+    }
+    const nextUrl = nextParams.toString() ? `/inventory?${nextParams.toString()}` : "/inventory";
+    router.replace(nextUrl, { scroll: false });
+  };
 
   const resetFilters = () => {
     setQuery("");
@@ -69,10 +112,7 @@ function InventoryContent() {
   };
 
   return (
-    <div
-      id="view-inventory"
-      className="inventory-page-wrap max-w-7xl"
-    >
+    <div id="view-inventory" className="inventory-page-wrap max-w-7xl">
       <div style={{ marginBottom: "2rem" }}>
         <h1 className="section-h2" style={{ marginBottom: "0.5rem" }}>
           Choose per your preference
@@ -88,7 +128,10 @@ function InventoryContent() {
           type="text"
           id="cars-search-input"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            updateFilters("q", e.target.value);
+          }}
           className="cars-search-input"
           placeholder="Search by brand or model (e.g. Mercedes, Land Cruiser, BMW)..."
         />
@@ -96,26 +139,27 @@ function InventoryContent() {
         <select
           id="cars-filter-brand"
           value={selectedBrand}
-          onChange={(e) => setSelectedBrand(e.target.value)}
+          onChange={(e) => {
+            setSelectedBrand(e.target.value);
+            updateFilters("brand", e.target.value);
+          }}
           className="filter-select"
         >
           <option value="all">All Brands</option>
-          <option value="Mercedes-Benz">Mercedes-Benz</option>
-          <option value="BMW">BMW</option>
-          <option value="Lexus">Lexus</option>
-          <option value="Toyota">Toyota</option>
-          <option value="Audi">Audi</option>
-          <option value="Porsche">Porsche</option>
-          <option value="Land Rover">Land Rover</option>
-          <option value="BYD">BYD</option>
-          <option value="Nissan">Nissan</option>
-          <option value="Volvo">Volvo</option>
+          {availableBrands.map((b) => (
+            <option key={b} value={b}>
+              {b}
+            </option>
+          ))}
         </select>
 
         <select
           id="cars-filter-type"
           value={selectedType}
-          onChange={(e) => setSelectedType(e.target.value)}
+          onChange={(e) => {
+            setSelectedType(e.target.value);
+            updateFilters("type", e.target.value);
+          }}
           className="filter-select"
         >
           <option value="all">All Types</option>
@@ -126,12 +170,25 @@ function InventoryContent() {
         <select
           id="cars-filter-branch"
           value={selectedBranch}
-          onChange={(e) => setSelectedBranch(e.target.value)}
+          onChange={(e) => {
+            setSelectedBranch(e.target.value);
+            updateFilters("branch", e.target.value);
+          }}
           className="filter-select"
         >
           <option value="all">All Showroom Branches</option>
-          <option value="kakrail">Kakrail Branch (18, Monsur Ali Soroni)</option>
-          <option value="gulshan">Gulshan Branch (House #07, Road #127)</option>
+          {branches.length > 0 ? (
+            branches.map((b) => (
+              <option key={b.id} value={b.branch_id}>
+                {b.name}
+              </option>
+            ))
+          ) : (
+            <>
+              <option value="kakrail">Kakrail Branch (18, Monsur Ali Soroni)</option>
+              <option value="gulshan">Gulshan Branch (House #07, Road #127)</option>
+            </>
+          )}
         </select>
 
         <button
@@ -148,8 +205,9 @@ function InventoryContent() {
       <div id="inventory-grid" className="cars-grid-layout">
         {filteredVehicles.length > 0 ? (
           filteredVehicles.map((car) => {
-            const branch =
-              SHOWROOM_BRANCHES[car.branch_id] || SHOWROOM_BRANCHES.kakrail;
+            const branchLabel =
+              car.branch_name ||
+              (car.branch_id === "gulshan" ? "Gulshan Branch" : "Kakrail Branch");
             return (
               <div
                 key={car.id}
@@ -169,7 +227,7 @@ function InventoryContent() {
                   style={{ marginBottom: "0.5rem", position: "relative" }}
                 >
                   <img src={car.image} alt={car.name} loading="lazy" />
-                  <span className="card-branch-tag">{branch.short_name}</span>
+                  <span className="card-branch-tag">{branchLabel}</span>
                 </div>
                 <div
                   style={{
@@ -244,7 +302,7 @@ function InventoryContent() {
   );
 }
 
-export default function InventoryClient() {
+export default function InventoryClient(props: InventoryClientProps) {
   return (
     <Suspense
       fallback={
@@ -253,7 +311,7 @@ export default function InventoryClient() {
         </div>
       }
     >
-      <InventoryContent />
+      <InventoryContent {...props} />
     </Suspense>
   );
 }

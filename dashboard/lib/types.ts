@@ -16,6 +16,10 @@ export type BrandItem = {
   name: string;
   segment: string;
   image: string;
+  logo_alt?: string;
+  order: number;
+  is_in_runway: boolean;
+  destination_url?: string;
   listing_footer_text: string;
   status: string;
   target_keyword: string | null;
@@ -62,6 +66,7 @@ export type InventoryGalleryImage = {
   image: string;
   caption: string | null;
   alt_text: string;
+  tag?: string;
   order: number;
 };
 
@@ -74,8 +79,12 @@ export type InventoryListItem = {
   model: number | null;
   model_generation_name: string;
   model_name: string;
+  branch?: number | null;
+  branch_name?: string | null;
   year: number | null;
   price: string | null;
+  is_call_for_price?: boolean;
+  registration_number?: string;
   fuel_type: string;
   transmission: string;
   registered: string;
@@ -92,6 +101,17 @@ export type InventoryDetailItem = InventoryListItem & {
   condition: string;
   body_style: number | null;
   body_style_name: string;
+  branch_detail?: {
+    id: number;
+    branch_id: string;
+    name: string;
+    short_name: string;
+    address: string;
+    phone: string;
+    hotline: string;
+    hours: string;
+    map_link: string;
+  } | null;
   inventory_type: string;
   engine_capacity: string | null;
   drive_type: string | null;
@@ -173,12 +193,30 @@ export type SubscriberItem = {
   email: string;
 };
 
+export type HeroCtaButton = {
+  label: string;
+  action: "link" | "appointment_modal";
+  destination: string;
+};
+
 export type SliderItem = {
   id: number;
   heading: string;
-  image: string;
+  poster?: string;
+  video_provider?: "youtube" | "vimeo" | "direct";
+  video_source?: string;
+  video_start_time?: number;
+  video_title?: string;
+  cta_buttons?: HeroCtaButton[];
+  scroll_link_label?: string;
+  scroll_link_target?: string;
+  is_published?: boolean;
+  image?: string | null;
   is_public_active: boolean;
+  created_at?: string;
+  updated_at?: string;
 };
+
 
 export type SocialMediaItem = {
   id: number;
@@ -384,3 +422,201 @@ export type PaginatedList<T> = {
   current_page: number;
   page_size: number;
 };
+
+export type SiteSettingsItem = {
+  id: number;
+  name: string;
+  tagline: string;
+  logo_text: string;
+  logo_asset: string;
+  hotline: string;
+  phone: string;
+  email: string;
+  whatsapp: string;
+  website: string;
+  primary_address: string;
+  footer_tagline: string;
+  footer_copy_text: string;
+  opening_hours_text: string;
+  social_media: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ShowroomBranchItem = {
+  id: number;
+  branch_id: string;
+  name: string;
+  short_name: string;
+  tag: string;
+  address: string;
+  phone: string;
+  hotline: string;
+  email: string;
+  hours: string;
+  map_link: string;
+  embed_map: string;
+  order: number;
+  status: "PUBLISHED" | "UNPUBLISHED" | "ARCHIVED" | string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PreferenceHighlightItem = {
+  title: string;
+  description: string;
+};
+
+export type PreferenceCategoryItem = {
+  id: number;
+  section: number | null;
+  category_key: "BRAND_NEW" | "PRE_OWNED" | string;
+  label: string;
+  badge?: string;
+  subtext?: string;
+  image?: string | null;
+  image_url?: string | null;
+  cta_text: string;
+  cta_url: string;
+  highlights: PreferenceHighlightItem[];
+  order: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type PreferenceSectionItem = {
+  id: number;
+  heading: string;
+  badge: string;
+  subtext: string;
+  is_active: boolean;
+  categories: PreferenceCategoryItem[];
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type ConsultationTrustPill = {
+  title: string;
+  icon: string;
+};
+
+export type ConsultationSectionItem = {
+  id: number;
+  tag: string;
+  heading: string;
+  description: string;
+  trust_pills: ConsultationTrustPill[];
+  primary_cta_label: string;
+  primary_cta_action: "appointment_modal" | "internal_link" | "external_link" | string;
+  primary_cta_url: string;
+  whatsapp_cta_label: string;
+  representative: number | null;
+  whatsapp_number: string;
+  whatsapp_message: string;
+  status_beacon_text: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type ExperiencePillarItem = {
+  id: number;
+  section: number | null;
+  pillar_number: string;
+  badge: string;
+  title: string;
+  description: string;
+  image?: string | null;
+  image_url?: string | null;
+  tags: string[];
+  order: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type ExperienceSectionItem = {
+  id: number;
+  title: string;
+  subtitle: string;
+  video_cta_label: string;
+  video_target: string;
+  is_active: boolean;
+  pillars: ExperiencePillarItem[];
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type VisualChroniclesSpec = {
+  label: string;
+  value: string;
+};
+
+export type VisualChroniclesItemData = {
+  id: number;
+  section: number | null;
+  card_type: "hero" | "portrait" | "tri" | string;
+  order: number;
+  front_image?: string | null;
+  front_image_url?: string | null;
+  front_alt?: string;
+  front_badge: string;
+  back_pill: string;
+  back_number: string;
+  title: string;
+  description: string;
+  specs: VisualChroniclesSpec[];
+  cta_label: string;
+  cta_url: string;
+  is_active: boolean;
+};
+
+export type VisualChroniclesSectionItem = {
+  id: number;
+  heading: string;
+  subtitle: string;
+  stats_number: string;
+  stats_label: string;
+  archive_tag: string;
+  archive_description: string;
+  archive_cta_label: string;
+  archive_cta_url: string;
+  is_active: boolean;
+  items: VisualChroniclesItemData[];
+};
+
+export type VipSanctuaryPillarData = {
+  title: string;
+  subtitle: string;
+  icon: string;
+};
+
+export type VipSanctuarySectionItem = {
+  id: number;
+  background_image?: string | null;
+  background_image_url?: string | null;
+  eyebrow: string;
+  title: string;
+  description: string;
+  value_pillars: VipSanctuaryPillarData[];
+  primary_cta_label: string;
+  primary_cta_action: "appointment_modal" | "link" | string;
+  primary_cta_url?: string | null;
+  secondary_cta_label: string;
+  secondary_cta_url: string;
+  card_badge: string;
+  card_title: string;
+  card_live_pill: string;
+  branch?: number | null;
+  location_text?: string;
+  hours_text?: string;
+  phone_text?: string;
+  whatsapp_cta_label: string;
+  whatsapp_url: string;
+  tour_cta_label: string;
+  tour_video_target: string;
+  is_active: boolean;
+};
+
+

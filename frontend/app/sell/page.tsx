@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import SellClient from "./SellClient";
+import { getPageSEO, buildMetadataFromSEO } from "@/lib/server/api";
 
-export const metadata: Metadata = {
+const fallbackMetadata: Metadata = {
   title: "Sell Your Luxury Car & Trade-In Valuation | DREAM CAR HOUSE",
   description:
     "Confidential valuation and trade-in services for your luxury car in Bangladesh. Direct acquisition, rapid appraisal, and certified verification at DREAM CAR HOUSE.",
@@ -9,6 +10,11 @@ export const metadata: Metadata = {
     canonical: "https://dreamcarhouse.com/sell/",
   },
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getPageSEO("sell");
+  return buildMetadataFromSEO(seo, fallbackMetadata);
+}
 
 export default function SellPage() {
   return <SellClient />;

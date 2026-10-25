@@ -30,6 +30,15 @@ import type {
   OverviewData,
   PaginatedList,
   BrandCascadeImpact,
+  SiteSettingsItem,
+  ShowroomBranchItem,
+  PreferenceSectionItem,
+  ConsultationSectionItem,
+  ExperienceSectionItem,
+  ExperiencePillarItem,
+  VisualChroniclesSectionItem,
+  VisualChroniclesItemData,
+  VipSanctuarySectionItem,
 } from "../types";
 
 export type {
@@ -976,6 +985,159 @@ export async function getOverviewAggregates(): Promise<ApiResult<OverviewData>> 
     decode: (val) => val as OverviewData,
   });
 }
+
+// ----------------- Site Settings (home.SiteSettings) -----------------
+export async function getSiteSettings(): Promise<ApiResult<SiteSettingsItem>> {
+  const access = await getManagementAccess();
+  if (!access.ok) return access;
+  if (!hasPermission(access.data.user, "home.view_sitesettings")) {
+    return { ok: false, error: { code: "FORBIDDEN", message: "Missing view_sitesettings permission." } };
+  }
+
+  const { origin, cookieHeader, csrftoken } = await getAuthHeaders();
+  return requestDashboard<SiteSettingsItem>({
+    origin,
+    path: "site-settings/",
+    method: "GET",
+    cookie: cookieHeader,
+    csrfToken: csrftoken,
+    decode: (val) => val as SiteSettingsItem,
+  });
+}
+
+// ----------------- Showroom Branches (home.ShowroomBranch) -----------------
+export async function getShowroomBranchList(searchParams?: {
+  q?: string;
+  status?: string;
+  page?: number | string;
+  page_size?: number | string;
+}): Promise<ApiResult<PaginatedList<ShowroomBranchItem>>> {
+  const access = await getManagementAccess();
+  if (!access.ok) return access;
+  if (!hasPermission(access.data.user, "home.view_showroombranch")) {
+    return { ok: false, error: { code: "FORBIDDEN", message: "Missing view_showroombranch permission." } };
+  }
+
+  const { origin, cookieHeader, csrftoken } = await getAuthHeaders();
+  const params = new URLSearchParams();
+  if (searchParams?.q) params.set("q", searchParams.q);
+  if (searchParams?.status) params.set("status", searchParams.status);
+  if (searchParams?.page) params.set("page", String(searchParams.page));
+  if (searchParams?.page_size) params.set("page_size", String(searchParams.page_size));
+
+  const path = `branches/${params.toString() ? `?${params.toString()}` : ""}`;
+  return requestDashboard<PaginatedList<ShowroomBranchItem>>({
+    origin,
+    path,
+    method: "GET",
+    cookie: cookieHeader,
+    csrfToken: csrftoken,
+    decode: (val) => val as PaginatedList<ShowroomBranchItem>,
+  });
+}
+
+export const getShowroomBranches = getShowroomBranchList;
+
+export async function getShowroomBranchDetail(id: number): Promise<ApiResult<ShowroomBranchItem>> {
+  const access = await getManagementAccess();
+  if (!access.ok) return access;
+  if (!hasPermission(access.data.user, "home.view_showroombranch")) {
+    return { ok: false, error: { code: "FORBIDDEN", message: "Missing view_showroombranch permission." } };
+  }
+
+  const { origin, cookieHeader, csrftoken } = await getAuthHeaders();
+  return requestDashboard<ShowroomBranchItem>({
+    origin,
+    path: `branches/${id}/`,
+    method: "GET",
+    cookie: cookieHeader,
+    csrfToken: csrftoken,
+    decode: (val) => val as ShowroomBranchItem,
+  });
+}
+
+// ----------------- Preference Section (home.PreferenceSection, home.PreferenceCategory) -----------------
+export async function getPreferenceSectionDashboard(): Promise<ApiResult<PreferenceSectionItem>> {
+  const access = await getManagementAccess();
+  if (!access.ok) return access;
+
+  const { origin, cookieHeader, csrftoken } = await getAuthHeaders();
+  return requestDashboard<PreferenceSectionItem>({
+    origin,
+    path: "preference-section/",
+    method: "GET",
+    cookie: cookieHeader,
+    csrfToken: csrftoken,
+    decode: (val) => val as PreferenceSectionItem,
+  });
+}
+
+// ----------------- Consultation Section (home.ConsultationSection) -----------------
+export async function getConsultationSectionDashboard(): Promise<ApiResult<ConsultationSectionItem>> {
+  const access = await getManagementAccess();
+  if (!access.ok) return access;
+
+  const { origin, cookieHeader, csrftoken } = await getAuthHeaders();
+  return requestDashboard<ConsultationSectionItem>({
+    origin,
+    path: "consultation/",
+    method: "GET",
+    cookie: cookieHeader,
+    csrfToken: csrftoken,
+    decode: (val) => val as ConsultationSectionItem,
+  });
+}
+
+// ----------------- Experience Section (home.ExperienceSection, home.ExperiencePillar) -----------------
+export async function getExperienceSectionDashboard(): Promise<ApiResult<ExperienceSectionItem>> {
+  const access = await getManagementAccess();
+  if (!access.ok) return access;
+
+  const { origin, cookieHeader, csrftoken } = await getAuthHeaders();
+  return requestDashboard<ExperienceSectionItem>({
+    origin,
+    path: "experience/",
+    method: "GET",
+    cookie: cookieHeader,
+    csrfToken: csrftoken,
+    decode: (val) => val as ExperienceSectionItem,
+  });
+}
+
+// ----------------- Visual Chronicles Section (home.VisualChroniclesSection, home.VisualChroniclesItem) -----------------
+export async function getVisualChroniclesSectionDashboard(): Promise<ApiResult<VisualChroniclesSectionItem>> {
+  const access = await getManagementAccess();
+  if (!access.ok) return access;
+
+  const { origin, cookieHeader, csrftoken } = await getAuthHeaders();
+  return requestDashboard<VisualChroniclesSectionItem>({
+    origin,
+    path: "visual-chronicles/",
+    method: "GET",
+    cookie: cookieHeader,
+    csrfToken: csrftoken,
+    decode: (val) => val as VisualChroniclesSectionItem,
+  });
+}
+
+// ----------------- VIP Sanctuary Section (home.VipSanctuarySection) -----------------
+export async function getVipSanctuarySectionDashboard(): Promise<ApiResult<VipSanctuarySectionItem>> {
+  const access = await getManagementAccess();
+  if (!access.ok) return access;
+
+  const { origin, cookieHeader, csrftoken } = await getAuthHeaders();
+  return requestDashboard<VipSanctuarySectionItem>({
+    origin,
+    path: "vip-sanctuary/",
+    method: "GET",
+    cookie: cookieHeader,
+    csrfToken: csrftoken,
+    decode: (val) => val as VipSanctuarySectionItem,
+  });
+}
+
+
+
 
 
 

@@ -293,6 +293,74 @@ export async function deleteInventoryGalleryImageAction(imageId: number, invento
   return res;
 }
 
+export async function updateInventoryGalleryImageAction(
+  imageId: number,
+  inventoryId: number,
+  data: { order?: number; caption?: string; alt_text?: string; tag?: string }
+): Promise<ApiResult<InventoryGalleryImage>> {
+  const { origin, cookieHeader, csrftoken } = await getAuthContext();
+  const res = await requestDashboard<InventoryGalleryImage>({
+    origin,
+    path: `inventory/images/${imageId}/`,
+    method: "PATCH",
+    body: data,
+    cookie: cookieHeader,
+    csrfToken: csrftoken,
+    decode: (val) => val as InventoryGalleryImage,
+  });
+  if (res.ok) {
+    revalidatePath(`/workspace/inventory/${inventoryId}`);
+  }
+  return res;
+}
+
+export async function batchUpdateGalleryImagesAction(
+  inventoryId: number,
+  updates: { id: number; order?: number; caption?: string; alt_text?: string; tag?: string }[],
+  deletions: number[] = []
+): Promise<ApiResult<{ updated: number; deleted: number }>> {
+  const { origin, cookieHeader, csrftoken } = await getAuthContext();
+
+  // 1. Process deletions first
+  let deletedCount = 0;
+  for (const delId of deletions) {
+    const delRes = await requestDashboard<{ message: string; deleted_id: number }>({
+      origin,
+      path: `inventory/images/${delId}/`,
+      method: "DELETE",
+      cookie: cookieHeader,
+      csrfToken: csrftoken,
+      decode: (val) => val as { message: string; deleted_id: number },
+    });
+    if (delRes.ok) {
+      deletedCount++;
+    }
+  }
+
+  // 2. Process updates and reordering
+  let updatedCount = 0;
+  for (const item of updates) {
+    if (deletions.includes(item.id)) continue;
+    const { id, ...patchData } = item;
+    const patchRes = await requestDashboard<InventoryGalleryImage>({
+      origin,
+      path: `inventory/images/${id}/`,
+      method: "PATCH",
+      body: patchData,
+      cookie: cookieHeader,
+      csrfToken: csrftoken,
+      decode: (val) => val as InventoryGalleryImage,
+    });
+    if (patchRes.ok) {
+      updatedCount++;
+    }
+  }
+
+  revalidatePath(`/workspace/inventory/${inventoryId}`);
+  return { ok: true, data: { updated: updatedCount, deleted: deletedCount } };
+}
+
+
 // ----------------- Stock Actions -----------------
 export async function createStockAction(formData: FormData): Promise<ApiResult<StockItem>> {
   const { origin, cookieHeader, csrftoken } = await getAuthContext();

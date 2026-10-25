@@ -3,109 +3,128 @@
 import React from "react";
 import Image from "next/image";
 import { useUI } from "@/lib/UIContext";
+import type { PublicExperienceSection } from "@/lib/types";
 
-export default function ExperiencePillars() {
+interface ExperiencePillarsProps {
+  experience?: PublicExperienceSection | null;
+}
+
+const defaultExperience: PublicExperienceSection = {
+  title: "Experience Beyond Ordinary",
+  subtitle:
+    "Dhaka's benchmark in high-luxury automotive delivery, certified diagnostic inspection, and bespoke global procurement.",
+  video_cta_label: "Watch Showroom Reel",
+  video_target: "reel",
+  pillars: [
+    {
+      id: 1,
+      pillar_number: "01",
+      badge: "PRIVATE SANCTUARY",
+      title: "The VIP Delivery Vault",
+      description:
+        "An exclusive private handover suite featuring theatrical automotive unveiling, champagne reception, and confidential documentation transfer.",
+      image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1000&q=80",
+      tags: ["Soundproof Suite", "Ceremonial Reveal"],
+      order: 1,
+    },
+    {
+      id: 2,
+      pillar_number: "02",
+      badge: "PRECISION AUDIT",
+      title: "150-Point Certified Audit",
+      description:
+        "Exhaustive computerized diagnostics, chassis integrity checks, battery health analysis, and robotic paint-depth verification before showroom induction.",
+      image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1000&q=80",
+      tags: ["Computer Diagnostics", "Zero Imperfection"],
+      order: 2,
+    },
+    {
+      id: 3,
+      pillar_number: "03",
+      badge: "BESPOKE IMPORT",
+      title: "Global Bespoke Concierge",
+      description:
+        "Direct sourcing of rare luxury allocations from London, Stuttgart, and Tokyo. Secured container logistics, customs facilitation, and doorstep delivery.",
+      image: "https://images.unsplash.com/photo-1520031441872-265e4ff70366?auto=format&fit=crop&w=1000&q=80",
+      tags: ["UK & Japan Sourcing", "Turnkey Import"],
+      order: 3,
+    },
+  ],
+};
+
+export default function ExperiencePillars({ experience }: ExperiencePillarsProps) {
   const { openVideoModal } = useUI();
+
+  const data = experience || defaultExperience;
+  const pillars =
+    data.pillars && data.pillars.length >= 3
+      ? data.pillars
+      : defaultExperience.pillars;
 
   return (
     <section className="experience-section max-w-7xl" id="experience">
       <div className="experience-header">
         <div className="experience-header-text">
-          <h2 className="experience-title">Experience Beyond Ordinary</h2>
-          <p className="experience-subtitle">
-            Dhaka's benchmark in high-luxury automotive delivery, certified diagnostic inspection, and bespoke global procurement.
-          </p>
+          <h2 className="experience-title">{data.title || defaultExperience.title}</h2>
+          {data.subtitle && (
+            <p className="experience-subtitle">{data.subtitle}</p>
+          )}
         </div>
         <div className="experience-header-action">
-          <button className="see-video-btn" onClick={() => openVideoModal("reel")}>
+          <button
+            className="see-video-btn"
+            onClick={() => {
+              const target = data.video_target === "tour" ? "tour" : "reel";
+              openVideoModal(target);
+            }}
+          >
             <div className="video-play-circle">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                 <polygon points="6 3 20 12 6 21 6 3" />
               </svg>
             </div>
-            <span>Watch Showroom Reel</span>
+            <span>{data.video_cta_label || defaultExperience.video_cta_label}</span>
           </button>
         </div>
       </div>
 
       <div className="experience-pillars-grid">
-        {/* Pillar 01: The VIP Delivery Vault */}
-        <div className="experience-card">
-          <div className="experience-card-media">
-            <Image
-              src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1000&q=80"
-              alt="VIP Delivery Vault"
-              width={600}
-              height={400}
-              loading="lazy"
-            />
-            <div className="experience-card-gradient"></div>
-            <div className="experience-card-badge">PRIVATE SANCTUARY</div>
-            <div className="experience-card-num">01</div>
-          </div>
-          <div className="experience-card-content">
-            <h3 className="experience-card-title">The VIP Delivery Vault</h3>
-            <p className="experience-card-desc">
-              An exclusive private handover suite featuring theatrical automotive unveiling, champagne reception, and confidential documentation transfer.
-            </p>
-            <div className="experience-card-tags">
-              <span className="exp-tag">Soundproof Suite</span>
-              <span className="exp-tag">Ceremonial Reveal</span>
-            </div>
-          </div>
-        </div>
+        {pillars.map((pillar, idx) => {
+          const fallbackPillar = defaultExperience.pillars[idx] || defaultExperience.pillars[0];
+          const num = pillar.pillar_number || String(idx + 1).padStart(2, "0");
+          const imgSrc = pillar.image || fallbackPillar.image || "";
+          const tags = pillar.tags && pillar.tags.length > 0 ? pillar.tags : fallbackPillar.tags;
 
-        {/* Pillar 02: 150-Point Certified Audit */}
-        <div className="experience-card">
-          <div className="experience-card-media">
-            <Image
-              src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1000&q=80"
-              alt="150-Point Certified Audit"
-              width={600}
-              height={400}
-              loading="lazy"
-            />
-            <div className="experience-card-gradient"></div>
-            <div className="experience-card-badge">PRECISION AUDIT</div>
-            <div className="experience-card-num">02</div>
-          </div>
-          <div className="experience-card-content">
-            <h3 className="experience-card-title">150-Point Certified Audit</h3>
-            <p className="experience-card-desc">
-              Exhaustive computerized diagnostics, chassis integrity checks, battery health analysis, and robotic paint-depth verification before showroom induction.
-            </p>
-            <div className="experience-card-tags">
-              <span className="exp-tag">Computer Diagnostics</span>
-              <span className="exp-tag">Zero Imperfection</span>
+          return (
+            <div className="experience-card" key={pillar.id || idx}>
+              <div className="experience-card-media">
+                {/* Use unoptimized to handle remote Unsplash and local backend uploaded images without domain config restriction */}
+                <Image
+                  src={imgSrc}
+                  alt={pillar.title}
+                  width={600}
+                  height={400}
+                  loading="lazy"
+                  unoptimized
+                />
+                <div className="experience-card-gradient"></div>
+                <div className="experience-card-badge">{pillar.badge}</div>
+                <div className="experience-card-num">{num}</div>
+              </div>
+              <div className="experience-card-content">
+                <h3 className="experience-card-title">{pillar.title}</h3>
+                <p className="experience-card-desc">{pillar.description}</p>
+                <div className="experience-card-tags">
+                  {tags.map((tag, tIdx) => (
+                    <span className="exp-tag" key={tIdx}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-
-        {/* Pillar 03: White-Glove Global Procurement */}
-        <div className="experience-card">
-          <div className="experience-card-media">
-            <Image
-              src="https://images.unsplash.com/photo-1520031441872-265e4ff70366?auto=format&fit=crop&w=1000&q=80"
-              alt="White-Glove Global Concierge"
-              width={600}
-              height={400}
-              loading="lazy"
-            />
-            <div className="experience-card-gradient"></div>
-            <div className="experience-card-badge">BESPOKE IMPORT</div>
-            <div className="experience-card-num">03</div>
-          </div>
-          <div className="experience-card-content">
-            <h3 className="experience-card-title">Global Bespoke Concierge</h3>
-            <p className="experience-card-desc">
-              Direct sourcing of rare luxury allocations from London, Stuttgart, and Tokyo. Secured container logistics, customs facilitation, and doorstep delivery.
-            </p>
-            <div className="experience-card-tags">
-              <span className="exp-tag">UK & Japan Sourcing</span>
-              <span className="exp-tag">Turnkey Import</span>
-            </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
     </section>
   );

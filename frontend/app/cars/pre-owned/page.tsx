@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { VEHICLE_DATA } from "@/lib/showroomData";
+import { getPublicInventory, getCategorySEO, buildMetadataFromSEO } from "@/lib/server/api";
 import VehicleCard from "@/components/VehicleCard";
 
-export const metadata: Metadata = {
+const fallbackMetadata: Metadata = {
   title: "Certified Pre-Owned Luxury Vehicles | DREAM CAR HOUSE",
   description:
     "Explore 150-point certified pre-owned luxury cars in Dhaka at DREAM CAR HOUSE. Verified service history and showroom-ready condition.",
@@ -12,8 +12,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PreOwnedCarsPage() {
-  const preOwnedCars = VEHICLE_DATA.filter((c) => c.car_type === "PRE_OWNED");
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getCategorySEO("pre-owned");
+  return buildMetadataFromSEO(seo, fallbackMetadata);
+}
+
+export default async function PreOwnedCarsPage() {
+  let preOwnedCars: import("@/lib/types").PublicVehicle[] = [];
+  try {
+    const res = await getPublicInventory({ type: "PRE_OWNED" });
+    preOwnedCars = res.items;
+  } catch (error) {
+    console.error("[PreOwnedCarsPage] Failed to fetch inventory:", error);
+  }
 
   return (
     <div className="inventory-page-wrap max-w-7xl">
@@ -38,9 +49,15 @@ export default function PreOwnedCarsPage() {
       </div>
 
       <div className="cars-grid-layout">
-        {preOwnedCars.map((car) => (
-          <VehicleCard key={car.id} car={car} layout="grid" />
-        ))}
+        {preOwnedCars.length > 0 ? (
+          preOwnedCars.map((car) => (
+            <VehicleCard key={car.id} car={car} layout="grid" />
+          ))
+        ) : (
+          <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "4rem 1rem", color: "#9ca3af" }}>
+            No certified pre-owned luxury vehicles currently listed.
+          </div>
+        )}
       </div>
     </div>
   );

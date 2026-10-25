@@ -32,7 +32,11 @@ export function BrandEditClient({ brand }: { brand: BrandItem }) {
     setSubmitting(true);
     setFieldErrors({});
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    const runwayInput = form.elements.namedItem("is_in_runway") as HTMLInputElement | null;
+    formData.set("is_in_runway", runwayInput?.checked ? "true" : "false");
 
     // If schemaText exists, validate client-side before sending
     if (schemaText.trim()) {
@@ -120,13 +124,41 @@ export function BrandEditClient({ brand }: { brand: BrandItem }) {
             />
           </FormField>
 
-          <FormField label="Brand Logo" error={fieldErrors.image} description="Leave blank to keep existing image">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
+            <FormField label="Display Order" error={fieldErrors.order} description="Sequential ordering in listings and runway">
+              <Input type="number" name="order" defaultValue={brand.order ?? 0} />
+            </FormField>
+
+            <FormField label="Runway Strip Visibility" error={fieldErrors.is_in_runway} description="Toggle display in homepage Brand Runway">
+              <label style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginTop: "var(--space-2)", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  name="is_in_runway"
+                  defaultChecked={brand.is_in_runway !== false}
+                  style={{ width: "18px", height: "18px" }}
+                />
+                <span style={{ fontSize: "var(--font-size-sm)", fontWeight: 500 }}>
+                  Show on Homepage Brand Runway
+                </span>
+              </label>
+            </FormField>
+          </div>
+
+          <FormField label="Destination URL (CTA Link)" error={fieldErrors.destination_url} description="Custom URL or relative path (e.g. /inventory?brand=BMW). Leave blank for default.">
+            <Input name="destination_url" defaultValue={brand.destination_url || ""} placeholder="e.g. /inventory?brand=BMW" />
+          </FormField>
+
+          <FormField label="Brand Logo" error={fieldErrors.image} description="SVG, PNG, WEBP, or JPG (max 10MB). Leave blank to keep existing logo.">
             {brand.image && (
-              <div style={{ marginBottom: "var(--space-2)" }}>
-                <img src={brand.image} alt={brand.name} style={{ maxHeight: "60px", objectFit: "contain" }} />
+              <div style={{ marginBottom: "var(--space-2)", padding: "var(--space-2)", background: "#0f172a", borderRadius: "var(--radius-sm)", display: "inline-block" }}>
+                <img src={brand.image} alt={brand.logo_alt || brand.name} style={{ maxHeight: "60px", objectFit: "contain" }} />
               </div>
             )}
-            <Upload name="image" accept="image/*" />
+            <Upload name="image" accept="image/*,.svg" />
+          </FormField>
+
+          <FormField label="Logo Alt Text" error={fieldErrors.logo_alt} description="Accessible description for screen readers and search engines">
+            <Input name="logo_alt" defaultValue={brand.logo_alt || ""} placeholder="e.g. BMW luxury marque" />
           </FormField>
 
           <FormField label="Listing Footer Text" error={fieldErrors.listing_footer_text} description="Shown below pagination on brand car listing (/cars/brand/<slug>)">

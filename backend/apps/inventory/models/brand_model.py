@@ -34,10 +34,36 @@ class Brand(models.Model):
         upload_to=images_path_dir,
         max_length=500,
         validators=[FileExtensionValidator(
-            ['jpg', 'jpeg', 'png', 'webp']
+            ['jpg', 'jpeg', 'png', 'webp', 'svg']
         )],
-        help_text=_("jpg, jpeg, png, webp"),
-        verbose_name=_("Image")
+        help_text=_("jpg, jpeg, png, webp, svg"),
+        verbose_name=_("Image / Logo")
+    )
+    logo_alt = models.CharField(
+        max_length=150,
+        blank=True,
+        default="",
+        verbose_name=_("Logo Alt Text"),
+        help_text=_("Accessible description for brand logo. Defaults to brand name if blank.")
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        db_index=True,
+        verbose_name=_("Display Order"),
+        help_text=_("Display order in lists and brand runway.")
+    )
+    is_in_runway = models.BooleanField(
+        default=True,
+        db_index=True,
+        verbose_name=_("Show in Brand Runway"),
+        help_text=_("Whether this brand appears in the homepage Brand Runway.")
+    )
+    destination_url = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name=_("Destination URL"),
+        help_text=_("Custom CTA link or relative path (e.g. /inventory?brand=BMW). Defaults to /inventory?brand=<name>.")
     )
     listing_footer_text = models.TextField(
         blank=True,
@@ -90,7 +116,7 @@ class Brand(models.Model):
         null=True,
         default=None,
         verbose_name=_("Canonical URL"),
-        help_text=_("Preferred URL for this page, e.g. https://www.begautos.com/cars/brand/toyota/."),
+        help_text=_("Preferred URL for this page, e.g. https://dreamcarhouse.com/cars/brand/toyota/."),
     )
     robots = models.CharField(
         max_length=50,
@@ -152,6 +178,8 @@ class Brand(models.Model):
         verbose_name = "Car Brand"
         verbose_name_plural = "Car Brands"
         db_table = "tbl_brand"
+        ordering = ["order", "name"]
         indexes = [
-            models.Index(fields=['status']),
+            models.Index(fields=["status"]),
+            models.Index(fields=["status", "is_in_runway", "order"]),
         ]

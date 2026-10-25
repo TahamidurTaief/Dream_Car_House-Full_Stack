@@ -12,18 +12,21 @@ import { Upload } from "@/components/ui/Upload";
 import { Tabs } from "@/components/ui/Tabs";
 import { Switch } from "@/components/ui/Switch";
 import { useToast } from "@/components/ui/Toast";
-import { Trash2, ArrowLeft } from "lucide-react";
 import {
   createInventoryAction,
   updateInventoryAction,
   uploadInventoryGalleryImageAction,
   deleteInventoryGalleryImageAction,
+  batchUpdateGalleryImagesAction,
 } from "@/app/actions/inventory";
+import { ArrowUp, ArrowDown, Trash2, ArrowLeft, Save } from "lucide-react";
 import type {
   InventoryDetailItem,
   BrandItem,
   ModelGenerationItem,
   BodyStyleItem,
+  ShowroomBranchItem,
+  InventoryGalleryImage,
 } from "@/lib/types";
 
 export function InventoryFormClient({
@@ -31,11 +34,13 @@ export function InventoryFormClient({
   brands,
   allModels,
   bodyStyles,
+  branches = [],
 }: {
   initialCar?: InventoryDetailItem;
   brands: BrandItem[];
   allModels: ModelGenerationItem[];
   bodyStyles: BodyStyleItem[];
+  branches?: ShowroomBranchItem[];
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -54,6 +59,19 @@ export function InventoryFormClient({
     initialCar?.model ? String(initialCar.model) : ""
   );
 
+  // Showroom Branch association state
+  const [selectedBranchId, setSelectedBranchId] = useState<string>(
+    initialCar?.branch ? String(initialCar.branch) : ""
+  );
+
+  // Pricing & presentation state
+  const [isCallForPrice, setIsCallForPrice] = useState<boolean>(
+    initialCar?.is_call_for_price ?? false
+  );
+  const [registrationNumber, setRegistrationNumber] = useState<string>(
+    initialCar?.registration_number ?? ""
+  );
+
   const [isFeatured, setIsFeatured] = useState<boolean>(initialCar?.is_featured ?? false);
 
   const [schemaText, setSchemaText] = useState(
@@ -61,8 +79,12 @@ export function InventoryFormClient({
   );
 
   // Gallery state for edit mode
-  const [galleryImages, setGalleryImages] = useState(initialCar?.inventory_images || []);
+  const [galleryImages, setGalleryImages] = useState<InventoryGalleryImage[]>(
+    initialCar?.inventory_images || []
+  );
+  const [pendingDeletions, setPendingDeletions] = useState<number[]>([]);
   const [galleryUploading, setGalleryUploading] = useState(false);
+  const [gallerySaving, setGallerySaving] = useState(false);
 
   // Filter model choices dynamically by selectedBrandId
   const filteredModels = useMemo(() => {
@@ -88,7 +110,14 @@ export function InventoryFormClient({
 
     const formData = new FormData(e.currentTarget);
     formData.set("is_featured", isFeatured ? "true" : "false");
+    formData.set("is_call_for_price", isCallForPrice ? "true" : "false");
+    formData.set("registration_number", registrationNumber.trim());
     formData.set("brand", selectedBrandId);
+    if (selectedBranchId) {
+      formData.set("branch", selectedBranchId);
+    } else {
+      formData.delete("branch");
+    }
     if (selectedModelId) {
       formData.set("model", selectedModelId);
     } else {
@@ -158,18 +187,61 @@ export function InventoryFormClient({
     e.target.value = "";
   };
 
-  const handleDeleteGalleryImage = async (imageId: number) => {
+  const handleMoveGalleryImage = (index: number, direction: "up" | "down") => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= galleryImages.length) return;
+    const itemA = galleryImages[index];
+    const itemB = galleryImages[targetIndex];
+    if (!itemA || !itemB) return;
+    const next = [...galleryImages];
+    next[index] = itemB;
+    next[targetIndex] = itemA;
+    const reordered = next.map((img, idx) => ({ ...img, order: idx + 1 }));
+    setGalleryImages(reordered);
+  };
+
+  const handleUpdateGalleryField = (
+    id: number,
+    field: "order" | "alt_text" | "caption" | "tag",
+    val: string | number
+  ) => {
+    setGalleryImages((prev) =>
+      prev.map((img) => (img.id === id ? { ...img, [field]: val } : img))
+    );
+  };
+
+  const handleStageGalleryDelete = (imageId: number) => {
+    setGalleryImages((prev) => prev.filter((img) => img.id !== imageId));
+    setPendingDeletions((prev) => (prev.includes(imageId) ? prev : [...prev, imageId]));
+  };
+
+  const handleSaveGalleryBatch = async () => {
     if (!initialCar) return;
-    const res = await deleteInventoryGalleryImageAction(imageId, initialCar.id);
+    setGallerySaving(true);
+    const updates = galleryImages.map((img, idx) => ({
+      id: img.id,
+      order: typeof img.order === "number" ? img.order : idx + 1,
+      alt_text: img.alt_text || "",
+      caption: img.caption || "",
+      tag: img.tag || "",
+    }));
+
+    const res = await batchUpdateGalleryImagesAction(initialCar.id, updates, pendingDeletions);
+    setGallerySaving(false);
     if (res.ok) {
-      showToast("Gallery image deleted.", "success");
-      setGalleryImages((prev) => prev.filter((img) => img.id !== imageId));
+      showToast("Gallery saved successfully.", "success");
+      setPendingDeletions([]);
+      router.refresh();
     } else {
-      showToast(res.error.message || "Failed to delete gallery image.", "error");
+      showToast(res.error.message || "Failed to update gallery.", "error");
     }
   };
 
   const brandOptions = brands.map((b) => ({ label: b.name, value: String(b.id) }));
+  const branchOptions = [
+    { label: "-- Unassigned (Global / Main) --", value: "" },
+    ...branches.map((b) => ({ label: `${b.name} (${b.branch_id || b.short_name || b.id})`, value: String(b.id) })),
+  ];
   const modelOptions = [
     { label: "-- Select Model Generation --", value: "" },
     ...filteredModels.map((m) => ({ label: m.model, value: String(m.id) })),
@@ -292,6 +364,19 @@ export function InventoryFormClient({
             </FormField>
           </div>
 
+          <FormField
+            label="Showroom Branch"
+            error={fieldErrors.branch}
+            description="Assigned showroom location (e.g. Kakrail, Gulshan). Cards and detail pages show actual branch."
+          >
+            <Select
+              name="branch_select"
+              options={branchOptions}
+              value={selectedBranchId}
+              onChange={(e) => setSelectedBranchId(e.target.value)}
+            />
+          </FormField>
+
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4)", paddingTop: "var(--space-2)" }}>
             <Switch
               label="Feature on Homepage / Showcase"
@@ -370,7 +455,7 @@ export function InventoryFormClient({
       {activeTab === "pricing" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
-            <FormField label="Price (BDT)" error={fieldErrors.price} description="Decimal precision preserved (e.g. 29500000.00)">
+            <FormField label="Price (BDT)" error={fieldErrors.price} description="Decimal numeric value preserved separately (e.g. 28000000.00)">
               <Input name="price" defaultValue={initialCar?.price ? String(initialCar.price) : ""} placeholder="e.g. 28000000.00" />
             </FormField>
 
@@ -386,7 +471,27 @@ export function InventoryFormClient({
             </FormField>
           </div>
 
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", padding: "var(--space-3)", background: "var(--surface-raised, rgba(255,255,255,0.03))", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
+            <Switch
+              label="Call for Price / VIP Valuation Display Mode"
+              checked={isCallForPrice}
+              onChange={(e) => setIsCallForPrice(e.target.checked)}
+            />
+            <p className="muted" style={{ fontSize: "var(--font-size-xs)", margin: 0 }}>
+              When enabled, public listing cards and vehicle detail pages show &quot;Call for Price&quot; or &quot;Price Upon Request • VIP Consultation&quot;. The exact numeric price entered above is safely stored in the database for financial tracking.
+            </p>
+          </div>
+
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
+            <FormField label="Registration Number / Paper Details" error={fieldErrors.registration_number} description="Chassis, auction grade, or Bangladesh paper registration info">
+              <Input
+                name="registration_number"
+                value={registrationNumber}
+                onChange={(e) => setRegistrationNumber(e.target.value)}
+                placeholder="e.g. DHAKA-METRO-GA-12-3456"
+              />
+            </FormField>
+
             <FormField
               label="Availability in Showroom"
               required
@@ -405,26 +510,26 @@ export function InventoryFormClient({
                 required
               />
             </FormField>
-
-            <FormField
-              label="Publication Status"
-              required
-              error={fieldErrors.status}
-              description="Visibility state (Published, Unpublished, Archived, Unlisted). Distinct from availability!"
-            >
-              <Select
-                name="status"
-                options={[
-                  { label: "Published (Visible on site)", value: "PUBLISHED" },
-                  { label: "Unpublished (Draft)", value: "UNPUBLISHED" },
-                  { label: "Archived (Hidden from list)", value: "ARCHIVED" },
-                  { label: "Unlisted (Link only)", value: "UNLISTED" },
-                ]}
-                defaultValue={initialCar?.status || "PUBLISHED"}
-                required
-              />
-            </FormField>
           </div>
+
+          <FormField
+            label="Publication Status"
+            required
+            error={fieldErrors.status}
+            description="Visibility state (Published, Unpublished, Archived, Unlisted). Distinct from availability!"
+          >
+            <Select
+              name="status"
+              options={[
+                { label: "Published (Visible on site)", value: "PUBLISHED" },
+                { label: "Unpublished (Draft)", value: "UNPUBLISHED" },
+                { label: "Archived (Hidden from list)", value: "ARCHIVED" },
+                { label: "Unlisted (Link only)", value: "UNLISTED" },
+              ]}
+              defaultValue={initialCar?.status || "PUBLISHED"}
+              required
+            />
+          </FormField>
         </div>
       )}
 
@@ -446,25 +551,44 @@ export function InventoryFormClient({
 
           {isEdit && (
             <div style={{ marginTop: "var(--space-4)", borderTop: "1px solid var(--border)", paddingTop: "var(--space-4)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-3)" }}>
-                <h4 style={{ margin: 0 }}>Gallery Images ({galleryImages.length})</h4>
-                <label className="button button--secondary" style={{ cursor: "pointer", fontSize: "var(--font-size-xs)" }}>
-                  {galleryUploading ? "Uploading..." : "+ Add Gallery Image"}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleUploadGalleryImage}
-                    disabled={galleryUploading}
-                    style={{ display: "none" }}
-                  />
-                </label>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-3)", flexWrap: "wrap", gap: "var(--space-2)" }}>
+                <div>
+                  <h4 style={{ margin: 0 }}>Gallery Images ({galleryImages.length})</h4>
+                  {pendingDeletions.length > 0 && (
+                    <span style={{ fontSize: "var(--font-size-xs)", color: "var(--danger)" }}>
+                      ({pendingDeletions.length} marked for deletion on save)
+                    </span>
+                  )}
+                </div>
+                <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    disabled={gallerySaving}
+                    onClick={handleSaveGalleryBatch}
+                    style={{ fontSize: "var(--font-size-xs)", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                  >
+                    <Save size={14} />
+                    {gallerySaving ? "Saving..." : "Save Gallery Order & Details"}
+                  </Button>
+                  <label className="button button--secondary" style={{ cursor: "pointer", fontSize: "var(--font-size-xs)" }}>
+                    {galleryUploading ? "Uploading..." : "+ Add Gallery Image"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleUploadGalleryImage}
+                      disabled={galleryUploading}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                </div>
               </div>
 
               {galleryImages.length === 0 ? (
                 <p className="muted" style={{ fontSize: "var(--font-size-sm)" }}>No gallery photos uploaded yet.</p>
               ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "var(--space-3)" }}>
-                  {galleryImages.map((img) => (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "var(--space-3)" }}>
+                  {galleryImages.map((img, index) => (
                     <div
                       key={img.id}
                       style={{
@@ -473,31 +597,123 @@ export function InventoryFormClient({
                         borderRadius: "var(--radius-sm)",
                         overflow: "hidden",
                         background: "var(--background)",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "6px",
+                        padding: "8px",
                       }}
                     >
-                      <img
-                        src={img.image}
-                        alt={img.alt_text || "Vehicle gallery image"}
-                        style={{ width: "100%", height: "90px", objectFit: "cover" }}
-                      />
-                      <div style={{ padding: "4px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>Order: {img.order}</span>
+                      <div style={{ position: "relative", width: "100%", height: "120px", borderRadius: "4px", overflow: "hidden", background: "#000" }}>
+                        <img
+                          src={img.image}
+                          alt={img.alt_text || "Vehicle gallery image"}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
                         <button
                           type="button"
-                          onClick={() => handleDeleteGalleryImage(img.id)}
-                          aria-label="Delete gallery image"
+                          onClick={() => handleStageGalleryDelete(img.id)}
+                          aria-label="Remove gallery image"
                           style={{
-                            background: "transparent",
-                            border: "none",
+                            position: "absolute",
+                            top: "4px",
+                            right: "4px",
+                            background: "rgba(0,0,0,0.7)",
+                            border: "1px solid var(--border)",
+                            borderRadius: "4px",
                             color: "var(--danger)",
                             cursor: "pointer",
-                            padding: "2px",
+                            padding: "4px",
                             display: "inline-flex",
                             alignItems: "center",
                           }}
                         >
-                          <Trash2 size={12} />
+                          <Trash2 size={13} />
                         </button>
+                      </div>
+
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "11px", fontWeight: "bold" }}>#{index + 1} (Order: {img.order})</span>
+                        <div style={{ display: "flex", gap: "2px" }}>
+                          <button
+                            type="button"
+                            disabled={index === 0}
+                            onClick={() => handleMoveGalleryImage(index, "up")}
+                            style={{
+                              background: "transparent",
+                              border: "1px solid var(--border)",
+                              borderRadius: "3px",
+                              color: "var(--foreground)",
+                              cursor: index === 0 ? "not-allowed" : "pointer",
+                              padding: "2px 4px",
+                              opacity: index === 0 ? 0.3 : 1,
+                            }}
+                            title="Move up"
+                          >
+                            <ArrowUp size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={index === galleryImages.length - 1}
+                            onClick={() => handleMoveGalleryImage(index, "down")}
+                            style={{
+                              background: "transparent",
+                              border: "1px solid var(--border)",
+                              borderRadius: "3px",
+                              color: "var(--foreground)",
+                              cursor: index === galleryImages.length - 1 ? "not-allowed" : "pointer",
+                              padding: "2px 4px",
+                              opacity: index === galleryImages.length - 1 ? 0.3 : 1,
+                            }}
+                            title="Move down"
+                          >
+                            <ArrowDown size={12} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <label style={{ fontSize: "10px", color: "var(--text-muted)" }}>Perspective Tag</label>
+                        <select
+                          value={img.tag || ""}
+                          onChange={(e) => handleUpdateGalleryField(img.id, "tag", e.target.value)}
+                          style={{
+                            fontSize: "11px",
+                            padding: "3px 6px",
+                            background: "var(--surface)",
+                            color: "var(--foreground)",
+                            border: "1px solid var(--border)",
+                            borderRadius: "4px",
+                          }}
+                        >
+                          <option value="">No Tag</option>
+                          <option value="EXTERIOR">EXTERIOR</option>
+                          <option value="PROFILE">PROFILE</option>
+                          <option value="COCKPIT">COCKPIT</option>
+                          <option value="INTERIOR">INTERIOR</option>
+                          <option value="WHEELS">WHEELS</option>
+                          <option value="REAR">REAR</option>
+                          <option value="ENGINE">ENGINE</option>
+                          <option value="TRUNK">TRUNK</option>
+                          <option value="OTHER">OTHER</option>
+                        </select>
+                      </div>
+
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <label style={{ fontSize: "10px", color: "var(--text-muted)" }}>Alt Text / Caption</label>
+                        <input
+                          type="text"
+                          value={img.alt_text || ""}
+                          onChange={(e) => handleUpdateGalleryField(img.id, "alt_text", e.target.value)}
+                          placeholder="Accessible description"
+                          style={{
+                            fontSize: "11px",
+                            padding: "3px 6px",
+                            background: "var(--surface)",
+                            color: "var(--foreground)",
+                            border: "1px solid var(--border)",
+                            borderRadius: "4px",
+                          }}
+                        />
                       </div>
                     </div>
                   ))}

@@ -3,17 +3,70 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useUI } from "@/lib/UIContext";
-import { VEHICLE_DATA, Vehicle } from "@/lib/showroomData";
+import { Vehicle } from "@/lib/showroomData";
 
 export default function CompareModal() {
   const { isCompareOpen, closeCompareModal, openCarModal } = useUI();
-  const [car1Id, setCar1Id] = useState<number>(VEHICLE_DATA[0]?.id || 1);
-  const [car2Id, setCar2Id] = useState<number>(VEHICLE_DATA[1]?.id || 2);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [car1Id, setCar1Id] = useState<number>(0);
+  const [car2Id, setCar2Id] = useState<number>(0);
+
+  React.useEffect(() => {
+    if (isCompareOpen) {
+      fetch("/api/v1/inventory/")
+        .then((res) => res.json())
+        .then((json) => {
+          const list = json?.data?.results || json?.data?.items || json?.data || [];
+          if (Array.isArray(list) && list.length > 0) {
+            const mapped: Vehicle[] = list.map((c: Record<string, unknown>) => {
+              const branch = c.branch && typeof c.branch === "object" ? (c.branch as Record<string, unknown>) : null;
+              return {
+                id: typeof c.id === "number" ? c.id : 0,
+                name: String(c.name || ""),
+                brand: String(c.brand || ""),
+                model: String(c.model_name || c.model || ""),
+                year: typeof c.year === "number" ? c.year : 0,
+                car_type: c.car_type === "PRE_OWNED" ? "PRE_OWNED" : "BRAND_NEW",
+                fuel_type: String(c.fuel_type || ""),
+                engine_capacity: c.engine_capacity ? String(c.engine_capacity) : "",
+                mileage: c.mileage ? String(c.mileage) : "",
+                price: c.price ? String(c.price) : "Call for Price",
+                registered: String(c.registered || "Available"),
+                branch_id: (branch?.branch_id as "kakrail" | "gulshan") || "kakrail",
+                branch_name: String(branch?.name || "Kakrail Branch & Showroom"),
+                branch_address: String(branch?.address || "18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000"),
+                image: typeof c.feature_image === "string" ? c.feature_image : "/assets/maybach_hero_poster.jpg",
+                images: [],
+                description: String(c.description || ""),
+                slug: String(c.slug || c.id || ""),
+                drivetrain: typeof c.drive_type === "string" ? c.drive_type : undefined,
+              };
+            });
+            setVehicles(mapped);
+            if (mapped[0]) setCar1Id(mapped[0].id);
+            if (mapped[1]) setCar2Id(mapped[1].id);
+            else if (mapped[0]) setCar2Id(mapped[0].id);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isCompareOpen]);
 
   if (!isCompareOpen) return null;
 
-  const car1 = VEHICLE_DATA.find((c) => c.id === car1Id) || VEHICLE_DATA[0];
-  const car2 = VEHICLE_DATA.find((c) => c.id === car2Id) || VEHICLE_DATA[1];
+  const car1 = vehicles.find((c) => c.id === car1Id) || vehicles[0];
+  const car2 = vehicles.find((c) => c.id === car2Id) || vehicles[1] || vehicles[0];
+
+  if (!car1 || !car2) {
+    return (
+      <div className="car-modal-backdrop active" onClick={closeCompareModal}>
+        <div className="car-modal-box" style={{ maxWidth: "32rem", textAlign: "center", padding: "3rem 1.5rem" }} onClick={(e) => e.stopPropagation()}>
+          <button className="modal-close-x" onClick={closeCompareModal} aria-label="Close Vehicle Comparison">&times;</button>
+          <p style={{ color: "#9ca3af" }}>Loading showroom inventory for comparison...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="car-modal-backdrop active" onClick={closeCompareModal}>
@@ -51,7 +104,7 @@ export default function CompareModal() {
               className="appt-input appt-select"
               style={{ width: "100%" }}
             >
-              {VEHICLE_DATA.map((c) => (
+              {vehicles.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.brand} {c.name} ({c.year})
                 </option>
@@ -69,7 +122,7 @@ export default function CompareModal() {
               className="appt-input appt-select"
               style={{ width: "100%" }}
             >
-              {VEHICLE_DATA.map((c) => (
+              {vehicles.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.brand} {c.name} ({c.year})
                 </option>

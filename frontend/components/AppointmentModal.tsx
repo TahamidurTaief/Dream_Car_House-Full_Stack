@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { useUI } from "@/lib/UIContext";
+import { submitAppointmentEnquiryAction, AppointmentSubmissionResult } from "@/app/actions/appointment";
 
 export default function AppointmentModal() {
   const { isAppointmentOpen, closeAppointmentModal, appointmentPrefill } = useUI();
@@ -12,7 +13,9 @@ export default function AppointmentModal() {
   const [branch, setBranch] = useState("kakrail");
   const [date, setDate] = useState("");
   const [notes, setNotes] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState<AppointmentSubmissionResult["data"] | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     if (appointmentPrefill.carName) {
@@ -21,25 +24,39 @@ export default function AppointmentModal() {
     if (appointmentPrefill.branchId) {
       setBranch(appointmentPrefill.branchId);
     }
-    setSubmitted(false);
+    setSubmissionResult(null);
+    setErrorMessage(null);
   }, [appointmentPrefill, isAppointmentOpen]);
 
   if (!isAppointmentOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    if (isPending) return;
+
+    setErrorMessage(null);
+    startTransition(async () => {
+      const res = await submitAppointmentEnquiryAction({
+        fullName,
+        phone,
+        interest,
+        branch,
+        date,
+        notes,
+      });
+
+      if (!res.ok) {
+        setErrorMessage(res.error || "Failed to submit appointment. Please verify details.");
+      } else if (res.data) {
+        setSubmissionResult(res.data);
+      }
+    });
   };
 
   const branchLabel =
     branch === "kakrail"
       ? "Kakrail Branch (18, Shaheed Captain Monsur Ali Soroni)"
       : "Gulshan Branch (House #07, Road #127, Gulshan Avenue)";
-
-  const waAppointmentMsg = encodeURIComponent(
-    `Hello DREAM CAR HOUSE Concierge,\n\nI would like to schedule a VIP Private Consultation.\n\n• Name: ${fullName}\n• Phone: ${phone}\n• Interest: ${interest}\n• Showroom Branch: ${branchLabel}\n• Preferred Date: ${date || "Earliest Available"}\n• Notes: ${notes || "General VIP Tour"}`
-  );
-  const waAppointmentUrl = `https://wa.me/8801615121312?text=${waAppointmentMsg}`;
 
   return (
     <div className="car-modal-backdrop active" onClick={closeAppointmentModal}>
@@ -61,7 +78,31 @@ export default function AppointmentModal() {
           </p>
         </div>
 
-        {!submitted ? (
+        {errorMessage && (
+          <div
+            style={{
+              background: "rgba(239, 68, 68, 0.15)",
+              border: "1px solid rgba(239, 68, 68, 0.4)",
+              borderRadius: "8px",
+              padding: "0.75rem 1rem",
+              marginBottom: "1rem",
+              color: "#fca5a5",
+              fontSize: "0.85rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+        {!submissionResult ? (
           <form id="appointment-form" onSubmit={handleSubmit} className="appointment-form-grid">
             <div className="form-group">
               <label htmlFor="appt-name">Full Name *</label>
@@ -69,6 +110,7 @@ export default function AppointmentModal() {
                 type="text"
                 id="appt-name"
                 required
+                disabled={isPending}
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="e.g. Asif Mahmud"
@@ -82,6 +124,7 @@ export default function AppointmentModal() {
                 type="tel"
                 id="appt-phone"
                 required
+                disabled={isPending}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+880 1XXX-XXXXXX"
@@ -93,6 +136,7 @@ export default function AppointmentModal() {
               <label htmlFor="appt-interest">Consultation Interest</label>
               <select
                 id="appt-interest"
+                disabled={isPending}
                 value={interest}
                 onChange={(e) => setInterest(e.target.value)}
                 className="appt-input appt-select"
@@ -108,6 +152,7 @@ export default function AppointmentModal() {
               <label htmlFor="appt-branch">Showroom Branch</label>
               <select
                 id="appt-branch"
+                disabled={isPending}
                 value={branch}
                 onChange={(e) => setBranch(e.target.value)}
                 className="appt-input appt-select"
@@ -122,6 +167,7 @@ export default function AppointmentModal() {
               <input
                 type="date"
                 id="appt-date"
+                disabled={isPending}
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
                 className="appt-input"
@@ -133,6 +179,7 @@ export default function AppointmentModal() {
               <input
                 type="text"
                 id="appt-notes"
+                disabled={isPending}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="e.g. Interested in Mercedes G 580 or Land Cruiser 250"
@@ -143,13 +190,31 @@ export default function AppointmentModal() {
             <div className="form-actions full-width">
               <button
                 type="submit"
+                disabled={isPending}
                 className="consult-primary-btn"
-                style={{ width: "100%", justifyContent: "center" }}
+                style={{
+                  width: "100%",
+                  justifyContent: "center",
+                  opacity: isPending ? 0.7 : 1,
+                  cursor: isPending ? "not-allowed" : "pointer",
+                }}
               >
-                <span>Confirm VIP Appointment</span>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
+                {isPending ? (
+                  <>
+                    <svg className="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
+                      <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" className="opacity-75" />
+                    </svg>
+                    <span>Securing Reservation in Database...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Confirm VIP Appointment</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </>
+                )}
               </button>
             </div>
           </form>
@@ -160,33 +225,32 @@ export default function AppointmentModal() {
                 <path d="M20 6L9 17l-5-5" />
               </svg>
               <h4 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#ffffff", margin: 0 }}>
-                Appointment Request Prepared!
+                Reservation Confirmed & Saved!
               </h4>
             </div>
 
             <p style={{ color: "#d1d5db", fontSize: "0.92rem", lineHeight: "1.6", marginBottom: "1.25rem" }}>
-              Thank you, <strong>{fullName}</strong>. Your consultation details for{" "}
-              <strong>{branchLabel}</strong> have been recorded in this browser session.
+              Thank you, <strong>{submissionResult.fullName}</strong>. Your consultation reservation for{" "}
+              <strong>{submissionResult.branchLabel}</strong> has been validated and permanently recorded in our showroom database (Booking Ref #{submissionResult.id}).
             </p>
 
-            {/* Note on static export integration */}
             <div
               style={{
-                background: "rgba(234, 179, 8, 0.1)",
-                border: "1px solid rgba(234, 179, 8, 0.3)",
+                background: "rgba(34, 197, 94, 0.08)",
+                border: "1px solid rgba(34, 197, 94, 0.25)",
                 borderRadius: "8px",
                 padding: "0.85rem 1rem",
                 marginBottom: "1.25rem",
                 fontSize: "0.82rem",
-                color: "#fef08a",
+                color: "#86efac",
                 lineHeight: "1.5",
               }}
             >
-              <strong>Notice:</strong> This site is operating under static build mode. To finalize your instant reservation with zero delay, connect directly with our active VIP concierge on WhatsApp below:
+              <strong>Concierge Status:</strong> Our VIP Client Director has received your enquiry. You can also transmit the details directly to our active WhatsApp desk below for expedited scheduling:
             </div>
 
             <a
-              href={waAppointmentUrl}
+              href={submissionResult.waUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="consult-whatsapp-btn"

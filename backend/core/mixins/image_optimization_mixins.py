@@ -38,9 +38,9 @@ class OptimizedImageSerializerMixin:
                 os.path.basename(image_field.name)
             )[0]
 
-            # Skip video files
+            # Skip video and vector SVG files (serve as original)
             image_name_lower = image_field.name.lower()
-            if any(image_name_lower.endswith(ext) for ext in ['.mp4', '.mov', '.avi', '.mkv', '.webm']):
+            if any(image_name_lower.endswith(ext) for ext in ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.svg']):
                 return request.build_absolute_uri(image_url)
 
             # Resolve local path (skip for remote/S3 storage)

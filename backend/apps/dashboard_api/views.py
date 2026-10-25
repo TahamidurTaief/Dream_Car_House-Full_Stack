@@ -24,6 +24,14 @@ from apps.home.models import (
     SalesRepresentative,
     SiteSettings,
     ShowroomBranch,
+    PreferenceSection,
+    PreferenceCategory,
+    ConsultationSection,
+    ExperienceSection,
+    ExperiencePillar,
+    VisualChroniclesSection,
+    VisualChroniclesItem,
+    VipSanctuarySection,
 )
 from django.contrib.auth.models import User, Group, Permission
 from apps.seo_config.models import SEOConfig, CategoryPageSEO
@@ -53,6 +61,14 @@ from .serializers import (
     PermissionSerializer,
     SiteSettingsManagementSerializer,
     ShowroomBranchManagementSerializer,
+    PreferenceSectionManagementSerializer,
+    PreferenceCategoryManagementSerializer,
+    ConsultationSectionManagementSerializer,
+    ExperienceSectionManagementSerializer,
+    ExperiencePillarManagementSerializer,
+    VisualChroniclesItemManagementSerializer,
+    VisualChroniclesSectionManagementSerializer,
+    VipSanctuarySectionManagementSerializer,
 )
 
 
@@ -2187,4 +2203,318 @@ class ShowroomBranchDetailView(DashboardBaseAPIView):
                 "deleted_id": int(pk),
             }
         })
+
+
+class PreferenceSectionManagementView(DashboardBaseAPIView):
+    permission_classes = (IsActiveStaff, DashboardModelPermission)
+    model = PreferenceSection
+
+    def get(self, request):
+        section = PreferenceSection.objects.first()
+        if not section:
+            return Response({"success": True, "data": None})
+        serializer = PreferenceSectionManagementSerializer(section, context={"request": request})
+        return Response({"success": True, "data": serializer.data})
+
+    def post(self, request):
+        section = PreferenceSection.objects.first()
+        if section:
+            serializer = PreferenceSectionManagementSerializer(section, data=request.data, partial=True, context={"request": request})
+        else:
+            serializer = PreferenceSectionManagementSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        saved = serializer.save()
+        return Response(
+            {"success": True, "data": PreferenceSectionManagementSerializer(saved, context={"request": request}).data},
+            status=status.HTTP_200_OK if section else status.HTTP_201_CREATED,
+        )
+
+    def patch(self, request):
+        section = PreferenceSection.objects.first()
+        if not section:
+            section = PreferenceSection.objects.create(heading="Choose per your preference")
+        serializer = PreferenceSectionManagementSerializer(section, data=request.data, partial=True, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        saved = serializer.save()
+        return Response({"success": True, "data": PreferenceSectionManagementSerializer(saved, context={"request": request}).data})
+
+
+class PreferenceCategoryListCreateView(DashboardBaseAPIView):
+    permission_classes = (IsActiveStaff, DashboardModelPermission)
+    model = PreferenceCategory
+
+    def get(self, request):
+        qs = PreferenceCategory.objects.all().order_by("order", "id")
+        serializer = PreferenceCategoryManagementSerializer(qs, many=True, context={"request": request})
+        return Response({"success": True, "data": serializer.data})
+
+    def post(self, request):
+        serializer = PreferenceCategoryManagementSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        cat = serializer.save()
+        return Response(
+            {"success": True, "data": PreferenceCategoryManagementSerializer(cat, context={"request": request}).data},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class PreferenceCategoryDetailView(DashboardBaseAPIView):
+    permission_classes = (IsActiveStaff, DashboardModelPermission)
+    model = PreferenceCategory
+
+    def get(self, request, pk):
+        cat = get_object_or_404(PreferenceCategory, pk=pk)
+        return Response({"success": True, "data": PreferenceCategoryManagementSerializer(cat, context={"request": request}).data})
+
+    def patch(self, request, pk):
+        cat = get_object_or_404(PreferenceCategory, pk=pk)
+        serializer = PreferenceCategoryManagementSerializer(cat, data=request.data, partial=True, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        updated = serializer.save()
+        return Response({"success": True, "data": PreferenceCategoryManagementSerializer(updated, context={"request": request}).data})
+
+    def delete(self, request, pk):
+        cat = get_object_or_404(PreferenceCategory, pk=pk)
+        label = cat.label
+        cat.delete()
+        return Response({
+            "success": True,
+            "data": {
+                "message": f"Preference category '{label}' deleted successfully.",
+                "deleted_id": int(pk),
+            }
+        })
+
+
+class ConsultationSectionManagementView(DashboardBaseAPIView):
+    permission_classes = (IsActiveStaff, DashboardModelPermission)
+    model = ConsultationSection
+
+    def get(self, request):
+        section = ConsultationSection.objects.first()
+        if not section:
+            return Response({"success": True, "data": None})
+        serializer = ConsultationSectionManagementSerializer(section, context={"request": request})
+        return Response({"success": True, "data": serializer.data})
+
+    def post(self, request):
+        section = ConsultationSection.objects.first()
+        if section:
+            serializer = ConsultationSectionManagementSerializer(section, data=request.data, partial=True, context={"request": request})
+        else:
+            serializer = ConsultationSectionManagementSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        saved = serializer.save()
+        return Response(
+            {"success": True, "data": ConsultationSectionManagementSerializer(saved, context={"request": request}).data},
+            status=status.HTTP_200_OK if section else status.HTTP_201_CREATED,
+        )
+
+    def patch(self, request):
+        section = ConsultationSection.objects.first()
+        if not section:
+            section = ConsultationSection.objects.create(heading="Connect to Consult")
+        serializer = ConsultationSectionManagementSerializer(section, data=request.data, partial=True, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        saved = serializer.save()
+        return Response({"success": True, "data": ConsultationSectionManagementSerializer(saved, context={"request": request}).data})
+
+
+class ExperienceSectionManagementView(DashboardBaseAPIView):
+    permission_classes = (IsActiveStaff, DashboardModelPermission)
+    model = ExperienceSection
+
+    def get(self, request):
+        section = ExperienceSection.objects.first()
+        if not section:
+            return Response({"success": True, "data": None})
+        serializer = ExperienceSectionManagementSerializer(section, context={"request": request})
+        return Response({"success": True, "data": serializer.data})
+
+    def post(self, request):
+        section = ExperienceSection.objects.first()
+        if section:
+            serializer = ExperienceSectionManagementSerializer(section, data=request.data, partial=True, context={"request": request})
+        else:
+            serializer = ExperienceSectionManagementSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        saved = serializer.save()
+        return Response(
+            {"success": True, "data": ExperienceSectionManagementSerializer(saved, context={"request": request}).data},
+            status=status.HTTP_200_OK if section else status.HTTP_201_CREATED,
+        )
+
+    def patch(self, request):
+        section = ExperienceSection.objects.first()
+        if not section:
+            section = ExperienceSection.objects.create(title="Experience Beyond Ordinary")
+        serializer = ExperienceSectionManagementSerializer(section, data=request.data, partial=True, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        saved = serializer.save()
+        return Response({"success": True, "data": ExperienceSectionManagementSerializer(saved, context={"request": request}).data})
+
+
+class ExperiencePillarListCreateView(DashboardBaseAPIView):
+    permission_classes = (IsActiveStaff, DashboardModelPermission)
+    model = ExperiencePillar
+
+    def get(self, request):
+        qs = ExperiencePillar.objects.all().order_by("order", "id")
+        serializer = ExperiencePillarManagementSerializer(qs, many=True, context={"request": request})
+        return Response({"success": True, "data": serializer.data})
+
+    def post(self, request):
+        serializer = ExperiencePillarManagementSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        pillar = serializer.save()
+        return Response(
+            {"success": True, "data": ExperiencePillarManagementSerializer(pillar, context={"request": request}).data},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class ExperiencePillarDetailView(DashboardBaseAPIView):
+    permission_classes = (IsActiveStaff, DashboardModelPermission)
+    model = ExperiencePillar
+
+    def get(self, request, pk):
+        pillar = get_object_or_404(ExperiencePillar, pk=pk)
+        return Response({"success": True, "data": ExperiencePillarManagementSerializer(pillar, context={"request": request}).data})
+
+    def patch(self, request, pk):
+        pillar = get_object_or_404(ExperiencePillar, pk=pk)
+        serializer = ExperiencePillarManagementSerializer(pillar, data=request.data, partial=True, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        updated = serializer.save()
+        return Response({"success": True, "data": ExperiencePillarManagementSerializer(updated, context={"request": request}).data})
+
+    def delete(self, request, pk):
+        pillar = get_object_or_404(ExperiencePillar, pk=pk)
+        title = pillar.title
+        pillar.delete()
+        return Response({
+            "success": True,
+            "data": {
+                "message": f"Experience pillar '{title}' deleted successfully.",
+                "deleted_id": int(pk),
+            }
+        })
+
+
+class VisualChroniclesSectionManagementView(DashboardBaseAPIView):
+    permission_classes = (IsActiveStaff, DashboardModelPermission)
+    model = VisualChroniclesSection
+
+    def get(self, request):
+        section = VisualChroniclesSection.objects.first()
+        if not section:
+            return Response({"success": True, "data": None})
+        serializer = VisualChroniclesSectionManagementSerializer(section, context={"request": request})
+        return Response({"success": True, "data": serializer.data})
+
+    def post(self, request):
+        section = VisualChroniclesSection.objects.first()
+        if section:
+            serializer = VisualChroniclesSectionManagementSerializer(section, data=request.data, partial=True, context={"request": request})
+        else:
+            serializer = VisualChroniclesSectionManagementSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        saved = serializer.save()
+        return Response(
+            {"success": True, "data": VisualChroniclesSectionManagementSerializer(saved, context={"request": request}).data},
+            status=status.HTTP_200_OK if section else status.HTTP_201_CREATED,
+        )
+
+    def patch(self, request):
+        section = VisualChroniclesSection.objects.first()
+        if not section:
+            section = VisualChroniclesSection.objects.create(heading="DREAM CAR HOUSE Visual Chronicles")
+        serializer = VisualChroniclesSectionManagementSerializer(section, data=request.data, partial=True, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        saved = serializer.save()
+        return Response({"success": True, "data": VisualChroniclesSectionManagementSerializer(saved, context={"request": request}).data})
+
+
+class VisualChroniclesItemListCreateView(DashboardBaseAPIView):
+    permission_classes = (IsActiveStaff, DashboardModelPermission)
+    model = VisualChroniclesItem
+
+    def get(self, request):
+        qs = VisualChroniclesItem.objects.all().order_by("order", "id")
+        serializer = VisualChroniclesItemManagementSerializer(qs, many=True, context={"request": request})
+        return Response({"success": True, "data": serializer.data})
+
+    def post(self, request):
+        serializer = VisualChroniclesItemManagementSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        item = serializer.save()
+        return Response(
+            {"success": True, "data": VisualChroniclesItemManagementSerializer(item, context={"request": request}).data},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class VisualChroniclesItemDetailView(DashboardBaseAPIView):
+    permission_classes = (IsActiveStaff, DashboardModelPermission)
+    model = VisualChroniclesItem
+
+    def get(self, request, pk):
+        item = get_object_or_404(VisualChroniclesItem, pk=pk)
+        return Response({"success": True, "data": VisualChroniclesItemManagementSerializer(item, context={"request": request}).data})
+
+    def patch(self, request, pk):
+        item = get_object_or_404(VisualChroniclesItem, pk=pk)
+        serializer = VisualChroniclesItemManagementSerializer(item, data=request.data, partial=True, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        updated = serializer.save()
+        return Response({"success": True, "data": VisualChroniclesItemManagementSerializer(updated, context={"request": request}).data})
+
+    def delete(self, request, pk):
+        item = get_object_or_404(VisualChroniclesItem, pk=pk)
+        title = item.title
+        item.delete()
+        return Response({
+            "success": True,
+            "data": {
+                "message": f"Chronicles tile '{title}' deleted successfully.",
+                "deleted_id": int(pk),
+            }
+        })
+
+
+class VipSanctuarySectionManagementView(DashboardBaseAPIView):
+    permission_classes = (IsActiveStaff, DashboardModelPermission)
+    model = VipSanctuarySection
+
+    def get(self, request):
+        section = VipSanctuarySection.objects.first()
+        if not section:
+            return Response({"success": True, "data": None})
+        serializer = VipSanctuarySectionManagementSerializer(section, context={"request": request})
+        return Response({"success": True, "data": serializer.data})
+
+    def post(self, request):
+        section = VipSanctuarySection.objects.first()
+        if section:
+            serializer = VipSanctuarySectionManagementSerializer(section, data=request.data, partial=True, context={"request": request})
+        else:
+            serializer = VipSanctuarySectionManagementSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        saved = serializer.save()
+        return Response(
+            {"success": True, "data": VipSanctuarySectionManagementSerializer(saved, context={"request": request}).data},
+            status=status.HTTP_200_OK if section else status.HTTP_201_CREATED,
+        )
+
+    def patch(self, request):
+        section = VipSanctuarySection.objects.first()
+        if not section:
+            section = VipSanctuarySection.objects.create(title="Step Into The Realm of Automotive Excellence")
+        serializer = VipSanctuarySectionManagementSerializer(section, data=request.data, partial=True, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        saved = serializer.save()
+        return Response({"success": True, "data": VipSanctuarySectionManagementSerializer(saved, context={"request": request}).data})
+
+
+
 

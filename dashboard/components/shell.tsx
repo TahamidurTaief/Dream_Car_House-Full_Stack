@@ -25,6 +25,9 @@ import {
   User,
   Search,
   FileText,
+  Sliders,
+  Camera,
+  Crown,
 } from "lucide-react";
 import { navigation } from "@/lib/navigation";
 import type { DashboardUser } from "@/lib/types";
@@ -55,6 +58,16 @@ function getNavIcon(href: string): ReactNode {
       return <Users size={18} />;
     case "/workspace/content/sliders":
       return <Clapperboard size={18} />;
+    case "/workspace/content/preferences":
+      return <Sliders size={18} />;
+    case "/workspace/content/consultation":
+      return <MessageSquare size={18} />;
+    case "/workspace/content/experience":
+      return <Layers size={18} />;
+    case "/workspace/content/visual-chronicles":
+      return <Camera size={18} />;
+    case "/workspace/content/vip-sanctuary":
+      return <Crown size={18} />;
     case "/workspace/content/social-media":
       return <Globe size={18} />;
     case "/workspace/content/social-features":

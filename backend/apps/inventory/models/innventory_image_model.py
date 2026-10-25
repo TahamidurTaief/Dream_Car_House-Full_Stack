@@ -33,6 +33,13 @@ class InventoryImage(models.Model):
         blank=True,
         verbose_name=_("Alt Text")
     )
+    tag = models.CharField(
+        max_length=50,
+        blank=True,
+        default='',
+        verbose_name=_("Photo Tag / Perspective"),
+        help_text=_("e.g. EXTERIOR, PROFILE, COCKPIT, INTERIOR, WHEELS, REAR")
+    )
     order = models.PositiveIntegerField(
         default=0,
         verbose_name=_("Display Order")

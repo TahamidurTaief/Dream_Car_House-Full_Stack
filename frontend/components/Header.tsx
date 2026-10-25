@@ -5,8 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { useUI } from "@/lib/UIContext";
 import { playNextSupercarSound, SupercarSoundProfile } from "@/lib/audioEngine";
+import type { PublicSiteSettings } from "@/lib/types";
 
-export default function Header() {
+export default function Header({ settings }: { settings?: PublicSiteSettings }) {
   const { isDrawerOpen, openDrawer, closeDrawer, isStoriesOpen, openStories } = useUI();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
@@ -89,7 +90,7 @@ export default function Header() {
             className="header-story-ring-btn"
             id="header-story-btn"
             onClick={openStories}
-            title="Watch DREAM CAR HOUSE VIP Showroom Stories & Highlights"
+            title={`Watch ${settings?.name || "DREAM CAR HOUSE"} VIP Showroom Stories & Highlights`}
             aria-label="Open Showroom Stories"
           >
             <div className="story-ring-border">
@@ -164,10 +165,10 @@ export default function Header() {
 
         {/* Center Logo (Strictly Centered) */}
         <div className="header-logo">
-          <Link href="/" className="header-logo-link" aria-label="DREAM CAR HOUSE Homepage">
+          <Link href="/" className="header-logo-link" aria-label={`${settings?.name || "DREAM CAR HOUSE"} Homepage`}>
             <Image
               src="/assets/dch-logo.webp"
-              alt="DREAM CAR HOUSE Logo"
+              alt={`${settings?.name || "DREAM CAR HOUSE"} Logo`}
               width={160}
               height={60}
               className="header-brand-logo-img"

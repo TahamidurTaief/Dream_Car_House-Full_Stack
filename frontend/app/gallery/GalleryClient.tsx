@@ -5,10 +5,12 @@ import Link from "next/link";
 import { GALLERY_DATA, GalleryPhoto } from "@/lib/showroomData";
 import { useUI } from "@/lib/UIContext";
 
-export default function GalleryClient() {
+export default function GalleryClient({ initialPhotos }: { initialPhotos?: GalleryPhoto[] }) {
   const { openGalleryLightbox, openAppointmentModal, openVideoModal } = useUI();
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [flippedCards, setFlippedCards] = useState<Record<number, boolean>>({});
+
+  const allPhotos = initialPhotos && initialPhotos.length > 0 ? initialPhotos : GALLERY_DATA;
 
   const toggleFlip = (id: number) => {
     setFlippedCards((prev) => ({
@@ -18,9 +20,9 @@ export default function GalleryClient() {
   };
 
   const filteredPhotos = useMemo(() => {
-    if (selectedCategory === "all") return GALLERY_DATA;
-    return GALLERY_DATA.filter((p) => p.category === selectedCategory);
-  }, [selectedCategory]);
+    if (selectedCategory === "all") return allPhotos;
+    return allPhotos.filter((p) => p.category === selectedCategory);
+  }, [selectedCategory, allPhotos]);
 
   const handleLightboxOpen = (photo: GalleryPhoto, e: React.MouseEvent) => {
     e.stopPropagation();

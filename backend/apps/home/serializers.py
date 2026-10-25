@@ -7,7 +7,9 @@ from core.mixins.image_optimization_mixins import OptimizedImageSerializerMixin
 
 from apps.home.models import (
     Slider, SocialMedia, SellCar, PeopleTalkAboutUs, SellYourCarImages, Subscriber, SalesRepresentative,
-    ContactMessage, SiteSettings, ShowroomBranch,
+    ContactMessage, SiteSettings, ShowroomBranch, PreferenceSection, PreferenceCategory,
+    ConsultationSection, ExperienceSection, ExperiencePillar,
+    VisualChroniclesSection, VisualChroniclesItem, VipSanctuarySection,
 )
 
 
@@ -17,10 +19,25 @@ class SliderSerializer(serializers.ModelSerializer, OptimizedImageSerializerMixi
 
     class Meta:
         model = Slider
-        fields = ['heading', 'image']
+        fields = [
+            'id',
+            'heading',
+            'poster',
+            'video_provider',
+            'video_source',
+            'video_start_time',
+            'video_title',
+            'cta_buttons',
+            'scroll_link_label',
+            'scroll_link_target',
+            'image',
+            'is_published',
+            'updated_at',
+        ]
 
     def get_image(self, obj):
         return self.get_optimized_image_url(obj, 'image')
+
 
 
 class SocialMediaSerializer(serializers.ModelSerializer):
@@ -179,4 +196,242 @@ class PublicShowroomBranchSerializer(serializers.ModelSerializer):
             'embed_map',
             'order',
         ]
+
+
+class PublicPreferenceCategorySerializer(serializers.ModelSerializer, OptimizedImageSerializerMixin):
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PreferenceCategory
+        fields = [
+            'id',
+            'category_key',
+            'label',
+            'badge',
+            'subtext',
+            'image',
+            'cta_text',
+            'cta_url',
+            'highlights',
+            'order',
+        ]
+
+    def get_image(self, obj):
+        return self.get_optimized_image_url(obj, 'image')
+
+
+class PublicPreferenceSectionSerializer(serializers.ModelSerializer):
+    categories = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PreferenceSection
+        fields = [
+            'heading',
+            'badge',
+            'subtext',
+            'categories',
+        ]
+
+    def get_categories(self, obj):
+        cats = obj.categories.filter(is_active=True).order_by('order', 'id')
+        return PublicPreferenceCategorySerializer(cats, many=True, context=self.context).data
+
+
+class PublicConsultationSectionSerializer(serializers.ModelSerializer):
+    whatsapp_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ConsultationSection
+        fields = [
+            'tag',
+            'heading',
+            'description',
+            'trust_pills',
+            'primary_cta_label',
+            'primary_cta_action',
+            'primary_cta_url',
+            'whatsapp_cta_label',
+            'whatsapp_url',
+            'status_beacon_text',
+        ]
+
+    def get_whatsapp_url(self, obj):
+        import urllib.parse
+        phone = ""
+        if obj.whatsapp_number and obj.whatsapp_number.strip():
+            phone = obj.whatsapp_number.strip()
+        elif obj.representative and obj.representative.status == "PUBLISHED" and obj.representative.phone_number:
+            phone = obj.representative.phone_number.strip()
+        else:
+            site_settings = SiteSettings.objects.first()
+            if site_settings and site_settings.whatsapp:
+                phone = site_settings.whatsapp.strip()
+            elif site_settings and site_settings.hotline:
+                phone = site_settings.hotline.strip()
+            else:
+                phone = "8801615121312"
+
+        clean_digits = re.sub(r'[^0-9]', '', phone)
+        if clean_digits.startswith("0"):
+            clean_digits = "88" + clean_digits
+        elif not clean_digits.startswith("880") and len(clean_digits) == 10:
+            clean_digits = "880" + clean_digits
+
+        msg = obj.whatsapp_message or "Hello Dream Car House, I would like to consult regarding a luxury vehicle."
+        encoded_msg = urllib.parse.quote(msg)
+        return f"https://wa.me/{clean_digits}?text={encoded_msg}"
+
+
+class PublicExperiencePillarSerializer(serializers.ModelSerializer, OptimizedImageSerializerMixin):
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ExperiencePillar
+        fields = [
+            'id',
+            'pillar_number',
+            'badge',
+            'title',
+            'description',
+            'image',
+            'tags',
+            'order',
+        ]
+
+    def get_image(self, obj):
+        if not obj.image:
+            return None
+        val = str(obj.image)
+        if val.startswith("http://") or val.startswith("https://"):
+            return val
+        return self.get_optimized_image_url(obj, 'image')
+
+
+class PublicExperienceSectionSerializer(serializers.ModelSerializer):
+    pillars = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ExperienceSection
+        fields = [
+            'title',
+            'subtitle',
+            'video_cta_label',
+            'video_target',
+            'pillars',
+        ]
+
+    def get_pillars(self, obj):
+        pillars = obj.pillars.filter(is_active=True).order_by('order', 'id')
+        return PublicExperiencePillarSerializer(pillars, many=True, context=self.context).data
+
+
+class PublicVisualChroniclesItemSerializer(serializers.ModelSerializer, OptimizedImageSerializerMixin):
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VisualChroniclesItem
+        fields = [
+            'id',
+            'card_type',
+            'order',
+            'image',
+            'front_alt',
+            'front_badge',
+            'back_pill',
+            'back_number',
+            'title',
+            'description',
+            'specs',
+            'cta_label',
+            'cta_url',
+        ]
+
+    def get_image(self, obj):
+        if obj.front_image:
+            return self.get_optimized_image_url(obj, 'front_image')
+        return obj.front_image_url or None
+
+
+class PublicVisualChroniclesSectionSerializer(serializers.ModelSerializer):
+    items = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VisualChroniclesSection
+        fields = [
+            'heading',
+            'subtitle',
+            'stats_number',
+            'stats_label',
+            'archive_tag',
+            'archive_description',
+            'archive_cta_label',
+            'archive_cta_url',
+            'items',
+        ]
+
+    def get_items(self, obj):
+        items = obj.items.filter(is_active=True).order_by('order', 'id')
+        return PublicVisualChroniclesItemSerializer(items, many=True, context=self.context).data
+
+
+class PublicVipSanctuarySectionSerializer(serializers.ModelSerializer, OptimizedImageSerializerMixin):
+    background_image = serializers.SerializerMethodField()
+    location_text = serializers.SerializerMethodField()
+    hours_text = serializers.SerializerMethodField()
+    phone_text = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VipSanctuarySection
+        fields = [
+            'background_image',
+            'eyebrow',
+            'title',
+            'description',
+            'value_pillars',
+            'primary_cta_label',
+            'primary_cta_action',
+            'primary_cta_url',
+            'secondary_cta_label',
+            'secondary_cta_url',
+            'card_badge',
+            'card_title',
+            'card_live_pill',
+            'location_text',
+            'hours_text',
+            'phone_text',
+            'whatsapp_cta_label',
+            'whatsapp_url',
+            'tour_cta_label',
+            'tour_video_target',
+        ]
+
+    def get_background_image(self, obj):
+        if obj.background_image:
+            return self.get_optimized_image_url(obj, 'background_image')
+        return obj.background_image_url or None
+
+    def get_location_text(self, obj):
+        if obj.location_text and obj.location_text.strip():
+            return obj.location_text
+        if obj.branch and obj.branch.address:
+            return obj.branch.address
+        return "18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000"
+
+    def get_hours_text(self, obj):
+        if obj.hours_text and obj.hours_text.strip():
+            return obj.hours_text
+        if obj.branch and obj.branch.hours:
+            return obj.branch.hours
+        return "Daily 10:00 AM – 10:00 PM (Private Viewings by Reservation)"
+
+    def get_phone_text(self, obj):
+        if obj.phone_text and obj.phone_text.strip():
+            return obj.phone_text
+        if obj.branch and obj.branch.hotline:
+            return obj.branch.hotline
+        site_settings = SiteSettings.objects.first()
+        if site_settings and site_settings.hotline:
+            return site_settings.hotline
+        return "01615-121312"
+
 

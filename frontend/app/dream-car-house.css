@@ -1900,9 +1900,19 @@ button {
 }
 
 .runway-brand-card:hover .brand-svg,
-.runway-brand-card:hover .brand-svg-wide {
+.runway-brand-card:hover .brand-svg-wide,
+.runway-brand-card:hover .brand-runway-img {
   color: #ffffff;
   transform: scale(1.1);
+}
+
+.brand-runway-img {
+  max-width: 54px;
+  max-height: 36px;
+  width: auto;
+  height: 30px;
+  object-fit: contain;
+  transition: transform 0.3s ease;
 }
 
 .runway-brand-name {

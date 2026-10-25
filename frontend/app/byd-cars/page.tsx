@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { VEHICLE_DATA } from "@/lib/showroomData";
+import { getPublicInventory, getPageSEO, buildMetadataFromSEO } from "@/lib/server/api";
 import VehicleCard from "@/components/VehicleCard";
 
-export const metadata: Metadata = {
+const fallbackMetadata: Metadata = {
   title: "BYD Luxury Electric & Hybrid Vehicles | DREAM CAR HOUSE",
   description:
     "Explore BYD electric and hybrid luxury vehicles in Bangladesh at DREAM CAR HOUSE Kakrail and Gulshan showrooms.",
@@ -12,8 +12,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BydCarsPage() {
-  const bydCars = VEHICLE_DATA.filter((c) => c.brand.toLowerCase() === "byd");
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getPageSEO("byd-cars");
+  return buildMetadataFromSEO(seo, fallbackMetadata);
+}
+
+export default async function BydCarsPage() {
+  let bydCars: import("@/lib/types").PublicVehicle[] = [];
+  try {
+    const res = await getPublicInventory({ brand: "BYD" });
+    bydCars = res.items;
+  } catch (error) {
+    console.error("[BydCarsPage] Failed to fetch BYD inventory:", error);
+  }
 
   return (
     <div className="inventory-page-wrap max-w-7xl">

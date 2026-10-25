@@ -4,15 +4,110 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useUI } from "@/lib/UIContext";
+import type { PublicVipSanctuarySection } from "@/lib/types";
 
-export default function VipSanctuary() {
+interface VipSanctuaryProps {
+  sanctuary?: PublicVipSanctuarySection | null;
+}
+
+export default function VipSanctuary({ sanctuary }: VipSanctuaryProps) {
   const { openAppointmentModal, openVideoModal } = useUI();
+
+  const bgImageUrl =
+    sanctuary?.background_image ||
+    "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=2560&q=95";
+  const eyebrow = sanctuary?.eyebrow || "KAKRAIL & GULSHAN • DHAKA";
+  const title = sanctuary?.title || "Step Into The Realm of Automotive Excellence";
+  const narrative =
+    sanctuary?.description ||
+    "DREAM CAR HOUSE specializes in bringing you the finest selection of luxury cars from around the world. With a handpicked collection of the most prestigious brands, DREAM CAR HOUSE takes pride in offering only the highest quality vehicles that combine sophistication, performance, and innovation. Whether you're searching for a sleek sports coupe, a refined executive sedan, or an iconic luxury SUV, DREAM CAR HOUSE is your ultimate destination in Dhaka.";
+
+  const primaryCtaLabel = sanctuary?.primary_cta_label || "Schedule Private Viewing";
+  const secondaryCtaLabel = sanctuary?.secondary_cta_label || "Browse Available Vault →";
+  const secondaryCtaLink = sanctuary?.secondary_cta_url || "/inventory";
+
+  const cardBadge = sanctuary?.card_badge || "FLAGSHIP SHOWROOM";
+  const cardTitle = sanctuary?.card_title || "DREAM CAR HOUSE Flagship";
+  const liveStatusText = sanctuary?.card_live_pill || "OPEN TODAY";
+  const showroomLocation =
+    sanctuary?.location_text || "18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000";
+  const viewingHours =
+    sanctuary?.hours_text || "Daily 10:00 AM – 10:00 PM (Private Viewings by Reservation)";
+  const hotline = sanctuary?.phone_text || "01615-121312";
+  const whatsappUrl =
+    sanctuary?.whatsapp_url ||
+    "https://wa.me/8801615121312?text=Hello%20DREAM%20CAR%20HOUSE,%20I%20would%20like%20to%20inquire%20about%20a%20luxury%20vehicle";
+  const videoTourTarget = sanctuary?.tour_video_target === "reel" ? "reel" : "tour";
+
+  const pillars =
+    sanctuary?.value_pillars && sanctuary.value_pillars.length > 0
+      ? sanctuary.value_pillars
+      : [
+          {
+            title: "100% Certified Provenance",
+            subtitle: "Verified mechanical inspection & auction grades",
+            icon: "shield",
+          },
+          {
+            title: "Global Bespoke Sourcing",
+            subtitle: "Direct official imports from UK, DE & Japan",
+            icon: "globe",
+          },
+          {
+            title: "White-Glove VIP Advisory",
+            subtitle: "Personalized acquisition & dedicated concierge",
+            icon: "star",
+          },
+        ];
+
+  // Helper to render pillar icons
+  const renderPillarIcon = (iconName?: string) => {
+    if (iconName === "globe") {
+      return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="2" y1="12" x2="22" y2="12" />
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+        </svg>
+      );
+    }
+    if (iconName === "star") {
+      return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+      );
+    }
+    // Default shield
+    return (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <polyline points="9 12 11 14 15 10" />
+      </svg>
+    );
+  };
+
+  // Render title cleanly with highlight span if present
+  const renderTitle = () => {
+    const highlight = "Automotive Excellence";
+    if (title.includes(highlight)) {
+      const parts = title.split(highlight);
+      return (
+        <>
+          {parts[0]}
+          <span className="vip-title-gold">{highlight}</span>
+          {parts[1] || ""}
+        </>
+      );
+    }
+    return title;
+  };
 
   return (
     <section className="vip-sanctuary-section" id="sanctuary">
       <Image
         className="vip-sanctuary-bg"
-        src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=2560&q=95"
+        src={bgImageUrl}
         alt="DREAM CAR HOUSE Showroom Atmosphere"
         fill
         sizes="100vw"
@@ -26,70 +121,37 @@ export default function VipSanctuary() {
           {/* Left Column: Editorial Invitation & Value Pillars */}
           <div className="vip-sanctuary-narrative">
             <div className="vip-sanctuary-eyebrow">
-              <span>KAKRAIL & GULSHAN • DHAKA</span>
+              <span>{eyebrow}</span>
             </div>
 
-            <h2 className="vip-sanctuary-title">
-              Step Into The Realm of <span className="vip-title-gold">Automotive Excellence</span>
-            </h2>
+            <h2 className="vip-sanctuary-title">{renderTitle()}</h2>
 
-            <p className="vip-sanctuary-desc">
-              DREAM CAR HOUSE specializes in bringing you the finest selection of luxury cars from around the world. With a handpicked collection of the most prestigious brands, DREAM CAR HOUSE takes pride in offering only the highest quality vehicles that combine sophistication, performance, and innovation. Whether you&apos;re searching for a sleek sports coupe, a refined executive sedan, or an iconic luxury SUV, DREAM CAR HOUSE is your ultimate destination in Dhaka.
-            </p>
+            <p className="vip-sanctuary-desc">{narrative}</p>
 
             {/* Value Pillars Row */}
             <div className="vip-pillars-row">
-              <div className="vip-pillar-item">
-                <div className="vip-pillar-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    <polyline points="9 12 11 14 15 10" />
-                  </svg>
+              {pillars.map((pillar, idx) => (
+                <div key={idx} className="vip-pillar-item">
+                  <div className="vip-pillar-icon">{renderPillarIcon(pillar.icon)}</div>
+                  <div className="vip-pillar-info">
+                    <span className="vip-pillar-title">{pillar.title}</span>
+                    <span className="vip-pillar-sub">{pillar.subtitle}</span>
+                  </div>
                 </div>
-                <div className="vip-pillar-info">
-                  <span className="vip-pillar-title">100% Certified Provenance</span>
-                  <span className="vip-pillar-sub">Verified mechanical inspection & auction grades</span>
-                </div>
-              </div>
-
-              <div className="vip-pillar-item">
-                <div className="vip-pillar-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="2" y1="12" x2="22" y2="12" />
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                  </svg>
-                </div>
-                <div className="vip-pillar-info">
-                  <span className="vip-pillar-title">Global Bespoke Sourcing</span>
-                  <span className="vip-pillar-sub">Direct official imports from UK, DE & Japan</span>
-                </div>
-              </div>
-
-              <div className="vip-pillar-item">
-                <div className="vip-pillar-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                  </svg>
-                </div>
-                <div className="vip-pillar-info">
-                  <span className="vip-pillar-title">White-Glove VIP Advisory</span>
-                  <span className="vip-pillar-sub">Personalized acquisition & dedicated concierge</span>
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* CTA Buttons */}
             <div className="vip-actions-row">
               <button className="vip-primary-btn" onClick={() => openAppointmentModal()}>
-                <span>Schedule Private Viewing</span>
+                <span>{primaryCtaLabel}</span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </button>
 
-              <Link href="/inventory" className="vip-secondary-btn">
-                <span>Browse Available Vault →</span>
+              <Link href={secondaryCtaLink} className="vip-secondary-btn">
+                <span>{secondaryCtaLabel}</span>
               </Link>
             </div>
           </div>
@@ -100,11 +162,11 @@ export default function VipSanctuary() {
 
             <div className="vip-card-head">
               <div>
-                <span className="vip-card-badge">FLAGSHIP SHOWROOM</span>
-                <h3 className="vip-card-title">DREAM CAR HOUSE Flagship</h3>
+                <span className="vip-card-badge">{cardBadge}</span>
+                <h3 className="vip-card-title">{cardTitle}</h3>
               </div>
               <div className="vip-live-pill">
-                <span>OPEN TODAY</span>
+                <span>{liveStatusText}</span>
               </div>
             </div>
 
@@ -118,7 +180,7 @@ export default function VipSanctuary() {
                 </div>
                 <div className="vip-feature-text">
                   <span className="vip-feat-label">Showroom Location</span>
-                  <span className="vip-feat-val">18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000</span>
+                  <span className="vip-feat-val">{showroomLocation}</span>
                 </div>
               </div>
 
@@ -131,7 +193,7 @@ export default function VipSanctuary() {
                 </div>
                 <div className="vip-feature-text">
                   <span className="vip-feat-label">VIP Viewing Hours</span>
-                  <span className="vip-feat-val">Daily 10:00 AM – 10:00 PM (Private Viewings by Reservation)</span>
+                  <span className="vip-feat-val">{viewingHours}</span>
                 </div>
               </div>
 
@@ -143,8 +205,8 @@ export default function VipSanctuary() {
                 </div>
                 <div className="vip-feature-text">
                   <span className="vip-feat-label">Direct Concierge Hotline</span>
-                  <a href="tel:01615-121312" className="vip-feat-val vip-phone-link">
-                    01615-121312
+                  <a href={`tel:${hotline.replace(/[^0-9+]/g, "")}`} className="vip-feat-val vip-phone-link">
+                    {hotline}
                   </a>
                 </div>
               </div>
@@ -153,7 +215,7 @@ export default function VipSanctuary() {
             {/* Card Bottom Quick Connect Buttons */}
             <div className="vip-card-cta-group">
               <a
-                href="https://wa.me/8801615121312?text=Hello%20DREAM%20CAR%20HOUSE,%20I%20would%20like%20to%20inquire%20about%20a%20luxury%20vehicle"
+                href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="vip-wa-btn"
@@ -165,7 +227,10 @@ export default function VipSanctuary() {
                 <span>WhatsApp Concierge</span>
               </a>
 
-              <button className="vip-tour-btn" onClick={() => openVideoModal("tour")}>
+              <button
+                className="vip-tour-btn"
+                onClick={() => openVideoModal(videoTourTarget)}
+              >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="5 3 19 12 5 21 5 3" />
                 </svg>
@@ -178,3 +243,4 @@ export default function VipSanctuary() {
     </section>
   );
 }
+

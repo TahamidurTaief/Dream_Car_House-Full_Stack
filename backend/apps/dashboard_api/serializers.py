@@ -1,7 +1,9 @@
 import json
+import bleach
 from django.contrib.auth import password_validation
 from django.contrib.auth.models import User, Group, Permission
 from rest_framework import serializers
+from core.mixins.image_optimization_mixins import OptimizedImageSerializerMixin
 from apps.inventory.models import Brand, ModelGeneration, BodyStyle, Inventory, InventoryImage, Stock, InventoryQuote
 from apps.home.models import (
     SellCar,
@@ -14,12 +16,22 @@ from apps.home.models import (
     SalesRepresentative,
     SiteSettings,
     ShowroomBranch,
+    PreferenceSection,
+    PreferenceCategory,
+    ConsultationSection,
+    ExperienceSection,
+    ExperiencePillar,
+    VisualChroniclesSection,
+    VisualChroniclesItem,
+    VipSanctuarySection,
 )
 
 from apps.seo_config.models import SEOConfig, CategoryPageSEO
 
 
 class BrandManagementSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Brand
         fields = [
@@ -27,6 +39,11 @@ class BrandManagementSerializer(serializers.ModelSerializer):
             "name",
             "segment",
             "image",
+            "image_url",
+            "logo_alt",
+            "order",
+            "is_in_runway",
+            "destination_url",
             "listing_footer_text",
             "status",
             "target_keyword",
@@ -42,7 +59,50 @@ class BrandManagementSerializer(serializers.ModelSerializer):
             "feature_image_alt",
             "seo_updated_at",
         ]
-        read_only_fields = ["id", "seo_updated_at"]
+        read_only_fields = ["id", "image_url", "seo_updated_at"]
+
+    def get_image_url(self, obj):
+        if not obj.image:
+            return None
+        request = self.context.get("request")
+        if request:
+            return request.build_absolute_uri(obj.image.url)
+        return obj.image.url
+
+    def validate_image(self, value):
+        if not value:
+            return value
+        if hasattr(value, "size") and value.size > 10 * 1024 * 1024:
+            raise serializers.ValidationError("Brand logo file exceeds 10MB limit.")
+        name_lower = getattr(value, "name", "").lower()
+        if name_lower.endswith(".svg"):
+            try:
+                content = value.read()
+                if hasattr(value, "seek"):
+                    value.seek(0)
+                decoded = content.decode("utf-8", errors="ignore").lower()
+                if "<script" in decoded or "</script" in decoded:
+                    raise serializers.ValidationError("SVG file contains disallowed <script> tags.")
+                if "javascript:" in decoded:
+                    raise serializers.ValidationError("SVG file contains disallowed 'javascript:' URI.")
+                import re
+                if re.search(r'\bon\w+\s*=', decoded):
+                    raise serializers.ValidationError("SVG file contains disallowed inline event handlers.")
+            except serializers.ValidationError:
+                raise
+            except Exception as e:
+                raise serializers.ValidationError(f"Unable to validate SVG file: {str(e)}")
+        return value
+
+    def validate_destination_url(self, value):
+        if not value:
+            return ""
+        val = value.strip()
+        if "javascript:" in val.lower():
+            raise serializers.ValidationError("Destination URL cannot contain javascript: URI.")
+        if not (val.startswith("/") or val.startswith("http://") or val.startswith("https://")):
+            raise serializers.ValidationError("Destination URL must be an internal path starting with / or an absolute URL (http/https).")
+        return val
 
     def validate_name(self, value):
         name_str = value.strip()
@@ -116,6 +176,7 @@ class InventoryImageManagementSerializer(serializers.ModelSerializer):
             "image",
             "caption",
             "alt_text",
+            "tag",
             "order",
         ]
         read_only_fields = ["id"]
@@ -125,6 +186,7 @@ class InventoryListManagementSerializer(serializers.ModelSerializer):
     brand_name = serializers.CharField(source="brand.name", read_only=True)
     model_generation_name = serializers.CharField(source="model.model", read_only=True)
     body_style_name = serializers.CharField(source="body_style.body", read_only=True)
+    branch_name = serializers.CharField(source="branch.name", read_only=True)
 
     class Meta:
         model = Inventory
@@ -139,8 +201,12 @@ class InventoryListManagementSerializer(serializers.ModelSerializer):
             "model_name",
             "body_style",
             "body_style_name",
+            "branch",
+            "branch_name",
             "year",
             "price",
+            "is_call_for_price",
+            "registration_number",
             "fuel_type",
             "transmission",
             "registered",
@@ -157,6 +223,7 @@ class InventoryListManagementSerializer(serializers.ModelSerializer):
             "brand_name",
             "model_generation_name",
             "body_style_name",
+            "branch_name",
             "slug",
             "created_at",
             "updated_at",
@@ -167,8 +234,25 @@ class InventoryDetailManagementSerializer(serializers.ModelSerializer):
     brand_name = serializers.CharField(source="brand.name", read_only=True)
     model_generation_name = serializers.CharField(source="model.model", read_only=True)
     body_style_name = serializers.CharField(source="body_style.body", read_only=True)
+    branch_name = serializers.CharField(source="branch.name", read_only=True)
+    branch_detail = serializers.SerializerMethodField()
     inventory_images = InventoryImageManagementSerializer(many=True, read_only=True)
     slug = serializers.SlugField(required=False, allow_blank=True)
+
+    def get_branch_detail(self, obj):
+        if not obj.branch:
+            return None
+        return {
+            "id": obj.branch.id,
+            "branch_id": obj.branch.branch_id,
+            "name": obj.branch.name,
+            "short_name": obj.branch.short_name,
+            "address": obj.branch.address,
+            "phone": obj.branch.phone,
+            "hotline": obj.branch.hotline,
+            "hours": obj.branch.hours,
+            "map_link": obj.branch.map_link,
+        }
 
     class Meta:
         model = Inventory
@@ -186,6 +270,9 @@ class InventoryDetailManagementSerializer(serializers.ModelSerializer):
             "condition",
             "body_style",
             "body_style_name",
+            "branch",
+            "branch_name",
+            "branch_detail",
             "inventory_type",
             "is_featured",
             "status",
@@ -199,8 +286,10 @@ class InventoryDetailManagementSerializer(serializers.ModelSerializer):
             "color",
             # Pricing & Availability
             "price",
+            "is_call_for_price",
             "slightly_negotiable",
             "registered",
+            "registration_number",
             # Media
             "feature_image",
             "youtube",
@@ -227,9 +316,26 @@ class InventoryDetailManagementSerializer(serializers.ModelSerializer):
             "brand_name",
             "model_generation_name",
             "body_style_name",
+            "branch_name",
+            "branch_detail",
             "created_at",
             "updated_at",
         ]
+
+    def validate_description(self, value):
+        if not value:
+            return value
+        allowed_tags = [
+            'p', 'b', 'i', 'u', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+            'ul', 'ol', 'li', 'span', 'blockquote', 'hr', 'br', 'table', 'thead', 'tbody',
+            'tr', 'th', 'td', 'div'
+        ]
+        allowed_attrs = {
+            'a': ['href', 'title', 'target', 'rel'],
+            '*': ['class', 'style', 'id']
+        }
+        return bleach.clean(value, tags=allowed_tags, attributes=allowed_attrs, strip=True)
+
 
     def validate_schema_override(self, value):
         if value is None or value == "":
@@ -360,11 +466,29 @@ class SliderManagementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Slider
-        fields = ["id", "heading", "image", "is_public_active"]
-        read_only_fields = ["id", "is_public_active"]
+        fields = [
+            "id",
+            "heading",
+            "poster",
+            "video_provider",
+            "video_source",
+            "video_start_time",
+            "video_title",
+            "cta_buttons",
+            "scroll_link_label",
+            "scroll_link_target",
+            "is_published",
+            "image",
+            "is_public_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "is_public_active", "created_at", "updated_at"]
 
     def get_is_public_active(self, obj):
-        last = Slider.objects.order_by("id").last()
+        last = Slider.objects.filter(is_published=True).order_by("id").last()
+        if not last:
+            last = Slider.objects.order_by("id").last()
         return bool(last and last.id == obj.id)
 
     def validate_image(self, value):
@@ -378,14 +502,117 @@ class SliderManagementSerializer(serializers.ModelSerializer):
             )
         return value
 
+    def validate_video_provider(self, value):
+        allowed = ["youtube", "vimeo", "direct"]
+        if value not in allowed:
+            raise serializers.ValidationError(
+                f"Unsupported video provider '{value}'. Allowed providers: {', '.join(allowed)}."
+            )
+        return value
+
+    def validate_video_source(self, value):
+        val = (value or "").strip()
+        if not val:
+            return val
+        # Check against dangerous URI schemes
+        lower_val = val.lower()
+        if lower_val.startswith("javascript:") or lower_val.startswith("data:") or "<script" in lower_val:
+            raise serializers.ValidationError("Executable code and unsafe URI schemes are strictly prohibited.")
+        return val
+
+    def validate_cta_buttons(self, value):
+        if value is None:
+            return []
+        if not isinstance(value, list):
+            raise serializers.ValidationError("CTA buttons must be a list of button objects.")
+
+        allowed_actions = ["link", "appointment_modal"]
+        cleaned_buttons = []
+
+        for idx, btn in enumerate(value):
+            if not isinstance(btn, dict):
+                raise serializers.ValidationError(f"CTA button #{idx + 1} must be an object.")
+
+            label = str(btn.get("label", "")).strip()
+            action = str(btn.get("action", "link")).strip()
+            destination = str(btn.get("destination", "")).strip()
+
+            if not label:
+                raise serializers.ValidationError(f"CTA button #{idx + 1} requires a label.")
+
+            if action not in allowed_actions:
+                raise serializers.ValidationError(
+                    f"CTA button #{idx + 1} action '{action}' is invalid. Allowed actions: {', '.join(allowed_actions)}."
+                )
+
+            if action == "link":
+                dest_lower = destination.lower()
+                if dest_lower.startswith("javascript:") or dest_lower.startswith("data:") or "<script" in dest_lower:
+                    raise serializers.ValidationError(
+                        f"CTA button #{idx + 1} destination contains an unsafe URI scheme or executable code."
+                    )
+                if not (dest_lower.startswith("/") or dest_lower.startswith("http://") or dest_lower.startswith("https://") or dest_lower.startswith("#")):
+                    raise serializers.ValidationError(
+                        f"CTA button #{idx + 1} link destination must start with '/', '#', 'http://', or 'https://'."
+                    )
+
+            cleaned_buttons.append({
+                "label": label,
+                "action": action,
+                "destination": destination if action == "link" else "",
+            })
+
+        return cleaned_buttons
+
+    def validate_poster(self, value):
+        val = (value or "").strip()
+        if not val:
+            return val
+        lower_val = val.lower()
+        if lower_val.startswith("javascript:") or "<script" in lower_val:
+            raise serializers.ValidationError("Unsafe poster URL or executable script detected.")
+        return val
+
+    def validate_scroll_link_target(self, value):
+        val = (value or "").strip()
+        if not val:
+            return val
+        lower_val = val.lower()
+        if lower_val.startswith("javascript:") or "<script" in lower_val:
+            raise serializers.ValidationError("Unsafe scroll link target.")
+        return val
+
     def to_internal_value(self, data):
+        # Allow mutation copy
+        data = data.copy() if hasattr(data, "copy") else dict(data)
+
+        # Parse JSON string for cta_buttons if sent via FormData / multipart
+        if "cta_buttons" in data and isinstance(data["cta_buttons"], str):
+            try:
+                import json
+                data["cta_buttons"] = json.loads(data["cta_buttons"])
+            except Exception:
+                raise serializers.ValidationError({"cta_buttons": "Must be valid JSON array."})
+
+        # Coerce boolean string for is_published
+        if "is_published" in data and isinstance(data["is_published"], str):
+            data["is_published"] = data["is_published"].lower() in ("true", "1", "yes")
+
+        # Coerce int for video_start_time
+        if "video_start_time" in data and isinstance(data["video_start_time"], str):
+            try:
+                data["video_start_time"] = int(data["video_start_time"])
+            except ValueError:
+                raise serializers.ValidationError({"video_start_time": "Must be a valid integer."})
+
         # On partial updates (PATCH), if image is empty string or None, retain existing file
-        if self.partial and isinstance(data, dict) and "image" in data:
+        if self.partial and "image" in data:
             val = data.get("image")
             if val == "" or val is None or (hasattr(val, "size") and val.size == 0):
-                data = data.copy() if hasattr(data, "copy") else dict(data)
                 data.pop("image", None)
+
         return super().to_internal_value(data)
+
 
 
 class SocialMediaManagementSerializer(serializers.ModelSerializer):
@@ -985,4 +1212,306 @@ class ShowroomBranchManagementSerializer(serializers.ModelSerializer):
         if not any(domain in val for domain in allowed_domains):
             raise serializers.ValidationError("Embed map must use Google Maps as the provider.")
         return val
+
+
+class PreferenceCategoryManagementSerializer(serializers.ModelSerializer, OptimizedImageSerializerMixin):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PreferenceCategory
+        fields = [
+            "id",
+            "section",
+            "category_key",
+            "label",
+            "badge",
+            "subtext",
+            "image",
+            "image_url",
+            "cta_text",
+            "cta_url",
+            "highlights",
+            "order",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "image_url", "created_at", "updated_at"]
+
+    def get_image_url(self, obj):
+        return self.get_optimized_image_url(obj, "image")
+
+    def validate_image(self, value):
+        if value:
+            import os
+            ext = os.path.splitext(value.name)[1].lower().lstrip(".")
+            if ext not in ["jpg", "jpeg", "png", "webp"]:
+                raise serializers.ValidationError("Only jpg, jpeg, png, and webp images are permitted.")
+            if value.size > 10 * 1024 * 1024:
+                raise serializers.ValidationError("Image file size cannot exceed 10MB.")
+        return value
+
+    def validate_highlights(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError("Highlights must be an array of card objects.")
+        for item in value:
+            if not isinstance(item, dict):
+                raise serializers.ValidationError("Each highlight must be an object with title and description.")
+            if not item.get("title"):
+                raise serializers.ValidationError("Each highlight must specify a title.")
+        return value
+
+
+class PreferenceSectionManagementSerializer(serializers.ModelSerializer):
+    categories = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PreferenceSection
+        fields = [
+            "id",
+            "heading",
+            "badge",
+            "subtext",
+            "is_active",
+            "categories",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "categories", "created_at", "updated_at"]
+
+    def get_categories(self, obj):
+        cats = obj.categories.all().order_by("order", "id")
+        return PreferenceCategoryManagementSerializer(cats, many=True, context=self.context).data
+
+
+class ConsultationSectionManagementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ConsultationSection
+        fields = [
+            "id",
+            "tag",
+            "heading",
+            "description",
+            "trust_pills",
+            "primary_cta_label",
+            "primary_cta_action",
+            "primary_cta_url",
+            "whatsapp_cta_label",
+            "representative",
+            "whatsapp_number",
+            "whatsapp_message",
+            "status_beacon_text",
+            "is_active",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "updated_at"]
+
+    def validate_trust_pills(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError("Trust pills must be a list of objects.")
+        for pill in value:
+            if not isinstance(pill, dict):
+                raise serializers.ValidationError("Each trust pill must be an object with title and icon.")
+            if not pill.get("title") or not pill.get("icon"):
+                raise serializers.ValidationError("Each trust pill must specify title and icon.")
+        return value
+
+    def validate(self, attrs):
+        action = attrs.get("primary_cta_action")
+        url = attrs.get("primary_cta_url")
+        if action in ["internal_link", "external_link"] and not url:
+            raise serializers.ValidationError({"primary_cta_url": "URL is required when action is link."})
+        return attrs
+
+
+class ExperiencePillarManagementSerializer(serializers.ModelSerializer, OptimizedImageSerializerMixin):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ExperiencePillar
+        fields = [
+            "id",
+            "section",
+            "pillar_number",
+            "badge",
+            "title",
+            "description",
+            "image",
+            "image_url",
+            "tags",
+            "order",
+            "is_active",
+        ]
+        read_only_fields = ["id", "image_url"]
+
+    def get_image_url(self, obj):
+        if not obj.image:
+            return None
+        val = str(obj.image)
+        if val.startswith("http://") or val.startswith("https://"):
+            return val
+        return self.get_optimized_image_url(obj, "image")
+
+    def validate_tags(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError("Tags must be a list of strings.")
+        return [str(t).strip() for t in value if str(t).strip()]
+
+    def validate_image(self, value):
+        if value and hasattr(value, "size"):
+            import os
+            ext = os.path.splitext(value.name)[1].lower().lstrip(".")
+            if ext not in ["jpg", "jpeg", "png", "webp"]:
+                raise serializers.ValidationError("Only jpg, jpeg, png, and webp images are permitted.")
+            if value.size > 10 * 1024 * 1024:
+                raise serializers.ValidationError("Image file size cannot exceed 10MB.")
+        return value
+
+
+class ExperienceSectionManagementSerializer(serializers.ModelSerializer):
+    pillars = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ExperienceSection
+        fields = [
+            "id",
+            "title",
+            "subtitle",
+            "video_cta_label",
+            "video_target",
+            "is_active",
+            "pillars",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "pillars", "updated_at"]
+
+    def get_pillars(self, obj):
+        pillars = obj.pillars.all().order_by("order", "id")
+        return ExperiencePillarManagementSerializer(pillars, many=True, context=self.context).data
+
+
+class VisualChroniclesItemManagementSerializer(serializers.ModelSerializer, OptimizedImageSerializerMixin):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VisualChroniclesItem
+        fields = [
+            "id",
+            "section",
+            "card_type",
+            "order",
+            "front_image",
+            "front_image_url",
+            "image_url",
+            "front_alt",
+            "front_badge",
+            "back_pill",
+            "back_number",
+            "title",
+            "description",
+            "specs",
+            "cta_label",
+            "cta_url",
+            "is_active",
+        ]
+        read_only_fields = ["id", "image_url"]
+
+    def get_image_url(self, obj):
+        if obj.front_image:
+            return self.get_optimized_image_url(obj, "front_image")
+        return obj.front_image_url or None
+
+    def validate_specs(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError("Specs must be a list of spec items or tag strings.")
+        return value
+
+    def validate_front_image(self, value):
+        if value and hasattr(value, "size"):
+            import os
+            ext = os.path.splitext(value.name)[1].lower().lstrip(".")
+            if ext not in ["jpg", "jpeg", "png", "webp"]:
+                raise serializers.ValidationError("Only jpg, jpeg, png, and webp images are permitted.")
+            if value.size > 10 * 1024 * 1024:
+                raise serializers.ValidationError("Image file size cannot exceed 10MB.")
+        return value
+
+
+class VisualChroniclesSectionManagementSerializer(serializers.ModelSerializer):
+    items = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VisualChroniclesSection
+        fields = [
+            "id",
+            "heading",
+            "subtitle",
+            "stats_number",
+            "stats_label",
+            "archive_tag",
+            "archive_description",
+            "archive_cta_label",
+            "archive_cta_url",
+            "is_active",
+            "items",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "items", "updated_at"]
+
+    def get_items(self, obj):
+        items = obj.items.all().order_by("order", "id")
+        return VisualChroniclesItemManagementSerializer(items, many=True, context=self.context).data
+
+
+class VipSanctuarySectionManagementSerializer(serializers.ModelSerializer, OptimizedImageSerializerMixin):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VipSanctuarySection
+        fields = [
+            "id",
+            "background_image",
+            "background_image_url",
+            "image_url",
+            "eyebrow",
+            "title",
+            "description",
+            "value_pillars",
+            "primary_cta_label",
+            "primary_cta_action",
+            "primary_cta_url",
+            "secondary_cta_label",
+            "secondary_cta_url",
+            "card_badge",
+            "card_title",
+            "card_live_pill",
+            "branch",
+            "location_text",
+            "hours_text",
+            "phone_text",
+            "whatsapp_cta_label",
+            "whatsapp_url",
+            "tour_cta_label",
+            "tour_video_target",
+            "is_active",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "image_url", "updated_at"]
+
+    def get_image_url(self, obj):
+        if obj.background_image:
+            return self.get_optimized_image_url(obj, "background_image")
+        return obj.background_image_url or None
+
+    def validate_value_pillars(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError("Value pillars must be a list of objects.")
+        for item in value:
+            if not isinstance(item, dict):
+                raise serializers.ValidationError("Each value pillar must be an object with title and subtitle.")
+            if not item.get("title"):
+                raise serializers.ValidationError("Each value pillar must specify a title.")
+        return value
+
+
 

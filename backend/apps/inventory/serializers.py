@@ -15,7 +15,7 @@ class InventoryImageSerializer(serializers.ModelSerializer, OptimizedImageSerial
 
     class Meta:
         model = InventoryImage
-        fields = ['id', 'caption', 'image', 'alt_text', 'order']
+        fields = ['id', 'caption', 'image', 'alt_text', 'tag', 'order']
 
     def get_image(self, obj):
         return self.get_optimized_image_url(obj, 'image')
@@ -28,6 +28,10 @@ class InventoryListSerializer(serializers.ModelSerializer, OptimizedImageSeriali
     model_name = serializers.CharField(read_only=True)
     fuel_type = serializers.SerializerMethodField()
     price = serializers.SerializerMethodField()
+    raw_price = serializers.DecimalField(source="price", max_digits=12, decimal_places=2, read_only=True)
+    is_call_for_price = serializers.BooleanField(read_only=True)
+    branch = serializers.SerializerMethodField()
+    registration_number = serializers.CharField(read_only=True)
     slug = serializers.SlugField(required=False, allow_blank=True)
 
     def validate_slug(self, value):
@@ -48,7 +52,8 @@ class InventoryListSerializer(serializers.ModelSerializer, OptimizedImageSeriali
         model = Inventory
         fields = [
             'id', 'name', 'car_type', 'brand', 'model', 'model_name', 'year', 'engine_capacity', 'fuel_type',
-            'mileage', 'price', 'feature_image', 'body_style', 'registered',
+            'mileage', 'price', 'raw_price', 'is_call_for_price', 'branch', 'registration_number',
+            'feature_image', 'body_style', 'registered',
             'slug', 'meta_title', 'featured_image_alt', 'indexing',
             'h1_title', 'target_keyword',
         ]
@@ -66,11 +71,29 @@ class InventoryListSerializer(serializers.ModelSerializer, OptimizedImageSeriali
         return obj.fuel_type
 
     def get_price(self, obj):
+        if getattr(obj, "is_call_for_price", False):
+            return "Call for Price"
         if obj.registered == Inventory.AvailabilityChoices.SOLD:
             return "Sold"
         if obj.registered == Inventory.AvailabilityChoices.PRE_ORDER:
             return "Pre-Order"
         return obj.price
+
+    def get_branch(self, obj):
+        if not obj.branch:
+            return None
+        return {
+            "id": obj.branch.id,
+            "branch_id": obj.branch.branch_id,
+            "name": obj.branch.name,
+            "short_name": obj.branch.short_name,
+            "tag": getattr(obj.branch, "tag", ""),
+            "address": obj.branch.address,
+            "phone": obj.branch.phone,
+            "hotline": obj.branch.hotline,
+            "hours": obj.branch.hours,
+            "map_link": obj.branch.map_link,
+        }
 
 
 class InventoryDetailSerializer(serializers.ModelSerializer, OptimizedImageSerializerMixin):
@@ -81,6 +104,10 @@ class InventoryDetailSerializer(serializers.ModelSerializer, OptimizedImageSeria
     model_name = serializers.CharField(read_only=True)
     body_style = serializers.StringRelatedField(read_only=True)
     price = serializers.SerializerMethodField()
+    raw_price = serializers.DecimalField(source="price", max_digits=12, decimal_places=2, read_only=True)
+    is_call_for_price = serializers.BooleanField(read_only=True)
+    branch = serializers.SerializerMethodField()
+    registration_number = serializers.CharField(read_only=True)
     schema_data = serializers.SerializerMethodField()
     slug = serializers.SlugField(required=False, allow_blank=True)
 
@@ -94,9 +121,6 @@ class InventoryDetailSerializer(serializers.ModelSerializer, OptimizedImageSeria
         return value
 
     def validate(self, attrs):
-        # Never allow blank or null slug to be saved purely via API manually if not auto-gen,
-        # but since we rely on save(), we let it pass here and let Django handle it, 
-        # or we remove empty string so model generates it.
         if 'slug' in attrs and not attrs.get('slug'):
             attrs.pop('slug', None)
         return attrs
@@ -105,6 +129,7 @@ class InventoryDetailSerializer(serializers.ModelSerializer, OptimizedImageSeria
         model = Inventory
         fields = [
             'id', 'name', 'car_type', 'brand', 'model', 'model_name', 'year', 'engine_capacity', 'fuel_type', 'mileage', 'price',
+            'raw_price', 'is_call_for_price', 'branch', 'registration_number',
             'transmission', 'drive_type', 'wheel_base', 'color', 'condition', 'registered', 'body_style',
             'feature_image', 'description', 'youtube', 'status', 'slightly_negotiable', 'inventory_images',
             'slug', 'meta_title', 'meta_description', 'canonical_url',
@@ -120,11 +145,30 @@ class InventoryDetailSerializer(serializers.ModelSerializer, OptimizedImageSeria
         return InventoryImageSerializer(images, many=True, context=self.context).data
 
     def get_price(self, obj):
+        if getattr(obj, "is_call_for_price", False):
+            return "Call for Price"
         if obj.registered == Inventory.AvailabilityChoices.SOLD:
             return "Sold"
         if obj.registered == Inventory.AvailabilityChoices.PRE_ORDER:
             return "Pre-Order"
         return obj.price
+
+    def get_branch(self, obj):
+        if not obj.branch:
+            return None
+        return {
+            "id": obj.branch.id,
+            "branch_id": obj.branch.branch_id,
+            "name": obj.branch.name,
+            "short_name": obj.branch.short_name,
+            "tag": getattr(obj.branch, "tag", ""),
+            "address": obj.branch.address,
+            "phone": obj.branch.phone,
+            "hotline": obj.branch.hotline,
+            "hours": obj.branch.hours,
+            "map_link": obj.branch.map_link,
+        }
+
 
     def get_schema_data(self, obj):
         if obj.schema_override:
@@ -136,7 +180,7 @@ class InventoryDetailSerializer(serializers.ModelSerializer, OptimizedImageSeria
             try:
                 page_url = self.context['request'].build_absolute_uri(f'/cars/{obj.slug}/')
             except Exception:
-                page_url = f'https://www.begautos.com/cars/{obj.slug}/'
+                page_url = f'https://dreamcarhouse.com/cars/{obj.slug}/'
 
         # Build feature image URL
         feature_image_url = ''
@@ -221,7 +265,7 @@ class BrandListSerializer(serializers.ModelSerializer, OptimizedImageSerializerM
         model = Brand
         fields = [
             'id', 'name', 'image', 'car_names', 'starting_price', 'segment',
-            'listing_footer_text',
+            'listing_footer_text', 'logo_alt', 'order', 'is_in_runway', 'destination_url',
         ]
 
     def get_image(self, obj):

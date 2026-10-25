@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { VEHICLE_DATA, getVehicleBySlug, getRelatedVehicles } from "@/lib/showroomData";
+import { notFound, permanentRedirect } from "next/navigation";
+import { getPublicInventoryDetail, getPublicRelatedVehicles } from "@/lib/server/api";
 import VehicleDetailClient from "./VehicleDetailClient";
 
 interface PageProps {
@@ -9,43 +9,53 @@ interface PageProps {
   }>;
 }
 
-// Generate static params for all 12 luxury vehicles at build time
-export async function generateStaticParams() {
-  return VEHICLE_DATA.map((car) => ({
-    slug: car.slug,
-  }));
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const car = getVehicleBySlug(slug);
+  const car = await getPublicInventoryDetail(slug);
 
   if (!car) {
     return {
       title: "Vehicle Not Found | DREAM CAR HOUSE",
+      robots: { index: false, follow: false },
     };
   }
 
-  const title = `${car.name} (${car.year}) | DREAM CAR HOUSE`;
-  const description = `${car.name} ${car.year} in Bangladesh. ${car.engine_capacity}, ${car.mileage}, ${car.fuel_type}. Available at ${car.branch_name}.`;
+  const title = car.meta_title || `${car.name} (${car.year}) | DREAM CAR HOUSE`;
+  const description =
+    car.meta_description ||
+    `${car.name} ${car.year} in Bangladesh. ${car.engine_capacity}, ${car.mileage}, ${car.fuel_type}. Available at ${car.branch_name}.`;
+  const canonical = car.canonical_url || `https://dreamcarhouse.com/cars/${car.slug}/`;
+
+  let robotsConfig: Metadata["robots"] = undefined;
+  if (car.indexing) {
+    const idx = car.indexing.toLowerCase();
+    if (idx.includes("noindex")) {
+      robotsConfig = { index: false, follow: !idx.includes("nofollow") };
+    } else if (idx.includes("index")) {
+      robotsConfig = { index: true, follow: !idx.includes("nofollow") };
+    }
+  }
+
+  const alt = car.featured_image_alt || `${car.name} (${car.year}) Stance`;
 
   return {
     title,
     description,
+    robots: robotsConfig,
     alternates: {
-      canonical: `https://dreamcarhouse.com/cars/${car.slug}/`,
+      canonical,
     },
     openGraph: {
       title,
       description,
-      url: `https://dreamcarhouse.com/cars/${car.slug}/`,
+      url: canonical,
       type: "article",
       images: [
         {
           url: car.image,
           width: 1200,
           height: 630,
-          alt: `${car.name} (${car.year}) Stance`,
+          alt,
         },
       ],
     },
@@ -60,16 +70,58 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CarDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const car = getVehicleBySlug(slug);
+  const car = await getPublicInventoryDetail(slug);
 
   if (!car) {
     notFound();
   }
 
-  const relatedCars = getRelatedVehicles(car.id, car.brand, 3);
+  // Canonical slug redirect: if requested slug is an old slug or casing mismatch
+  if (car.slug && car.slug.toLowerCase() !== slug.toLowerCase()) {
+    permanentRedirect(`/cars/${car.slug}/`);
+  }
+
+  const relatedCars = await getPublicRelatedVehicles(car.slug);
+
+  // Parse numeric price safely
+  const numericPrice = car.raw_price ? parseFloat(car.raw_price) : null;
+  const hasValidNumericPrice = numericPrice !== null && !isNaN(numericPrice) && numericPrice > 0;
+
+  // Determine stock availability without inventing
+  let schemaAvailability: string | undefined = undefined;
+  const reg = (car.registered || "").toLowerCase();
+  if (reg === "available") {
+    schemaAvailability = "https://schema.org/InStock";
+  } else if (reg === "sold") {
+    schemaAvailability = "https://schema.org/SoldOut";
+  } else if (reg === "booked") {
+    schemaAvailability = "https://schema.org/SoldOut";
+  } else if (reg === "pre-order") {
+    schemaAvailability = "https://schema.org/PreOrder";
+  }
+
+  // Build Offer object strictly complying with Schema.org
+  const offerObj: Record<string, unknown> = {
+    "@type": "Offer",
+    priceCurrency: "BDT",
+    url: car.canonical_url || `https://dreamcarhouse.com/cars/${car.slug}/`,
+    seller: {
+      "@type": "AutoDealer",
+      name: "DREAM CAR HOUSE",
+      address: car.branch_address,
+      telephone: "+880 1615-121312",
+    },
+  };
+
+  if (hasValidNumericPrice) {
+    offerObj.price = numericPrice;
+  }
+  if (schemaAvailability) {
+    offerObj.availability = schemaAvailability;
+  }
 
   // Structured Data Schema for Car
-  const carSchema = {
+  const carSchema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Car",
     name: car.name,
@@ -78,25 +130,22 @@ export default async function CarDetailPage({ params }: PageProps) {
       "@type": "Brand",
       name: car.brand,
     },
-    vehicleModelDate: car.year.toString(),
+    vehicleModelDate: car.year ? car.year.toString() : undefined,
     fuelType: car.fuel_type,
-    mileageFromOdometer: {
-      "@type": "QuantitativeValue",
-      value: car.mileage,
-    },
+    color: car.color,
+    vehicleTransmission: car.transmission,
+    bodyType: car.body_style,
+    driveWheelConfiguration: car.drivetrain,
+    mileageFromOdometer: car.mileage
+      ? {
+          "@type": "QuantitativeValue",
+          value: car.mileage,
+          unitCode: "KMT",
+        }
+      : undefined,
     image: car.image,
-    description: car.description,
-    offers: {
-      "@type": "Offer",
-      priceCurrency: "BDT",
-      price: car.price === "Call for Price" ? "Contact for Price" : car.price,
-      availability: "https://schema.org/InStock",
-      seller: {
-        "@type": "AutoDealer",
-        name: "DREAM CAR HOUSE",
-        address: car.branch_address,
-      },
-    },
+    description: car.meta_description || car.description,
+    offers: offerObj,
   };
 
   const breadcrumbSchema = {

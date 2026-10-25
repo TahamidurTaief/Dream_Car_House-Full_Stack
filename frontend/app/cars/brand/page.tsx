@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { VEHICLE_DATA, RUNWAY_BATCHES } from "@/lib/showroomData";
+import { getPublicInventory } from "@/lib/server/api";
 
 export const metadata: Metadata = {
   title: "Prestigious Automotive Brands • Luxury Marques | DREAM CAR HOUSE",
@@ -11,14 +11,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BrandsDirectoryPage() {
+export const dynamic = "force-dynamic";
+
+export default async function BrandsDirectoryPage() {
+  const inventoryRes = await getPublicInventory();
+  const vehicles = inventoryRes.items;
+
   // Aggregate all unique brands
-  const brandsSet = new Set(VEHICLE_DATA.map((c) => c.brand));
+  const brandsSet = new Set(vehicles.map((c: { brand: string }) => c.brand).filter(Boolean));
   const brandsList = Array.from(brandsSet).map((brandName) => {
-    const cars = VEHICLE_DATA.filter((c) => c.brand === brandName);
-    const slug = brandName.toLowerCase().replace(/[\s_]+/g, "-");
+    const cars = vehicles.filter((c: { brand: string }) => c.brand === brandName);
+    const slug = String(brandName).toLowerCase().replace(/[\s_]+/g, "-");
     return {
-      name: brandName,
+      name: String(brandName),
       slug,
       count: cars.length,
       image: cars[0]?.image || "",

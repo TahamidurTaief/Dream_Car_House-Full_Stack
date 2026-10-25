@@ -5,6 +5,7 @@ import {
   getBrands,
   getModelGenerations,
   getBodyStyles,
+  getShowroomBranchList,
 } from "@/lib/server/inventory";
 import { PageHeader } from "@/components/page-header";
 import { State } from "@/components/states";
@@ -38,11 +39,12 @@ export default async function EditInventoryPage({
     notFound();
   }
 
-  const [carRes, brandsRes, modelsRes, stylesRes] = await Promise.all([
+  const [carRes, brandsRes, modelsRes, stylesRes, branchesRes] = await Promise.all([
     getInventoryDetail(numId),
     getBrands({ page_size: 100 }),
     getModelGenerations({ page_size: 200 }),
     getBodyStyles({ page_size: 100 }),
+    getShowroomBranchList({ page_size: 100 }),
   ]);
 
   if (!carRes.ok) {
@@ -63,6 +65,7 @@ export default async function EditInventoryPage({
   const brands = brandsRes.ok ? brandsRes.data.results : [];
   const models = modelsRes.ok ? modelsRes.data.results : [];
   const bodyStyles = stylesRes.ok ? stylesRes.data.results : [];
+  const branches = branchesRes.ok ? branchesRes.data.results : [];
 
   return (
     <>
@@ -75,6 +78,7 @@ export default async function EditInventoryPage({
         brands={brands}
         allModels={models}
         bodyStyles={bodyStyles}
+        branches={branches}
       />
     </>
   );

@@ -3,14 +3,23 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { SHOWROOM_BRANCHES } from "@/lib/showroomData";
+import { SHOWROOM_BRANCHES, type ShowroomBranch } from "@/lib/showroomData";
 import { useUI } from "@/lib/UIContext";
+import type { PublicSiteSettings, PublicShowroomBranch } from "@/lib/types";
 
-export default function Footer() {
+export default function Footer({
+  settings,
+  branches = [],
+}: {
+  settings?: PublicSiteSettings;
+  branches?: PublicShowroomBranch[];
+}) {
   const { openCompareModal } = useUI();
-  const [activeBranch, setActiveBranch] = useState<"kakrail" | "gulshan">("kakrail");
+  const [activeBranchId, setActiveBranchId] = useState<string>(
+    branches[0]?.branch_id || "kakrail"
+  );
 
-  const branch = SHOWROOM_BRANCHES[activeBranch];
+  const activeBranch = branches.find((b) => b.branch_id === activeBranchId) || branches[0];
 
   return (
     <footer className="site-footer" id="contact">
@@ -28,7 +37,7 @@ export default function Footer() {
               />
             </div>
             <p className="footer-brand-tagline">
-              Where Extraordinary Dreams Meet The Road • Kakrail & Gulshan, Dhaka.
+              {settings?.footer_tagline || settings?.tagline || "Where Extraordinary Dreams Meet The Road • Kakrail & Gulshan, Dhaka."}
             </p>
 
             <ul className="contact-list">
@@ -46,9 +55,16 @@ export default function Footer() {
                   <circle cx="12" cy="10" r="3" />
                 </svg>
                 <span>
-                  <strong>Kakrail Branch (Main)</strong>: 18, Shaheed Captain Monsur Ali Soroni, Kakrail
-                  <br />
-                  <strong>Gulshan Branch</strong>: House #07, Road #127, Gulshan Avenue
+                  {branches.length > 0 ? (
+                    branches.map((b, idx) => (
+                      <React.Fragment key={b.branch_id}>
+                        {idx > 0 && <br />}
+                        <strong>{b.name || b.short_name}</strong>: {b.address}
+                      </React.Fragment>
+                    ))
+                  ) : (
+                    <span>{settings?.primary_address || "18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka - 1000"}</span>
+                  )}
                 </span>
               </li>
               <li className="contact-item">
@@ -63,8 +79,8 @@ export default function Footer() {
                 >
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                 </svg>
-                <a href="tel:01615-121312" className="contact-link">
-                  01615-121312
+                <a href={`tel:${(settings?.hotline || "01615-121312").replace(/\s+/g, "")}`} className="contact-link">
+                  {settings?.hotline || "01615-121312"}
                 </a>
               </li>
               <li className="contact-item">
@@ -80,8 +96,8 @@ export default function Footer() {
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                   <polyline points="22,6 12,13 2,6" />
                 </svg>
-                <a href="mailto:dreamcarhouse101@gmail.com" className="contact-link">
-                  dreamcarhouse101@gmail.com
+                <a href={`mailto:${settings?.email || "dreamcarhouse101@gmail.com"}`} className="contact-link">
+                  {settings?.email || "dreamcarhouse101@gmail.com"}
                 </a>
               </li>
               <li className="contact-item">
@@ -98,14 +114,14 @@ export default function Footer() {
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
                 <span>
-                  Sat – Thu: 10:00 AM – 9:00 PM <span className="status-open-pill">Open</span>
+                  {settings?.opening_hours_text || "Sat – Thu: 10:00 AM – 9:00 PM"} <span className="status-open-pill">Open</span>
                 </span>
               </li>
             </ul>
 
             <div className="footer-social-row">
               <a
-                href="https://facebook.com"
+                href={settings?.social_media?.facebook || "https://facebook.com"}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
@@ -117,7 +133,7 @@ export default function Footer() {
                 <span>Facebook</span>
               </a>
               <a
-                href="https://instagram.com"
+                href={settings?.social_media?.instagram || "https://instagram.com"}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
@@ -131,7 +147,7 @@ export default function Footer() {
                 <span>Instagram</span>
               </a>
               <a
-                href="https://youtube.com"
+                href={settings?.social_media?.youtube || "https://youtube.com"}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="YouTube"
@@ -152,39 +168,35 @@ export default function Footer() {
                 Showroom Locations
               </h3>
               <span className="map-subtitle">
-                {activeBranch === "kakrail"
-                  ? "Kakrail Branch • 18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka"
-                  : "Gulshan Branch • House #07, Road #127, Gulshan Avenue, Dhaka"}
+                {activeBranch
+                  ? `${activeBranch.name} • ${activeBranch.address}`
+                  : "18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka"}
               </span>
             </div>
             <div className="footer-branch-tabs">
-              <button
-                type="button"
-                className={`footer-branch-tab ${activeBranch === "kakrail" ? "active" : ""}`}
-                onClick={() => setActiveBranch("kakrail")}
-              >
-                Kakrail Branch (Main)
-              </button>
-              <button
-                type="button"
-                className={`footer-branch-tab ${activeBranch === "gulshan" ? "active" : ""}`}
-                onClick={() => setActiveBranch("gulshan")}
-              >
-                Gulshan Branch
-              </button>
+              {branches.map((b) => (
+                <button
+                  key={b.branch_id}
+                  type="button"
+                  className={`footer-branch-tab ${activeBranch?.branch_id === b.branch_id ? "active" : ""}`}
+                  onClick={() => setActiveBranchId(b.branch_id)}
+                >
+                  {b.short_name || b.name}
+                </button>
+              ))}
             </div>
             <div className="map-embed-wrapper-modern">
               <iframe
-                src={branch.embed_map}
+                src={activeBranch?.embed_map || "https://maps.google.com/maps?output=embed"}
                 loading="lazy"
-                title={`DREAM CAR HOUSE Showroom Location - ${branch.name}`}
+                title={`DREAM CAR HOUSE Showroom Location - ${activeBranch?.name || ""}`}
                 allowFullScreen
               />
               <div className="map-glow-border"></div>
             </div>
             <div className="map-actions-row">
               <a
-                href={branch.map_link}
+                href={activeBranch?.map_link || "https://maps.google.com"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="map-directions-btn"
@@ -255,7 +267,7 @@ export default function Footer() {
         {/* Bottom Copyright & Legal */}
         <div className="footer-bottom-modern">
           <div className="footer-copy-text">
-            © 2026 <strong>DREAM CAR HOUSE</strong>. All rights reserved. Kakrail & Gulshan, Dhaka, Bangladesh.
+            {settings?.footer_copy_text || "© 2026 DREAM CAR HOUSE. All rights reserved. Kakrail & Gulshan, Dhaka, Bangladesh."}
           </div>
           <div className="footer-sub-links">
             <span style={{ color: "#9ca3af", fontSize: "0.85rem" }}>

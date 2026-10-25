@@ -47,6 +47,17 @@ from .views import (
     SiteSettingsManagementView,
     ShowroomBranchListCreateView,
     ShowroomBranchDetailView,
+    PreferenceSectionManagementView,
+    PreferenceCategoryListCreateView,
+    PreferenceCategoryDetailView,
+    ConsultationSectionManagementView,
+    ExperienceSectionManagementView,
+    ExperiencePillarListCreateView,
+    ExperiencePillarDetailView,
+    VisualChroniclesSectionManagementView,
+    VisualChroniclesItemListCreateView,
+    VisualChroniclesItemDetailView,
+    VipSanctuarySectionManagementView,
 )
 
 
@@ -141,7 +152,29 @@ urlpatterns = [
     # Showroom Branches (home.ShowroomBranch)
     path("branches/", ShowroomBranchListCreateView.as_view(), name="branch_list_create"),
     path("branches/<int:pk>/", ShowroomBranchDetailView.as_view(), name="branch_detail"),
+
+    # Homepage Preference Section (home.PreferenceSection, home.PreferenceCategory)
+    path("preference-section/", PreferenceSectionManagementView.as_view(), name="preference_section"),
+    path("preference-categories/", PreferenceCategoryListCreateView.as_view(), name="preference_category_list_create"),
+    path("preference-categories/<int:pk>/", PreferenceCategoryDetailView.as_view(), name="preference_category_detail"),
+
+    # Homepage Consultation Section (home.ConsultationSection)
+    path("consultation/", ConsultationSectionManagementView.as_view(), name="consultation_section"),
+
+    # Homepage Experience Section (home.ExperienceSection, home.ExperiencePillar)
+    path("experience/", ExperienceSectionManagementView.as_view(), name="experience_section"),
+    path("experience-pillars/", ExperiencePillarListCreateView.as_view(), name="experience_pillar_list_create"),
+    path("experience-pillars/<int:pk>/", ExperiencePillarDetailView.as_view(), name="experience_pillar_detail"),
+
+    # Homepage Visual Chronicles Section (home.VisualChroniclesSection, home.VisualChroniclesItem)
+    path("visual-chronicles/", VisualChroniclesSectionManagementView.as_view(), name="visual_chronicles"),
+    path("visual-chronicles/items/", VisualChroniclesItemListCreateView.as_view(), name="visual_chronicles_items"),
+    path("visual-chronicles/items/<int:pk>/", VisualChroniclesItemDetailView.as_view(), name="visual_chronicles_item_detail"),
+
+    # Homepage VIP Sanctuary Section (home.VipSanctuarySection)
+    path("vip-sanctuary/", VipSanctuarySectionManagementView.as_view(), name="vip_sanctuary"),
 ]
+
 
 
 

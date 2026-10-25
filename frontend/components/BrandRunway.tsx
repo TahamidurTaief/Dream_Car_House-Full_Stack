@@ -3,6 +3,21 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ALL_RUNWAY_BRANDS } from "@/lib/showroomData";
+import { PublicBrand } from "@/lib/types";
+
+export interface RunwayItem {
+  name: string;
+  filterBrand: string;
+  destination_url?: string;
+  image?: string | null;
+  logo_alt?: string;
+  svg?: string;
+  originalIndex: number;
+}
+
+interface BrandRunwayProps {
+  brands?: PublicBrand[];
+}
 
 // Sleek Stealth GT Sweeper - Dark carbon silhouette, dual glowing exhaust flames, red LED taillight
 const CAR_SVG_SWEEPER = `
@@ -106,8 +121,29 @@ const CAR_SVG_DEPLOYER = `
   <circle cx="125" cy="42" r="3" fill="#ffffff"/>
 </svg>`;
 
-export default function BrandRunway() {
+export default function BrandRunway({ brands }: BrandRunwayProps = {}) {
   const router = useRouter();
+
+  // Normalize database brands with static fallback
+  const brandList: RunwayItem[] =
+    brands && brands.length > 0
+      ? brands.map((b, idx) => ({
+          name: b.name.toUpperCase(),
+          filterBrand: b.name,
+          destination_url:
+            b.destination_url ||
+            `/inventory?brand=${encodeURIComponent(b.name)}`,
+          image: b.image || null,
+          logo_alt: b.logo_alt || `${b.name} luxury marque`,
+          originalIndex: idx,
+        }))
+      : ALL_RUNWAY_BRANDS.map((b, idx) => ({
+          name: b.name,
+          filterBrand: b.filterBrand,
+          destination_url: `/inventory?brand=${encodeURIComponent(b.filterBrand)}`,
+          svg: b.svg,
+          originalIndex: idx,
+        }));
 
   // Responsive page size: Mobile = 3, Tablet = 6, Desktop = 8
   const [pageSize, setPageSize] = useState<number>(8);
@@ -149,8 +185,12 @@ export default function BrandRunway() {
     return () => window.removeEventListener("resize", handleResize);
   }, [calculatePageSize]);
 
-  const filterByBrand = (brandName: string) => {
-    router.push(`/inventory?brand=${encodeURIComponent(brandName)}`);
+  const filterByBrand = (item: RunwayItem) => {
+    if (item.destination_url) {
+      router.push(item.destination_url);
+    } else {
+      router.push(`/inventory?brand=${encodeURIComponent(item.filterBrand)}`);
+    }
   };
 
   // Run the majestic luxury car cruise with real-time wake synchronization
@@ -239,7 +279,7 @@ export default function BrandRunway() {
       carActor.style.left = "-240px";
 
       // Calculate next sequential batch without skipping ANY brand!
-      setStartIndex((prev) => (prev + pageSize) % ALL_RUNWAY_BRANDS.length);
+      setStartIndex((prev) => (prev + pageSize) % (brandList.length || 1));
 
       // Initialize all incoming cards in dissolved state so they materialize cleanly
       setDissolvedIndexes(Array.from({ length: pageSize }, (_, i) => i));
@@ -312,7 +352,7 @@ export default function BrandRunway() {
         }, cruiseDuration + 300);
       }, 450);
     }, cruiseDuration + 150);
-  }, [pageSize]);
+  }, [pageSize, brandList.length]);
 
   // Recurring interval: Cruise runs every 19 seconds (allowing ~8 seconds of resting interaction)
   useEffect(() => {
@@ -330,10 +370,11 @@ export default function BrandRunway() {
     };
   }, [runRunwayCycle]);
 
-  // Sliced brands for current active view
+  // Sliced brands for current active view (handles single brand edge case gracefully)
   const visibleBrands = Array.from({ length: pageSize }, (_, i) => {
-    const idx = (startIndex + i) % ALL_RUNWAY_BRANDS.length;
-    return { ...ALL_RUNWAY_BRANDS[idx], originalIndex: idx };
+    const len = brandList.length || 1;
+    const idx = (startIndex + i) % len;
+    return { ...brandList[idx], displayIndex: i };
   });
 
   return (
@@ -381,19 +422,32 @@ export default function BrandRunway() {
 
               return (
                 <div
-                  key={`${brand.name}-${brand.originalIndex}`}
+                  key={`${brand.name}-${brand.originalIndex}-${i}`}
                   className={`runway-brand-card ${isDissolved ? "is-dissolved" : ""} ${
                     isDeploying ? "is-deploying" : ""
                   }`}
                   data-index={i}
-                  onClick={() => filterByBrand(brand.filterBrand)}
+                  onClick={() => filterByBrand(brand)}
                   title={`View ${brand.name} Collection`}
                 >
                   <div className="brand-badge-inner">
-                    <div
-                      style={{ display: "contents" }}
-                      dangerouslySetInnerHTML={{ __html: brand.svg }}
-                    />
+                    {brand.image ? (
+                      <img
+                        src={brand.image}
+                        alt={brand.logo_alt || brand.name}
+                        className="brand-runway-img"
+                        loading="lazy"
+                      />
+                    ) : brand.svg ? (
+                      <div
+                        style={{ display: "contents" }}
+                        dangerouslySetInnerHTML={{ __html: brand.svg }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "#e2e8f0" }}>
+                        {brand.name.slice(0, 2)}
+                      </span>
+                    )}
                     <span className="runway-brand-name">{brand.name}</span>
                   </div>
                 </div>

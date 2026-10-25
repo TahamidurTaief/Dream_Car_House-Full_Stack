@@ -16,7 +16,21 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
   const { openAppointmentModal, openGalleryLightbox } = useUI();
   const [activeImgIdx, setActiveImgIdx] = useState(0);
 
-  const branch = SHOWROOM_BRANCHES[car.branch_id] || SHOWROOM_BRANCHES["kakrail"];
+  const branch = car.branch
+    ? {
+        id: car.branch.branch_id || car.branch_id || "kakrail",
+        name: car.branch.name || car.branch_name || "Kakrail Branch & Showroom",
+        short_name: car.branch.short_name || "Kakrail Branch",
+        tag: car.branch.tag || "Flagship Showroom",
+        address: car.branch.address || car.branch_address || "18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000",
+        phone: car.branch.phone || "01615-121312",
+        hotline: car.branch.hotline || "+880 1615-121312",
+        email: car.branch.email || "dreamcarhouse101@gmail.com",
+        hours: car.branch.hours || "Saturday – Thursday: 10:00 AM – 9:00 PM (Friday Closed)",
+        map_link: car.branch.map_link || "https://maps.google.com/?q=18+Shaheed+Captain+Mansur+Ali+Soroni+Kakrail+Dhaka",
+        embed_map: "",
+      }
+    : SHOWROOM_BRANCHES[car.branch_id] || SHOWROOM_BRANCHES["kakrail"];
   const [isCopied, setIsCopied] = useState(false);
   const isBrandNew = car.car_type === "BRAND_NEW";
 
@@ -145,7 +159,7 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
           >
             <Image
               src={currentImage.url}
-              alt={car.name}
+              alt={car.featured_image_alt || car.name}
               width={900}
               height={560}
               className="dch-car-img"
@@ -298,7 +312,7 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
               {car.brand.toUpperCase()} • PRODUCTION {car.year}
             </div>
             <h1 className="dch-car-title" style={{ fontSize: "2rem", lineHeight: "1.25", marginTop: "0.35rem" }}>
-              {car.name}
+              {car.h1_title || car.name}
             </h1>
             <div className="dch-car-price-row" style={{ marginTop: "0.85rem" }}>
               <div className="dch-valuation-top-bar">
@@ -358,7 +372,7 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
               <div className="spec-card-cell">
                 <span className="spec-cell-label">Condition Grade</span>
                 <span className="spec-cell-val">
-                  {isBrandNew ? "Brand New (00 km)" : "Certified Pre-Owned"}
+                  {car.condition === "NEW" || isBrandNew ? "Brand New (00 km)" : "Certified Pre-Owned"}
                 </span>
               </div>
               <div className="spec-card-cell">
@@ -379,16 +393,40 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
                   {car.drivetrain || "Full-Time Intelligent All-Wheel Drive"}
                 </span>
               </div>
+              {car.transmission && (
+                <div className="spec-card-cell">
+                  <span className="spec-cell-label">Transmission</span>
+                  <span className="spec-cell-val">{car.transmission}</span>
+                </div>
+              )}
+              {car.color && (
+                <div className="spec-card-cell">
+                  <span className="spec-cell-label">Exterior Color</span>
+                  <span className="spec-cell-val">{car.color}</span>
+                </div>
+              )}
+              {car.body_style && (
+                <div className="spec-card-cell">
+                  <span className="spec-cell-label">Body Architecture</span>
+                  <span className="spec-cell-val">{car.body_style}</span>
+                </div>
+              )}
               <div className="spec-card-cell">
                 <span className="spec-cell-label">Registration</span>
                 <span className="spec-cell-val">
-                  {isBrandNew ? "Unregistered Direct Import" : "Dhaka Metro Verified Papers"}
+                  {car.registration_number || (isBrandNew ? "Unregistered Direct Import" : "Dhaka Metro Verified Papers")}
                 </span>
               </div>
               <div className="spec-card-cell">
                 <span className="spec-cell-label">Vehicle Status</span>
-                <span className="spec-cell-val" style={{ color: "#22c55e", fontWeight: 600 }}>
-                  Physically Available
+                <span
+                  className="spec-cell-val"
+                  style={{
+                    color: car.registered?.toLowerCase() === "sold" ? "#ef4444" : "#22c55e",
+                    fontWeight: 600,
+                  }}
+                >
+                  {car.registered || "Physically Available"}
                 </span>
               </div>
             </div>
@@ -399,8 +437,49 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
             <h3 style={{ fontSize: "1.05rem", fontWeight: 600, color: "#ffffff", marginBottom: "0.5rem" }}>
               Atelier Overview & Provenance
             </h3>
-            <p>{car.description}</p>
+            {car.description && car.description.includes("<") && car.description.includes(">") ? (
+              <div
+                dangerouslySetInnerHTML={{ __html: car.description }}
+                style={{ color: "#d1d5db", lineHeight: "1.7", fontSize: "0.95rem" }}
+              />
+            ) : (
+              <p>{car.description}</p>
+            )}
           </div>
+
+          {/* Video Walkaround Presentation */}
+          {car.youtube && (
+            <div className="dch-video-walkaround-section" style={{ marginTop: "2rem" }}>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: 600, color: "#ffffff", marginBottom: "0.75rem" }}>
+                Official Cinematic Walkaround
+              </h3>
+              <div
+                style={{
+                  position: "relative",
+                  paddingBottom: "56.25%",
+                  height: 0,
+                  overflow: "hidden",
+                  borderRadius: "10px",
+                  background: "#0a0c10",
+                  border: "1px solid #1f2937",
+                }}
+              >
+                <iframe
+                  src={
+                    car.youtube.includes("watch?v=")
+                      ? car.youtube.replace("watch?v=", "embed/")
+                      : car.youtube.includes("youtu.be/")
+                      ? car.youtube.replace("youtu.be/", "www.youtube.com/embed/")
+                      : car.youtube
+                  }
+                  title={`${car.name} Video Walkaround`}
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          )}
 
           {/* Twin VIP Action Suite */}
           <div className="dch-vip-actions" style={{ marginTop: "2rem" }}>

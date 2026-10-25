@@ -124,7 +124,11 @@ export function BrandListClient({
     setCreateSubmitting(true);
     setCreateErrors({});
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const runwayInput = form.elements.namedItem("is_in_runway") as HTMLInputElement | null;
+    formData.set("is_in_runway", runwayInput?.checked ? "true" : "false");
+
     const res = await createBrandAction(formData);
     setCreateSubmitting(false);
 
@@ -177,6 +181,24 @@ export function BrandListClient({
         };
         return <Badge tone="neutral">{labels[row.segment] || row.segment}</Badge>;
       },
+    },
+    {
+      id: "order",
+      header: "Order",
+      accessor: (row) => (
+        <span style={{ fontWeight: 600, color: "var(--text)" }}>
+          #{row.order ?? 0}
+        </span>
+      ),
+    },
+    {
+      id: "runway",
+      header: "Runway",
+      accessor: (row) => (
+        <Badge tone={row.is_in_runway !== false ? "success" : "neutral"}>
+          {row.is_in_runway !== false ? "Visible" : "Hidden"}
+        </Badge>
+      ),
     },
     {
       id: "status",
@@ -302,8 +324,34 @@ export function BrandListClient({
             />
           </FormField>
 
-          <FormField label="Brand Logo" required error={createErrors.image} description="SVG, PNG, WEBP or JPG">
-            <Upload name="image" accept="image/*" required />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-3)" }}>
+            <FormField label="Display Order" error={createErrors.order}>
+              <Input type="number" name="order" defaultValue={0} />
+            </FormField>
+
+            <FormField label="Runway Strip Visibility" error={createErrors.is_in_runway}>
+              <label style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginTop: "var(--space-2)", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  name="is_in_runway"
+                  defaultChecked={true}
+                  style={{ width: "16px", height: "16px" }}
+                />
+                <span style={{ fontSize: "var(--font-size-sm)" }}>Show in Runway</span>
+              </label>
+            </FormField>
+          </div>
+
+          <FormField label="Destination URL (Optional)" error={createErrors.destination_url} description="Defaults to /inventory?brand=<name>">
+            <Input name="destination_url" placeholder="e.g. /inventory?brand=BMW" />
+          </FormField>
+
+          <FormField label="Brand Logo" required error={createErrors.image} description="SVG, PNG, WEBP or JPG (max 10MB)">
+            <Upload name="image" accept="image/*,.svg" required />
+          </FormField>
+
+          <FormField label="Logo Alt Text" error={createErrors.logo_alt} description="Defaults to brand name">
+            <Input name="logo_alt" placeholder="e.g. BMW luxury marque" />
           </FormField>
 
           <FormField label="Meta Title" error={createErrors.meta_title}>

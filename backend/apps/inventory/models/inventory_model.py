@@ -10,7 +10,7 @@ from core.utils import images_path_dir
 
 
 class Inventory(BaseModel):
-    CANONICAL_BASE_URL = "https://www.begautos.com"
+    CANONICAL_BASE_URL = "https://dreamcarhouse.com"
 
     class AvailabilityChoices(models.TextChoices):
         AVAILABLE = "Available", _("Available")
@@ -164,6 +164,24 @@ class Inventory(BaseModel):
         verbose_name=_("Body Style"),
         blank=True,
         null=True
+    )
+    branch = models.ForeignKey(
+        'home.ShowroomBranch',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='inventories',
+        verbose_name=_("Showroom Branch")
+    )
+    is_call_for_price = models.BooleanField(
+        default=False,
+        verbose_name=_("Call for Price / VIP Valuation")
+    )
+    registration_number = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        verbose_name=_("Registration Number / Paper Details")
     )
     feature_image = models.FileField(
         upload_to=images_path_dir,

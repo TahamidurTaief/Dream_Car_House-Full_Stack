@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { VEHICLE_DATA } from "@/lib/showroomData";
+import { getPublicInventory } from "@/lib/server/api";
 import VehicleCard from "@/components/VehicleCard";
 
 interface PageProps {
@@ -22,12 +22,6 @@ const BRAND_SLUG_MAP: Record<string, string> = {
   "land-rover": "Land Rover",
   "byd": "BYD",
 };
-
-export async function generateStaticParams() {
-  return Object.keys(BRAND_SLUG_MAP).map((brandSlug) => ({
-    brandSlug,
-  }));
-}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { brandSlug } = await params;
@@ -56,9 +50,13 @@ export default async function BrandVehiclesPage({ params }: PageProps) {
     notFound();
   }
 
-  const matchingCars = VEHICLE_DATA.filter(
-    (car) => car.brand.toLowerCase() === brandName.toLowerCase()
-  );
+  let matchingCars: import("@/lib/types").PublicVehicle[] = [];
+  try {
+    const res = await getPublicInventory({ brand: brandName });
+    matchingCars = res.items;
+  } catch (error) {
+    console.error(`[BrandVehiclesPage] Failed to fetch cars for brand ${brandName}:`, error);
+  }
 
   return (
     <div className="inventory-page-wrap max-w-7xl">

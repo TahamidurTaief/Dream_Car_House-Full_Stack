@@ -1,17 +1,29 @@
 "use client";
 
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { VEHICLE_DATA, Vehicle } from "@/lib/showroomData";
+import { Vehicle } from "@/lib/showroomData";
 import { useUI } from "@/lib/UIContext";
 
-export default function InventoryCarousel() {
+interface InventoryCarouselProps {
+  vehicles?: Vehicle[];
+}
+
+export default function InventoryCarousel({ vehicles }: InventoryCarouselProps) {
   const { openCarModal } = useUI();
   const trackRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // 3-tile duplicated dataset for mathematically seamless, infinite bidirectional wrapping
-  const marqueeData = [...VEHICLE_DATA, ...VEHICLE_DATA, ...VEHICLE_DATA];
+  const items = vehicles || [];
+
+  // Repeated dataset for mathematically seamless, infinite bidirectional wrapping
+  const marqueeData = useMemo<Vehicle[]>(() => {
+    if (items.length === 0) return [];
+    if (items.length >= 4) {
+      return [...items, ...items, ...items];
+    }
+    return [...items, ...items, ...items, ...items, ...items, ...items];
+  }, [items]);
 
   // Animation & Physics Refs
   const posRef = useRef(0);
@@ -292,33 +304,40 @@ export default function InventoryCarousel() {
           onTouchEnd={handleTouchEnd}
           onTouchCancel={handleTouchEnd}
         >
-          {marqueeData.map((car, index) => {
-            const branchName =
-              car.branch_id === "kakrail" ? "Kakrail Branch" : "Gulshan Branch";
-            return (
-              <div key={`${car.id}-${index}`} className="card-item-slider">
-                <div
-                  className="group"
-                  onClick={() => handleCardClick(car)}
-                  style={{ cursor: isGrabbing ? "grabbing" : "pointer" }}
-                >
+          {items.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#9ca3af", width: "100%" }}>
+              No featured vehicles currently available in the showroom vault.
+            </div>
+          ) : (
+            marqueeData.map((car, index) => {
+              const branchName =
+                car.branch_name ||
+                (car.branch_id === "gulshan" ? "Gulshan Branch" : "Kakrail Branch");
+              return (
+                <div key={`${car.id}-${index}`} className="card-item-slider">
                   <div
-                    className="portrait-image-wrapper"
-                    style={{ position: "relative" }}
+                    className="group"
+                    onClick={() => handleCardClick(car)}
+                    style={{ cursor: isGrabbing ? "grabbing" : "pointer" }}
                   >
-                    <img
-                      src={car.image}
-                      alt={car.name}
-                      loading="lazy"
-                      draggable={false}
-                    />
-                    <span className="card-branch-tag">{branchName}</span>
+                    <div
+                      className="portrait-image-wrapper"
+                      style={{ position: "relative" }}
+                    >
+                      <img
+                        src={car.image}
+                        alt={car.name}
+                        loading="lazy"
+                        draggable={false}
+                      />
+                      <span className="card-branch-tag">{branchName}</span>
+                    </div>
+                    <h3 className="card-car-title">{car.name}</h3>
                   </div>
-                  <h3 className="card-car-title">{car.name}</h3>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
     </section>
