@@ -332,7 +332,7 @@ export default function AboutClient() {
           <button
             type="button"
             className="gallery-btn-secondary"
-            onClick={openAppointmentModal}
+            onClick={() => openAppointmentModal()}
             style={{ padding: "0.9rem 2rem", fontSize: "0.95rem", cursor: "pointer" }}
           >
             <span>Schedule Showroom Tour</span>
