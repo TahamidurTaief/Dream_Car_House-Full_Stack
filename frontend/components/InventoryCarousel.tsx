@@ -10,8 +10,11 @@ export default function InventoryCarousel() {
   const trackRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Full inventory dataset (always intact, unimpacted by hero tab navigation)
+  const allInventory = VEHICLE_DATA;
+
   // 3-tile duplicated dataset for mathematically seamless, infinite bidirectional wrapping
-  const marqueeData = [...VEHICLE_DATA, ...VEHICLE_DATA, ...VEHICLE_DATA];
+  const marqueeData = React.useMemo(() => [...allInventory, ...allInventory, ...allInventory], [allInventory]);
 
   // Animation & Physics Refs
   const posRef = useRef(0);
@@ -272,7 +275,7 @@ export default function InventoryCarousel() {
       <div className="section-head">
         <h2 className="section-h2">Current Inventory</h2>
         <Link className="see-all-link" href="/inventory">
-          See All
+          See All ({allInventory.length})
         </Link>
       </div>
 

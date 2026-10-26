@@ -156,17 +156,17 @@ function InventoryContent() {
                 className="group inventory-card-box"
                 onClick={() => openCarModal(car)}
                 style={{
-                  background: "#0d0f12",
-                  padding: "0.75rem",
-                  borderRadius: "8px",
-                  border: "1px solid #1f2937",
+                  background: "#101012",
+                  padding: "0.85rem",
+                  borderRadius: "10px",
+                  border: "1px solid rgba(255, 255, 255, 0.10)",
                   cursor: "pointer",
                   transition: "transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease",
                 }}
               >
                 <div
                   className="portrait-image-wrapper"
-                  style={{ marginBottom: "0.5rem", position: "relative" }}
+                  style={{ marginBottom: "0.65rem", position: "relative", background: "#111111" }}
                 >
                   <img src={car.image} alt={car.name} loading="lazy" />
                   <span className="card-branch-tag">{branch.short_name}</span>
@@ -174,8 +174,9 @@ function InventoryContent() {
                 <div
                   style={{
                     fontSize: "0.75rem",
-                    color: "#9ca3af",
+                    color: "rgba(255, 255, 255, 0.50)",
                     textTransform: "uppercase",
+                    letterSpacing: "0.05em",
                     marginBottom: "0.25rem",
                   }}
                 >
@@ -189,7 +190,7 @@ function InventoryContent() {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    borderTop: "1px solid #1f2937",
+                    borderTop: "1px solid rgba(255, 255, 255, 0.10)",
                     paddingTop: "0.5rem",
                   }}
                 >
@@ -202,7 +203,7 @@ function InventoryContent() {
                   >
                     {car.mileage}
                   </span>
-                  <span style={{ fontSize: "0.8rem", color: "#9ca3af" }}>
+                  <span style={{ fontSize: "0.8rem", color: "rgba(255, 255, 255, 0.50)" }}>
                     {car.fuel_type}
                   </span>
                 </div>

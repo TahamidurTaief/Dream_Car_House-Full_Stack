@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { useUI } from "@/lib/UIContext";
 
 export default function AppointmentModal() {
@@ -54,6 +55,22 @@ export default function AppointmentModal() {
         </button>
 
         <div className="appointment-modal-head">
+          <div style={{ marginBottom: "0.85rem" }}>
+            <Image
+              src="/assets/dch-logo.webp"
+              alt="DREAM CAR HOUSE"
+              width={1020}
+              height={350}
+              style={{
+                height: "44px",
+                width: "auto",
+                maxWidth: "220px",
+                objectFit: "contain",
+                filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(255,255,255,0.15))",
+              }}
+              unoptimized
+            />
+          </div>
           <span className="consult-pill-tag">VIP SHOWROOM RESERVATION</span>
           <h3 className="appointment-modal-title">Book A Private Consultation</h3>
           <p className="appointment-modal-sub">

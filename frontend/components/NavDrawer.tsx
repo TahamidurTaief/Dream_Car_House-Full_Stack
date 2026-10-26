@@ -62,9 +62,16 @@ export default function NavDrawer() {
                 <Image
                   src="/assets/dch-logo.webp"
                   alt="DREAM CAR HOUSE Logo"
-                  width={150}
-                  height={56}
-                  style={{ height: "40px", width: "auto", objectFit: "contain", filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.6))" }}
+                  width={1020}
+                  height={350}
+                  style={{
+                    height: "46px",
+                    width: "auto",
+                    maxWidth: "240px",
+                    objectFit: "contain",
+                    filter: "drop-shadow(0 2px 10px rgba(0,0,0,0.9)) drop-shadow(0 0 12px rgba(255,255,255,0.2))",
+                  }}
+                  unoptimized
                 />
                 <span className="drawer-brand-sub">
                   Premier Luxury Automotive Showroom • Kakrail & Gulshan
@@ -191,16 +198,8 @@ export default function NavDrawer() {
         {/* Drawer Footer: Live Concierge Card & Quick Actions */}
         <div className="drawer-footer-card">
           <div className="drawer-live-status">
-            <span
-              className={`drawer-status-text ${isOpen ? "status-open" : "status-closed"}`}
-              style={{
-                color: isOpen ? "#22c55e" : "#ef4444",
-                textShadow: isOpen
-                  ? "0 0 10px rgba(34, 197, 94, 0.4)"
-                  : "0 0 10px rgba(239, 68, 68, 0.4)",
-                transition: "color 0.3s ease, text-shadow 0.3s ease",
-              }}
-            >
+            <span className={`drawer-status-dot ${isOpen ? "open" : "closed"}`}></span>
+            <span className={`drawer-status-text ${isOpen ? "status-open" : "status-closed"}`}>
               {isOpen
                 ? "SHOWROOM OPEN TODAY • 10:00 AM - 10:00 PM"
                 : "SHOWROOM CLOSED NOW • 10:00 AM - 10:00 PM"}

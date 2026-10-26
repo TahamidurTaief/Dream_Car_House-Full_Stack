@@ -31,6 +31,14 @@ export default function VehicleCard({ car }: VehicleCardProps) {
           loading="lazy"
           className="pref-car-img"
         />
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(180deg, transparent 60%, rgba(16, 16, 18, 0.75) 100%)",
+            pointerEvents: "none",
+          }}
+        />
         <span
           className={`pref-car-badge ${
             isBrandNew ? "pref-badge-brandnew" : "pref-badge-preowned"

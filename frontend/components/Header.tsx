@@ -7,7 +7,7 @@ import { useUI } from "@/lib/UIContext";
 import { playNextSupercarSound, SupercarSoundProfile } from "@/lib/audioEngine";
 
 export default function Header() {
-  const { isDrawerOpen, openDrawer, closeDrawer, isStoriesOpen, openStories } = useUI();
+  const { isDrawerOpen, openDrawer, closeDrawer, isStoriesOpen, openStories, theme, toggleTheme } = useUI();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -84,7 +84,7 @@ export default function Header() {
     >
       <div className="header-container">
         {/* Left: Luxury Showroom Stories Ring Button */}
-        <div>
+        <div style={{ display: "inline-flex", alignItems: "center", background: "transparent", border: "none" }}>
           <button
             className="header-story-ring-btn"
             id="header-story-btn"
@@ -168,54 +168,86 @@ export default function Header() {
             <Image
               src="/assets/dch-logo.webp"
               alt="DREAM CAR HOUSE Logo"
-              width={160}
-              height={60}
+              width={1020}
+              height={350}
               className="header-brand-logo-img"
               priority
+              unoptimized
             />
           </Link>
         </div>
 
-        {/* Right Corner: 3D Photorealistic Supercar Wheel Trigger */}
-        <div style={{ position: "relative" }}>
+        {/* Right Corner: Theme Toggle & 3D Wheel Menu Trigger */}
+        <div className="header-right-group">
+          {/* Day / Night Smooth Luxury Toggle (Icon-Only Luxury Orb) */}
           <button
-            className={`header-wheel-trigger ${isSpinning ? "wheel-spinning" : ""} ${isDrawerOpen ? "menu-active" : ""}`}
-            id="header-menu-btn"
-            onClick={handleWheelClick}
-            aria-label="Open Luxury Showroom Menu"
-            title="Click to Spin Wheel & Launch Supercar Menu"
+            type="button"
+            onClick={toggleTheme}
+            className={`header-theme-toggle ${theme === "dark" ? "mode-dark" : "mode-light"}`}
+            aria-label={theme === "dark" ? "Switch to Day Mode" : "Switch to Night Mode"}
+            title={theme === "dark" ? "Switch to Day Mode (সূর্য)" : "Switch to Night Mode (চাঁদ)"}
+            id="header-theme-btn"
           >
-            <div className="wheel-disc-wrapper">
-              <Image
-                src="/assets/supercar_wheel.png"
-                alt="Supercar Forged Wheel"
-                width={54}
-                height={54}
-                className="realistic-wheel-img"
-                priority
-              />
-              <div className="wheel-light-sweep"></div>
-            </div>
+            {theme === "dark" ? (
+              <svg className="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21.64 13a1 1 0 0 0-1.05-.14 8 8 0 0 1-3.37.73A8.15 8.15 0 0 1 9.08 5.49a8.59 8.59 0 0 1 .25-2A1 1 0 0 0 8 2.36a10.14 10.14 0 1 0 14 11.69 1 1 0 0 0-.36-1.05z" />
+              </svg>
+            ) : (
+              <svg className="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+            )}
           </button>
 
-          {/* Luxury Supercar Sound HUD Badge Toast */}
-          {activeSoundBadge && (
-            <div
-              className="wheel-sound-hud-toast"
-              style={{
-                borderColor: `${activeSoundBadge.accentColor}55`,
-                boxShadow: `0 12px 28px rgba(0, 0, 0, 0.95), 0 0 16px ${activeSoundBadge.accentColor}33`,
-              }}
+          {/* 3D Photorealistic Supercar Wheel Trigger */}
+          <div style={{ position: "relative" }}>
+            <button
+              className={`header-wheel-trigger ${isSpinning ? "wheel-spinning" : ""} ${isDrawerOpen ? "menu-active" : ""}`}
+              id="header-menu-btn"
+              onClick={handleWheelClick}
+              aria-label="Open Luxury Showroom Menu"
+              title="Click to Spin Wheel & Launch Supercar Menu"
             >
-              <span className="sound-hud-icon">{activeSoundBadge.icon}</span>
-              <div className="sound-hud-info">
-                <span className="sound-hud-marque" style={{ color: activeSoundBadge.accentColor }}>
-                  {activeSoundBadge.marque} • {activeSoundBadge.model}
-                </span>
-                <span className="sound-hud-tagline">{activeSoundBadge.tagline}</span>
+              <div className="wheel-disc-wrapper">
+                <Image
+                  src="/assets/supercar_wheel.png"
+                  alt="Supercar Forged Wheel"
+                  width={54}
+                  height={54}
+                  className="realistic-wheel-img"
+                  priority
+                />
+                <div className="wheel-light-sweep"></div>
               </div>
-            </div>
-          )}
+            </button>
+
+            {/* Luxury Supercar Sound HUD Badge Toast */}
+            {activeSoundBadge && (
+              <div
+                className="wheel-sound-hud-toast"
+                style={{
+                  borderColor: `${activeSoundBadge.accentColor}55`,
+                  boxShadow: `0 12px 28px rgba(0, 0, 0, 0.95), 0 0 16px ${activeSoundBadge.accentColor}33`,
+                }}
+              >
+                <span className="sound-hud-icon">{activeSoundBadge.icon}</span>
+                <div className="sound-hud-info">
+                  <span className="sound-hud-marque" style={{ color: activeSoundBadge.accentColor }}>
+                    {activeSoundBadge.marque} • {activeSoundBadge.model}
+                  </span>
+                  <span className="sound-hud-tagline">{activeSoundBadge.tagline}</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

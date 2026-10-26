@@ -16,10 +16,17 @@ export default function AboutClient() {
           <Image
             src="/assets/dch-logo.webp"
             alt="DREAM CAR HOUSE Flagship Logo"
-            width={180}
-            height={68}
-            style={{ height: "52px", width: "auto", objectFit: "contain", filter: "drop-shadow(0 4px 14px rgba(0,0,0,0.6))" }}
+            width={1020}
+            height={350}
+            style={{
+              height: "72px",
+              width: "auto",
+              maxWidth: "340px",
+              objectFit: "contain",
+              filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.85)) drop-shadow(0 0 16px rgba(255,255,255,0.2))",
+            }}
             priority
+            unoptimized
           />
         </div>
         <div className="about-pill-badge">

@@ -1,13 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --bg-black: #000000;
-  --bg-surface: #0a0a0a;
-  --bg-card: #111111;
-  --border-dark: #1f2937;
-  --border-light: rgba(255, 255, 255, 0.15);
+  --bg-black: #0b0b0c;
+  --bg-surface: #0d0d0f;
+  --bg-card: #101012;
+  --border-dark: rgba(255, 255, 255, 0.10);
+  --border-light: rgba(255, 255, 255, 0.20);
+  --border-hover: rgba(255, 255, 255, 0.25);
   --text-white: #ffffff;
-  --text-gray: #9ca3af;
+  --text-gray: rgba(255, 255, 255, 0.50);
   --text-gray-light: #e5e7eb;
 }
 
@@ -15,7 +16,7 @@ html,
 body {
   width: 100%;
   max-width: 100vw;
-  background-color: #000000;
+  background-color: #0b0b0c;
   color: #ffffff;
   overflow-x: hidden;
   scroll-behavior: smooth;

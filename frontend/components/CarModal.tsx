@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { useUI } from "@/lib/UIContext";
 import { SHOWROOM_BRANCHES, GalleryPhoto, Vehicle } from "@/lib/showroomData";
 
@@ -183,6 +184,22 @@ export default function CarModal() {
           <div className="dch-car-modal-wrapper">
             {/* Top Status & Studio Allocation Beacon Bar */}
             <div className="dch-modal-top-bar">
+              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                <Image
+                  src="/assets/dch-logo.webp"
+                  alt="DREAM CAR HOUSE"
+                  width={1020}
+                  height={350}
+                  style={{
+                    height: "36px",
+                    width: "auto",
+                    maxWidth: "200px",
+                    objectFit: "contain",
+                    filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.85)) drop-shadow(0 0 10px rgba(255,255,255,0.15))",
+                  }}
+                  unoptimized
+                />
+              </div>
               <div className="dch-modal-badges">
                 {isBrandNew ? (
                   <span className="car-badge-pill pill-brandnew">

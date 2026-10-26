@@ -3,7 +3,19 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Vehicle, GalleryPhoto } from "./showroomData";
 
+export type ThemeMode = "dark" | "light";
+export type HeroCarFilter = "ALL" | "BRAND_NEW" | "RECONDITIONED";
+
 interface UIContextType {
+  // Global Day / Night Theme
+  theme: ThemeMode;
+  toggleTheme: () => void;
+  setTheme: (theme: ThemeMode) => void;
+
+  // Hero Car Filter (Brand New vs Reconditioned)
+  heroCarFilter: HeroCarFilter;
+  setHeroCarFilter: (filter: HeroCarFilter) => void;
+
   // Navigation Drawer
   isDrawerOpen: boolean;
   openDrawer: () => void;
@@ -45,6 +57,12 @@ interface UIContextType {
 const UIContext = createContext<UIContextType | null>(null);
 
 export function UIProvider({ children }: { children: React.ReactNode }) {
+  // Global Theme State
+  const [theme, setThemeState] = useState<ThemeMode>("dark");
+
+  // Hero Inventory Filter
+  const [heroCarFilter, setHeroCarFilter] = useState<HeroCarFilter>("ALL");
+
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedCar, setSelectedCar] = useState<Vehicle | null>(null);
   const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
@@ -58,6 +76,34 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
   const [galleryPhotos, setGalleryPhotos] = useState<GalleryPhoto[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const [isStoriesOpen, setIsStoriesOpen] = useState(false);
+
+  // Initialize theme from localStorage on client
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("dch-theme") as ThemeMode | null;
+      if (saved === "light" || saved === "dark") {
+        setThemeState(saved);
+        document.documentElement.setAttribute("data-theme", saved);
+      } else {
+        document.documentElement.setAttribute("data-theme", "dark");
+      }
+    } catch (_) {
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
+  }, []);
+
+  const setTheme = (newTheme: ThemeMode) => {
+    setThemeState(newTheme);
+    try {
+      localStorage.setItem("dch-theme", newTheme);
+    } catch (_) {}
+    document.documentElement.setAttribute("data-theme", newTheme);
+  };
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+  };
 
   const openDrawer = () => setIsDrawerOpen(true);
   const closeDrawer = () => setIsDrawerOpen(false);
@@ -130,6 +176,11 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
   return (
     <UIContext.Provider
       value={{
+        theme,
+        toggleTheme,
+        setTheme,
+        heroCarFilter,
+        setHeroCarFilter,
         isDrawerOpen,
         openDrawer,
         closeDrawer,
