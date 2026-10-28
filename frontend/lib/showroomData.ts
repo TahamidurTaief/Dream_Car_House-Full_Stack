@@ -130,6 +130,7 @@ export interface Vehicle {
   indexing?: string;
   schema_data?: Record<string, unknown>;
   previous_slug?: string;
+  status?: string;
 }
 
 export const VEHICLE_DATA: Vehicle[] = [

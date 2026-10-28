@@ -214,23 +214,25 @@ export default function NavDrawer({
             </span>
           </div>
 
-          <div className="drawer-concierge-phone">
-            <span className="drawer-phone-label">VIP Concierge Line</span>
-            <a href={`tel:${(settings?.hotline || "01615-121312").replace(/\s+/g, "")}`} className="drawer-phone-val">
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                style={{ display: "inline-block", verticalAlign: "-2px", marginRight: "4px" }}
-              >
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-              </svg>
-              {settings?.hotline || "01615-121312"}
-            </a>
-          </div>
+          {settings?.hotline ? (
+            <div className="drawer-concierge-phone">
+              <span className="drawer-phone-label">VIP Concierge Line</span>
+              <a href={`tel:${settings.hotline.replace(/\s+/g, "")}`} className="drawer-phone-val">
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  style={{ display: "inline-block", verticalAlign: "-2px", marginRight: "4px" }}
+                >
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+                {settings.hotline}
+              </a>
+            </div>
+          ) : null}
 
           <div className="drawer-cta-group">
             <button
@@ -246,18 +248,20 @@ export default function NavDrawer({
               <span>Book VIP Viewing</span>
             </button>
 
-            <a
-              href={`https://wa.me/${(settings?.whatsapp || "8801615121312").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(settings?.name || "DREAM CAR HOUSE")},%20I%20would%20like%20to%20inquire%20about%20a%20luxury%20vehicle`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="drawer-wa-btn"
-              title="Chat on WhatsApp"
-              aria-label="WhatsApp Concierge"
-            >
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.592 2.654-.696c1 .587 1.78.893 2.806.893 3.182 0 5.768-2.586 5.768-5.766.001-3.181-2.585-5.776-5.768-5.776zm3.435 8.163c-.144.404-.836.774-1.17.822-.311.045-.71.07-2.13-.518-1.815-.751-2.986-2.59-3.077-2.711-.091-.121-.739-.984-.739-1.877 0-.893.469-1.332.636-1.514.167-.182.365-.228.487-.228.122 0 .243.002.35.007.112.005.263-.042.412.315.152.365.518 1.265.564 1.356.045.091.076.197.015.318-.061.121-.091.197-.182.303-.091.106-.192.237-.274.318-.091.091-.186.19-.08.372.106.182.471.777 1.011 1.258.697.621 1.284.814 1.466.905.182.091.289.076.395-.045.106-.121.456-.531.577-.713.121-.182.243-.152.41-.091.167.061 1.062.5 1.244.591.182.091.304.136.35.212.045.076.045.44-.099.844zM12 2C6.477 2 2 6.477 2 12c0 1.891.524 3.662 1.435 5.176L2 22l4.957-1.399C8.414 21.499 10.151 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" />
-              </svg>
-            </a>
+            {settings?.whatsapp || settings?.hotline ? (
+              <a
+                href={`https://wa.me/${(settings?.whatsapp || settings?.hotline || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(settings?.name || "DREAM CAR HOUSE")},%20I%20would%20like%20to%20inquire%20about%20a%20luxury%20vehicle`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="drawer-wa-btn"
+                title="Chat on WhatsApp"
+                aria-label="WhatsApp Concierge"
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.592 2.654-.696c1 .587 1.78.893 2.806.893 3.182 0 5.768-2.586 5.768-5.766.001-3.181-2.585-5.776-5.768-5.776zm3.435 8.163c-.144.404-.836.774-1.17.822-.311.045-.71.07-2.13-.518-1.815-.751-2.986-2.59-3.077-2.711-.091-.121-.739-.984-.739-1.877 0-.893.469-1.332.636-1.514.167-.182.365-.228.487-.228.122 0 .243.002.35.007.112.005.263-.042.412.315.152.365.518 1.265.564 1.356.045.091.076.197.015.318-.061.121-.091.197-.182.303-.091.106-.192.237-.274.318-.091.091-.186.19-.08.372.106.182.471.777 1.011 1.258.697.621 1.284.814 1.466.905.182.091.289.076.395-.045.106-.121.456-.531.577-.713.121-.182.243-.152.41-.091.167.061 1.062.5 1.244.591.182.091.304.136.35.212.045.076.045.44-.099.844zM12 2C6.477 2 2 6.477 2 12c0 1.891.524 3.662 1.435 5.176L2 22l4.957-1.399C8.414 21.499 10.151 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" />
+                </svg>
+              </a>
+            ) : null}
           </div>
         </div>
       </aside>

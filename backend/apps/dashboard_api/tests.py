@@ -265,6 +265,102 @@ class DashboardReferenceDataTests(TestCase):
         self.assertEqual(bad_json_res.status_code, 400)
         self.assertEqual(bad_json_res.json()["error"]["code"], "VALIDATION_ERROR")
 
+    def test_brand_svg_sanitization_and_url_validation(self):
+        csrf = self._login_superuser()
+
+        # 1. Clean approved vector SVG succeeds
+        clean_svg = (
+            b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">'
+            b'<circle cx="24" cy="24" r="20" fill="none" stroke="#e2e8f0" stroke-width="2"/>'
+            b'<path d="M12 24 L24 12 L36 24 Z" fill="#e2e8f0"/>'
+            b'</svg>'
+        )
+        clean_file = SimpleUploadedFile("clean_logo.svg", clean_svg, content_type="image/svg+xml")
+        res = self.client.post("/api/v1/dashboard/brands/", {
+            "name": "Clean Vector Brand",
+            "segment": "LUXURY_PERFORMANCE",
+            "image": clean_file,
+            "destination_url": "/inventory?brand=Clean+Vector+Brand",
+        }, HTTP_X_CSRFTOKEN=csrf)
+        self.assertEqual(res.status_code, 201)
+        brand_id = res.json()["data"]["id"]
+
+        # 2. SVG containing <foreignObject> is rejected
+        foreign_obj_svg = (
+            b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">'
+            b'<foreignObject width="100" height="100">'
+            b'<div xmlns="http://www.w3.org/1999/xhtml"><script>alert(1)</script></div>'
+            b'</foreignObject></svg>'
+        )
+        fo_file = SimpleUploadedFile("foreign_obj.svg", foreign_obj_svg, content_type="image/svg+xml")
+        res_fo = self.client.post("/api/v1/dashboard/brands/", {
+            "name": "Foreign Object Brand",
+            "segment": "LUXURY_PERFORMANCE",
+            "image": fo_file,
+        }, HTTP_X_CSRFTOKEN=csrf)
+        self.assertEqual(res_fo.status_code, 400)
+        self.assertIn("foreignobject", str(res_fo.json()).lower())
+
+        # 3. SVG containing <script> or onload is rejected
+        script_svg = b'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'
+        s_file = SimpleUploadedFile("script.svg", script_svg, content_type="image/svg+xml")
+        res_s = self.client.post("/api/v1/dashboard/brands/", {
+            "name": "Script Brand",
+            "segment": "LUXURY_PERFORMANCE",
+            "image": s_file,
+        }, HTTP_X_CSRFTOKEN=csrf)
+        self.assertEqual(res_s.status_code, 400)
+
+        onload_svg = b'<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"><circle cx="10" cy="10" r="5"/></svg>'
+        ol_file = SimpleUploadedFile("onload.svg", onload_svg, content_type="image/svg+xml")
+        res_ol = self.client.post("/api/v1/dashboard/brands/", {
+            "name": "Onload Brand",
+            "segment": "LUXURY_PERFORMANCE",
+            "image": ol_file,
+        }, HTTP_X_CSRFTOKEN=csrf)
+        self.assertEqual(res_ol.status_code, 400)
+
+        # 4. SVG containing external reference is rejected
+        ext_svg = b'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><use xlink:href="https://evil.com/x.svg#foo"/></svg>'
+        ext_file = SimpleUploadedFile("ext.svg", ext_svg, content_type="image/svg+xml")
+        res_ext = self.client.post("/api/v1/dashboard/brands/", {
+            "name": "External Ref Brand",
+            "segment": "LUXURY_PERFORMANCE",
+            "image": ext_file,
+        }, HTTP_X_CSRFTOKEN=csrf)
+        self.assertEqual(res_ext.status_code, 400)
+
+        # 5. SVG containing DOCTYPE entity expansion is rejected
+        xxe_svg = b'<!DOCTYPE svg SYSTEM "http://evil.com/xxe.dtd"><svg xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg>'
+        xxe_file = SimpleUploadedFile("xxe.svg", xxe_svg, content_type="image/svg+xml")
+        res_xxe = self.client.post("/api/v1/dashboard/brands/", {
+            "name": "XXE Brand",
+            "segment": "LUXURY_PERFORMANCE",
+            "image": xxe_file,
+        }, HTTP_X_CSRFTOKEN=csrf)
+        self.assertEqual(res_xxe.status_code, 400)
+
+        # 6. Destination URL: internal path and HTTPS links are allowed
+        patch_ok = self.client.patch(f"/api/v1/dashboard/brands/{brand_id}/", {
+            "destination_url": "https://dreamcarhouse.com/brands/clean",
+        }, HTTP_X_CSRFTOKEN=csrf, format="json")
+        self.assertEqual(patch_ok.status_code, 200)
+
+        # 7. Destination URL: Protocol-relative, dangerous schemes, and insecure HTTP are rejected
+        for bad_url in [
+            "//evil.com/phish",
+            "/\\evil.com",
+            "\\\\evil.com",
+            "javascript:alert(1)",
+            "data:text/html,<script>alert(1)</script>",
+            "http://insecure-domain.com",
+            "https://domain.com/path\nwith-newline",
+        ]:
+            bad_res = self.client.patch(f"/api/v1/dashboard/brands/{brand_id}/", {
+                "destination_url": bad_url,
+            }, HTTP_X_CSRFTOKEN=csrf, format="json")
+            self.assertEqual(bad_res.status_code, 400, msg=f"Should reject: {bad_url}")
+
     def test_model_generation_brand_relationship(self):
         csrf = self._login_superuser()
 
@@ -1110,8 +1206,8 @@ class DashboardContentConfigurationTests(TestCase):
 
         # 1. Initially zero records - check public endpoint contract
         pub_zero = pub_client.get("/api/v1/home/slider/")
-        self.assertEqual(pub_zero.status_code, 200)
-        self.assertEqual(pub_zero.json()["data"], {"heading": "", "image": ""})
+        self.assertEqual(pub_zero.status_code, 404)
+        self.assertFalse(pub_zero.json()["success"])
 
         # 2. Staff without permissions gets 403 on list
         staff_csrf = self._login_readonly()

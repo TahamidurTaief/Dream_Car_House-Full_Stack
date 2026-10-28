@@ -67,6 +67,16 @@ class VisualChroniclesSection(models.Model):
     )
     updated_at = models.DateTimeField(auto_now=True)
 
+    def clean(self):
+        super().clean()
+        if self.is_active and self.pk:
+            from django.core.exceptions import ValidationError
+            active_items = self.items.filter(is_active=True).count()
+            if active_items < 1:
+                raise ValidationError({
+                    "is_active": _(f"Cannot publish Visual Chronicles section with fewer than 1 active item (currently has {active_items}).")
+                })
+
     def __str__(self):
         return f"Visual Chronicles Section: {self.heading}"
 

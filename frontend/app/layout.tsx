@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import ModalContainer from "@/components/ModalContainer";
 
 import { fetchLayoutData } from "@/lib/server/api";
-import type { PublicSiteSettings, PublicShowroomBranch } from "@/lib/types";
+import type { PublicSiteSettings, PublicShowroomBranch, PublicVehicle } from "@/lib/types";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -16,6 +16,8 @@ const poppins = Poppins({
   display: "swap",
   variable: "--font-poppins",
 });
+
+export const dynamic = "force-dynamic";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -72,7 +74,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  let layoutData: { settings: PublicSiteSettings; branches: PublicShowroomBranch[] } | null = null;
+  let layoutData: { settings: PublicSiteSettings; branches: PublicShowroomBranch[]; featuredVehicles: PublicVehicle[] } | null = null;
   let layoutError: string | null = null;
 
   try {
@@ -110,7 +112,7 @@ export default async function RootLayout({
     );
   }
 
-  const { settings, branches } = layoutData;
+  const { settings, branches, featuredVehicles } = layoutData;
 
   const autoDealerSchema = {
     "@context": "https://schema.org",
@@ -143,7 +145,11 @@ export default async function RootLayout({
           <Header settings={settings} />
           <main id="main-content">{children}</main>
           <Footer settings={settings} branches={branches} />
-          <ModalContainer settings={settings} branches={branches} />
+          <ModalContainer
+            settings={settings}
+            branches={branches}
+            featuredVehicles={featuredVehicles}
+          />
         </UIProvider>
       </body>
     </html>

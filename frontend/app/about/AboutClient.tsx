@@ -4,9 +4,29 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useUI } from "@/lib/UIContext";
+import type { PublicSiteSettings, PublicShowroomBranch } from "@/lib/types";
 
-export default function AboutClient() {
+export default function AboutClient({
+  settings,
+  branches = [],
+  totalVehicles = 0,
+}: {
+  settings?: PublicSiteSettings;
+  branches?: PublicShowroomBranch[];
+  totalVehicles?: number;
+} = {}) {
   const { openVideoModal, openAppointmentModal } = useUI();
+
+  const targetPhone = settings?.whatsapp || settings?.hotline || "";
+  let waPhone = targetPhone.replace(/[^0-9]/g, "");
+  if (waPhone.startsWith("0")) {
+    waPhone = "88" + waPhone;
+  } else if (waPhone && !waPhone.startsWith("880") && waPhone.length === 10) {
+    waPhone = "880" + waPhone;
+  }
+  const waUrl = waPhone
+    ? `https://wa.me/${waPhone}?text=${encodeURIComponent("Hello Dream Car House, I would like to schedule a private showroom consultation.")}`
+    : "";
 
   return (
     <div className="about-page-wrap">
@@ -48,7 +68,7 @@ export default function AboutClient() {
           <div className="about-stat-label">Verified Global Provenance</div>
         </div>
         <div className="about-stat-card">
-          <div className="about-stat-num">2</div>
+          <div className="about-stat-num">{branches.length || 2}</div>
           <div className="about-stat-label">Dhaka Flagship Showrooms</div>
         </div>
       </section>
@@ -203,93 +223,65 @@ export default function AboutClient() {
       <section className="about-branches-section">
         <div className="about-section-header">
           <span className="about-story-eyebrow">VISIT OUR SHOWROOMS</span>
-          <h2 className="about-section-title">Two Flagship Sanctuaries Across Dhaka</h2>
+          <h2 className="about-section-title">
+            {branches.length > 0
+              ? `${branches.length} Flagship Showrooms Across Dhaka`
+              : "Flagship Showrooms Across Dhaka"}
+          </h2>
         </div>
 
         <div className="about-branches-grid">
-          {/* Branch 1: Kakrail */}
-          <div className="about-branch-card">
-            <div>
-              <span className="about-branch-tag">PRIMARY SHOWROOM & VAULT</span>
-              <h3 className="about-branch-name">Kakrail Flagship Showroom</h3>
-              <p className="about-branch-address">
-                18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000
-              </p>
+          {branches.length > 0 ? (
+            branches.map((b) => (
+              <div key={b.branch_id || b.id} className="about-branch-card">
+                <div>
+                  <span className="about-branch-tag">{b.tag || "SHOWROOM & VAULT"}</span>
+                  <h3 className="about-branch-name">{b.name}</h3>
+                  <p className="about-branch-address">{b.address}</p>
 
-              <div className="about-branch-features">
-                <span className="about-branch-pill">Main Display Floor</span>
-                <span className="about-branch-pill">Private Handover Vault</span>
-                <span className="about-branch-pill">Diagnostic Lab</span>
+                  <div className="about-branch-features">
+                    <span className="about-branch-pill">Main Display Floor</span>
+                    <span className="about-branch-pill">Private Handover Vault</span>
+                    <span className="about-branch-pill">Diagnostic Lab</span>
+                  </div>
+
+                  <div className="about-branch-timing">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <span>{b.hours || settings?.opening_hours_text || "Sat – Thu: 10:00 AM – 9:00 PM"}</span>
+                  </div>
+                </div>
+
+                <div className="about-branch-actions">
+                  <a
+                    href={b.map_link || `https://maps.google.com/?q=${encodeURIComponent(b.address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="about-dir-btn"
+                  >
+                    <span>Get Directions</span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </a>
+                  {(b.hotline || b.phone || settings?.hotline) && (
+                    <a
+                      href={`tel:${(b.hotline || b.phone || settings?.hotline || "").replace(/[^0-9+]/g, "")}`}
+                      className="about-call-btn"
+                    >
+                      <span>{b.hotline || b.phone || settings?.hotline}</span>
+                    </a>
+                  )}
+                </div>
               </div>
-
-              <div className="about-branch-timing">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-                <span>Sat – Thu: 10:00 AM – 9:00 PM (Fri Closed)</span>
-              </div>
+            ))
+          ) : (
+            <div style={{ color: "#9ca3af", textAlign: "center", padding: "2rem", gridColumn: "1 / -1" }}>
+              Showroom details currently updating. Please reach out via our central concierge.
             </div>
-
-            <div className="about-branch-actions">
-              <a
-                href="https://maps.google.com/?q=Kakrail,Dhaka"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="about-dir-btn"
-              >
-                <span>Get Directions</span>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </a>
-              <a href="tel:01615121312" className="about-call-btn">
-                <span>01615-121312</span>
-              </a>
-            </div>
-          </div>
-
-          {/* Branch 2: Gulshan */}
-          <div className="about-branch-card">
-            <div>
-              <span className="about-branch-tag">BOUTIQUE CONSULTATION DESK</span>
-              <h3 className="about-branch-name">Gulshan Avenue Lounge</h3>
-              <p className="about-branch-address">
-                Road #127, Gulshan Avenue, Gulshan-2, Dhaka-1212
-              </p>
-
-              <div className="about-branch-features">
-                <span className="about-branch-pill">Executive Consultation</span>
-                <span className="about-branch-pill">Bespoke Custom Orders</span>
-                <span className="about-branch-pill">VIP Coffee Bar</span>
-              </div>
-
-              <div className="about-branch-timing">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-                <span>Sat – Thu: 11:00 AM – 8:00 PM (Fri Closed)</span>
-              </div>
-            </div>
-
-            <div className="about-branch-actions">
-              <a
-                href="https://maps.google.com/?q=Gulshan+Avenue,Dhaka"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="about-dir-btn"
-              >
-                <span>Get Directions</span>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </a>
-              <a href="tel:01615121312" className="about-call-btn">
-                <span>01615-121312</span>
-              </a>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -304,19 +296,21 @@ export default function AboutClient() {
 
         <div className="about-cta-btn-group">
           {/* Custom Styled Emerald WhatsApp Button */}
-          <a
-            href="https://wa.me/8801615121312?text=Hello%20Dream%20Car%20House,%20I%20would%20like%20to%20schedule%20a%20private%20showroom%20consultation."
-            target="_blank"
-            rel="noopener noreferrer"
-            className="about-wa-btn"
-            id="about-wa-consult-btn"
-            title="Chat directly with Senior Showroom Concierge on WhatsApp"
-          >
-            <svg viewBox="0 0 24 24">
-              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
-            </svg>
-            <span>Inquire on WhatsApp</span>
-          </a>
+          {waUrl && (
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="about-wa-btn"
+              id="about-wa-consult-btn"
+              title="Chat directly with Senior Showroom Concierge on WhatsApp"
+            >
+              <svg viewBox="0 0 24 24">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+              </svg>
+              <span>Inquire on WhatsApp</span>
+            </a>
+          )}
 
           <Link
             href="/inventory"

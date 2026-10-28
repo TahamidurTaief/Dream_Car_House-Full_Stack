@@ -3,14 +3,20 @@
 import React, { useState, useEffect, useTransition } from "react";
 import { useUI } from "@/lib/UIContext";
 import { submitAppointmentEnquiryAction, AppointmentSubmissionResult } from "@/app/actions/appointment";
+import type { PublicSiteSettings, PublicShowroomBranch } from "@/lib/types";
 
-export default function AppointmentModal() {
+interface AppointmentModalProps {
+  settings?: PublicSiteSettings;
+  branches?: PublicShowroomBranch[];
+}
+
+export default function AppointmentModal({ settings, branches = [] }: AppointmentModalProps) {
   const { isAppointmentOpen, closeAppointmentModal, appointmentPrefill } = useUI();
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [interest, setInterest] = useState("Brand New & Reconditioned Import");
-  const [branch, setBranch] = useState("kakrail");
+  const [branch, setBranch] = useState(branches[0]?.branch_id || (branches[0]?.id ? String(branches[0].id) : ""));
   const [date, setDate] = useState("");
   const [notes, setNotes] = useState("");
   const [submissionResult, setSubmissionResult] = useState<AppointmentSubmissionResult["data"] | null>(null);
@@ -23,10 +29,12 @@ export default function AppointmentModal() {
     }
     if (appointmentPrefill.branchId) {
       setBranch(appointmentPrefill.branchId);
+    } else if (branches.length > 0 && !branch) {
+      setBranch(branches[0].branch_id || String(branches[0].id));
     }
     setSubmissionResult(null);
     setErrorMessage(null);
-  }, [appointmentPrefill, isAppointmentOpen]);
+  }, [appointmentPrefill, isAppointmentOpen, branches, branch]);
 
   if (!isAppointmentOpen) return null;
 
@@ -53,10 +61,10 @@ export default function AppointmentModal() {
     });
   };
 
-  const branchLabel =
-    branch === "kakrail"
-      ? "Kakrail Branch (18, Shaheed Captain Monsur Ali Soroni)"
-      : "Gulshan Branch (House #07, Road #127, Gulshan Avenue)";
+  const matchedBranch = branches.find((b) => b.branch_id === branch || String(b.id) === branch);
+  const branchLabel = matchedBranch
+    ? `${matchedBranch.name}${matchedBranch.address ? ` (${matchedBranch.address})` : ""}`
+    : branch || "DREAM CAR HOUSE Showroom";
 
   return (
     <div className="car-modal-backdrop active" onClick={closeAppointmentModal}>
@@ -157,8 +165,15 @@ export default function AppointmentModal() {
                 onChange={(e) => setBranch(e.target.value)}
                 className="appt-input appt-select"
               >
-                <option value="kakrail">Kakrail Branch (18, Shaheed Captain Monsur Ali Soroni)</option>
-                <option value="gulshan">Gulshan Branch (House #07, Road #127, Gulshan Avenue)</option>
+                {branches.length > 0 ? (
+                  branches.map((b) => (
+                    <option key={b.id} value={b.branch_id || String(b.id)}>
+                      {b.name}{b.address ? ` (${b.address})` : ""}
+                    </option>
+                  ))
+                ) : (
+                  <option value="">Showroom Headquarters</option>
+                )}
               </select>
             </div>
 

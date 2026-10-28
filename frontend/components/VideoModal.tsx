@@ -4,12 +4,34 @@ import React from "react";
 import { useUI } from "@/lib/UIContext";
 import { VIDEO_CONFIGS } from "@/lib/showroomData";
 
-export default function VideoModal() {
+import type { PublicSiteSettings, PublicShowroomBranch } from "@/lib/types";
+
+export default function VideoModal({
+  settings,
+  branches = [],
+}: {
+  settings?: PublicSiteSettings;
+  branches?: PublicShowroomBranch[];
+} = {}) {
   const { activeVideo, closeVideoModal, openAppointmentModal } = useUI();
 
   if (!activeVideo) return null;
 
-  const config = VIDEO_CONFIGS[activeVideo] || VIDEO_CONFIGS.reel;
+  const isDirectUrl = activeVideo.startsWith("http://") || activeVideo.startsWith("https://") || activeVideo.startsWith("//");
+  const config = isDirectUrl
+    ? {
+        pill: "CINEMATIC SHOWCASE",
+        title: `${settings?.name || "DREAM CAR HOUSE"} Cinema Showcase`,
+        sub: `${settings?.tagline || "Where Extraordinary Dreams Meet The Road"} • Dhaka`,
+        embed: activeVideo,
+      }
+    : VIDEO_CONFIGS[activeVideo] || VIDEO_CONFIGS.reel;
+
+  const addressText = branches.length > 0
+    ? branches.map((b) => `${b.short_name || b.name}: ${b.address}`).join(" • ")
+    : settings?.primary_address
+    ? `${settings.primary_address} • Private viewings by reservation`
+    : "18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka • Private viewings by reservation";
 
   return (
     <div className="car-modal-backdrop active" onClick={closeVideoModal}>
@@ -45,7 +67,7 @@ export default function VideoModal() {
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
-            <span>18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka • Private viewings by reservation</span>
+            <span>{addressText}</span>
           </div>
 
           <button

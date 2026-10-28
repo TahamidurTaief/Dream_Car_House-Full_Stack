@@ -63,6 +63,16 @@ class PreferenceSection(BaseModel):
         verbose_name=_("Is Active?"),
     )
 
+    def clean(self):
+        super().clean()
+        if self.is_active and self.pk:
+            from django.core.exceptions import ValidationError
+            active_cats = self.categories.filter(is_active=True).count()
+            if active_cats < 1:
+                raise ValidationError({
+                    "is_active": _(f"Cannot publish Preference section with fewer than 1 active category (currently has {active_cats}).")
+                })
+
     class Meta:
         verbose_name = _("Preference Section")
         verbose_name_plural = _("Preference Section")

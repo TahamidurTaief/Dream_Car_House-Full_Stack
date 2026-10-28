@@ -107,34 +107,54 @@ class ContactMessageSerializer(serializers.ModelSerializer):
         extra_kwargs = {'name': {'allow_blank': True}, 'phone': {'allow_blank': True}}
 
     def _clean(self, value):
+        if not value:
+            return ""
         return bleach.clean(value, tags=[], strip=True).strip()
 
     def validate_name(self, value):
         value = self._clean(value)
-        if not value:
-            raise serializers.ValidationError('Please enter your name.')
+        if not value or len(value) < 2:
+            raise serializers.ValidationError('Please enter your name (minimum 2 characters).')
+        if len(value) > 100:
+            raise serializers.ValidationError('Name must be 100 characters or fewer.')
         return value
 
     def validate_email(self, value):
-        return value.strip()
+        if not value:
+            return ""
+        val = value.strip()
+        if val:
+            from django.core.validators import validate_email as django_validate_email
+            from django.core.exceptions import ValidationError as DjangoValidationError
+            try:
+                django_validate_email(val)
+            except DjangoValidationError:
+                raise serializers.ValidationError('Please enter a valid email address.')
+        return val
 
     def validate_phone(self, value):
-        value = value.strip()
-        if not self.PHONE_RE.match(value):
-            raise serializers.ValidationError('Please enter a valid phone number.')
-        return value
+        val = value.strip() if value else ""
+        if not val or not self.PHONE_RE.match(val):
+            raise serializers.ValidationError('Please enter a valid phone number (at least 8 digits with country code or local format).')
+        digits = re.sub(r'[^0-9]', '', val)
+        if len(digits) < 7:
+            raise serializers.ValidationError('Please enter a valid phone number with at least 7 digits.')
+        return val
 
     def validate_vehicle(self, value):
-        return self._clean(value)
+        return self._clean(value)[:150]
 
     def validate_enquiry(self, value):
         value = self._clean(value)
         if not value:
             raise serializers.ValidationError('Tell us a little about your enquiry.')
+        if len(value) > 3000:
+            raise serializers.ValidationError('Enquiry must be 3000 characters or fewer.')
         return value
 
     def validate(self, attrs):
-        if attrs.get('preferred_contact') == ContactMessage.PreferredContactChoices.EMAIL and not attrs.get('email'):
+        preferred = attrs.get('preferred_contact')
+        if preferred == ContactMessage.PreferredContactChoices.EMAIL and not attrs.get('email'):
             raise serializers.ValidationError({'email': 'Add an email so we can reply.'})
         return attrs
 
@@ -269,9 +289,11 @@ class PublicConsultationSectionSerializer(serializers.ModelSerializer):
             elif site_settings and site_settings.hotline:
                 phone = site_settings.hotline.strip()
             else:
-                phone = "8801615121312"
+                phone = ""
 
         clean_digits = re.sub(r'[^0-9]', '', phone)
+        if not clean_digits:
+            return ""
         if clean_digits.startswith("0"):
             clean_digits = "88" + clean_digits
         elif not clean_digits.startswith("880") and len(clean_digits) == 10:
@@ -381,6 +403,7 @@ class PublicVipSanctuarySectionSerializer(serializers.ModelSerializer, Optimized
     phone_text = serializers.SerializerMethodField()
     card_title = serializers.SerializerMethodField()
     card_badge = serializers.SerializerMethodField()
+    whatsapp_url = serializers.SerializerMethodField()
 
     class Meta:
         model = VipSanctuarySection
@@ -449,5 +472,27 @@ class PublicVipSanctuarySectionSerializer(serializers.ModelSerializer, Optimized
         if obj.branch and obj.branch.tag:
             return obj.branch.tag
         return obj.card_badge or "FLAGSHIP SHOWROOM"
+
+    def get_whatsapp_url(self, obj):
+        if obj.whatsapp_url and obj.whatsapp_url.strip() and "8801615121312" not in obj.whatsapp_url:
+            return obj.whatsapp_url.strip()
+        phone = ""
+        if obj.branch and obj.branch.hotline:
+            phone = obj.branch.hotline
+        elif obj.phone_text and obj.phone_text.strip():
+            phone = obj.phone_text.strip()
+        else:
+            site_settings = SiteSettings.objects.first()
+            if site_settings and (site_settings.whatsapp or site_settings.hotline):
+                phone = site_settings.whatsapp or site_settings.hotline
+
+        clean_digits = re.sub(r'[^0-9]', '', phone or '')
+        if clean_digits:
+            if clean_digits.startswith("0"):
+                clean_digits = "88" + clean_digits
+            elif not clean_digits.startswith("880") and len(clean_digits) == 10:
+                clean_digits = "880" + clean_digits
+            return f"https://wa.me/{clean_digits}?text=Hello%20DREAM%20CAR%20HOUSE,%20I%20would%20like%20to%20inquire%20about%20a%20luxury%20vehicle"
+        return ""
 
 

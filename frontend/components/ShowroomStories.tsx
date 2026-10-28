@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUI } from "@/lib/UIContext";
 import { playNextSupercarSound } from "@/lib/audioEngine";
+import type { PublicSiteSettings, PublicVehicle } from "@/lib/types";
 
 export interface ShowroomStoryItem {
   id: string;
@@ -20,6 +21,19 @@ export interface ShowroomStoryItem {
   timeAgo: string;
   brand: string;
   accentColor: string;
+}
+
+function getBrandAccentColor(brand: string): string {
+  const b = brand.toLowerCase();
+  if (b.includes("mercedes")) return "#38bdf8";
+  if (b.includes("toyota")) return "#ef4444";
+  if (b.includes("bmw")) return "#3b82f6";
+  if (b.includes("lexus")) return "#f59e0b";
+  if (b.includes("porsche")) return "#ec4899";
+  if (b.includes("land rover")) return "#22c55e";
+  if (b.includes("byd")) return "#06b6d4";
+  if (b.includes("audi")) return "#a855f7";
+  return "#10b981";
 }
 
 const SHOWROOM_STORIES: ShowroomStoryItem[] = [
@@ -97,9 +111,46 @@ const SHOWROOM_STORIES: ShowroomStoryItem[] = [
 
 const STORY_DURATION_MS = 5200; // 5.2 seconds per story slide
 
-export default function ShowroomStories() {
+export default function ShowroomStories({
+  settings,
+  vehicles,
+}: {
+  settings?: PublicSiteSettings;
+  vehicles?: PublicVehicle[];
+} = {}) {
   const { isStoriesOpen, closeStories } = useUI();
   const router = useRouter();
+
+  const activeStories = React.useMemo<ShowroomStoryItem[]>(() => {
+    if (vehicles && vehicles.length > 0) {
+      return vehicles.slice(0, 8).map((car, idx) => {
+        const branchTag = car.branch_name || car.branch?.name || "DHAKA SHOWROOM";
+        const typeLabel = car.car_type === "BRAND_NEW" ? "BRAND NEW ARRIVAL" : "CERTIFIED PRE-OWNED";
+        const specsList = [
+          car.engine_capacity,
+          car.mileage,
+          car.fuel_type,
+          car.drivetrain,
+        ].filter(Boolean);
+
+        return {
+          id: String(car.slug || car.id || idx),
+          tag: `${typeLabel} • ${branchTag.toUpperCase()}`,
+          title: `${car.year ? `${car.year} ` : ""}${car.name}`,
+          subtitle: specsList.join(" • ") || "Handpicked luxury allocation at Dream Car House.",
+          priceNote: car.price || "Call for Price",
+          image: car.image || "/assets/maybach_hero_poster.jpg",
+          ctaText: "Inspect Vehicle",
+          ctaLink: `/cars/${car.slug || car.id}`,
+          whatsappMessage: `Hello ${settings?.name || "Dream Car House"}, I want to inquire about the ${car.name} from your Showroom Story.`,
+          timeAgo: `${(idx + 1) * 2}h ago`,
+          brand: car.brand || settings?.name || "DREAM CAR HOUSE",
+          accentColor: getBrandAccentColor(car.brand || ""),
+        };
+      });
+    }
+    return SHOWROOM_STORIES;
+  }, [vehicles, settings]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0); // 0 to 100
@@ -112,7 +163,7 @@ export default function ShowroomStories() {
 
   // Advance to next story
   const nextStory = useCallback(() => {
-    if (currentIndex < SHOWROOM_STORIES.length - 1) {
+    if (currentIndex < activeStories.length - 1) {
       setCurrentIndex((prev) => prev + 1);
       setProgress(0);
       elapsedBeforePauseRef.current = 0;
@@ -124,7 +175,7 @@ export default function ShowroomStories() {
       // Loop or close stories when all finished
       closeStories();
     }
-  }, [currentIndex, isMuted, closeStories]);
+  }, [currentIndex, activeStories.length, isMuted, closeStories]);
 
   // Go to previous story
   const prevStory = useCallback(() => {
@@ -215,7 +266,18 @@ export default function ShowroomStories() {
 
   if (!isStoriesOpen) return null;
 
-  const current = SHOWROOM_STORIES[currentIndex];
+  const current = activeStories[currentIndex] || activeStories[0];
+
+  const targetPhone = settings?.whatsapp || settings?.hotline || "";
+  let waPhone = targetPhone.replace(/[^0-9]/g, "");
+  if (waPhone.startsWith("0")) {
+    waPhone = "88" + waPhone;
+  } else if (waPhone && !waPhone.startsWith("880") && waPhone.length === 10) {
+    waPhone = "880" + waPhone;
+  }
+  const waUrl = waPhone
+    ? `https://wa.me/${waPhone}?text=${encodeURIComponent(current.whatsappMessage)}`
+    : "";
 
   return (
     <div className="stories-modal-backdrop" id="stories-modal-backdrop" onClick={closeStories}>
@@ -230,7 +292,7 @@ export default function ShowroomStories() {
       >
         {/* Story Progress Bars */}
         <div className="story-progress-strip">
-          {SHOWROOM_STORIES.map((item, idx) => {
+          {activeStories.map((item, idx) => {
             let fillPct = 0;
             if (idx < currentIndex) fillPct = 100;
             else if (idx === currentIndex) fillPct = progress;
@@ -353,7 +415,7 @@ export default function ShowroomStories() {
           <div className="story-meta-row">
             <span className="story-price-pill">{current.priceNote}</span>
             <span className="story-slide-counter">
-              Story {currentIndex + 1} of {SHOWROOM_STORIES.length}
+              Story {currentIndex + 1} of {activeStories.length}
             </span>
           </div>
 
@@ -374,19 +436,21 @@ export default function ShowroomStories() {
               </svg>
             </button>
 
-            <a
-              href={`https://wa.me/8801615121312?text=${encodeURIComponent(current.whatsappMessage)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="story-whatsapp-cta"
-              onClick={(e) => e.stopPropagation()}
-              title="Chat with VIP Concierge on WhatsApp"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.043.072.043.419-.101.824z" />
-              </svg>
-              <span>WhatsApp</span>
-            </a>
+            {waUrl && (
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="story-whatsapp-cta"
+                onClick={(e) => e.stopPropagation()}
+                title="Chat with VIP Concierge on WhatsApp"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.043.072.043.419-.101.824z" />
+                </svg>
+                <span>WhatsApp</span>
+              </a>
+            )}
           </div>
         </div>
       </div>

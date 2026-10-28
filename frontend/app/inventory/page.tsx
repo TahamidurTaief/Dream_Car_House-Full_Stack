@@ -1,74 +1,180 @@
 import type { Metadata } from "next";
 import InventoryClient from "./InventoryClient";
-import { getPublicInventory, getInventoryFilters, getShowroomBranches } from "@/lib/server/api";
+import {
+  getPublicInventory,
+  getInventoryFilters,
+  getShowroomBranches,
+  getSiteSettings,
+} from "@/lib/server/api";
+import type {
+  PublicVehicle,
+  PublicInventoryFilterOptions,
+  PublicShowroomBranch,
+  PublicSiteSettings,
+} from "@/lib/types";
 
-export const metadata: Metadata = {
-  title: "Complete Luxury Vehicle Inventory | DREAM CAR HOUSE",
-  description:
-    "Explore our complete inventory of brand new and certified pre-owned luxury vehicles in Bangladesh. Mercedes-Benz, BMW, Lexus, Toyota, Land Rover, and Porsche.",
-  alternates: {
-    canonical: "https://dreamcarhouse.com/inventory/",
-  },
-};
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   searchParams: Promise<{
     brand?: string;
     type?: string;
     branch?: string;
+    body_style?: string;
     q?: string;
     page?: string;
   }>;
 }
 
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const params = await searchParams;
+  let siteName = "DREAM CAR HOUSE";
+  let siteTagline = "The Pinnacle of Luxury Automobiles";
+  let siteWebsite = "https://dreamcarhouse.com";
+
+  try {
+    const settings = await getSiteSettings();
+    if (settings) {
+      siteName = settings.name || siteName;
+      siteTagline = settings.tagline || siteTagline;
+      siteWebsite = settings.website || siteWebsite;
+    }
+  } catch {
+    // Falls back safely
+  }
+
+  let title = "Complete Luxury Vehicle Inventory";
+  if (params.brand && params.brand !== "all") {
+    title = `${params.brand} Luxury Vehicles`;
+  } else if (params.type && params.type !== "all") {
+    const typeLabel = params.type === "BRAND_NEW" ? "Brand New" : "Certified Pre-Owned";
+    title = `${typeLabel} Luxury Vehicles`;
+  }
+
+  const description = `Explore our complete inventory of brand new and certified pre-owned luxury vehicles at ${siteName} in Dhaka, Bangladesh. Browse flagship sedans, performance SUVs, and exotic supercars with transparent specifications and concierge consultation.`;
+  const canonicalUrl = `${siteWebsite.replace(/\/$/, "")}/inventory/`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      siteName,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
+
 export default async function InventoryPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const pageNum = params.page ? parseInt(params.page, 10) : 1;
+  const pageNum = params.page ? Math.max(1, parseInt(params.page, 10)) : 1;
 
-  let inventoryData: { items: import("@/lib/types").PublicVehicle[]; totalRows: number; totalPages: number } = {
+  let inventoryData: { items: PublicVehicle[]; totalRows: number; totalPages: number } = {
     items: [],
     totalRows: 0,
     totalPages: 1,
   };
-  let filterOptions: import("@/lib/types").PublicInventoryFilterOptions = {
+  let filterOptions: PublicInventoryFilterOptions = {
     brands: [],
     models: [],
     bodyStyles: [],
     colors: [],
   };
-  let branches: import("@/lib/types").PublicShowroomBranch[] = [];
+  let branches: PublicShowroomBranch[] = [];
+  let settings: PublicSiteSettings | null = null;
 
   try {
-    const [inv, filters, branchList] = await Promise.all([
+    const [inv, filters, branchList, siteSettings] = await Promise.all([
       getPublicInventory({
         brand: params.brand,
         type: params.type,
         branch: params.branch,
+        body_style: params.body_style,
         q: params.q,
         page: pageNum,
       }),
       getInventoryFilters().catch(() => ({ brands: [], models: [], bodyStyles: [], colors: [] })),
       getShowroomBranches().catch(() => []),
+      getSiteSettings().catch(() => null),
     ]);
     inventoryData = inv;
     filterOptions = filters;
     branches = branchList;
+    settings = siteSettings;
   } catch (error) {
     console.error("[InventoryPage] Server fetch error:", error);
   }
 
+  const siteOrigin = settings?.website || "https://dreamcarhouse.com";
+
+  // Google ItemList JSON-LD Schema for 10000% SEO optimization
+  const itemListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: `${settings?.name || "DREAM CAR HOUSE"} Luxury Vehicle Inventory`,
+    description: `Current luxury automotive stock at ${settings?.name || "DREAM CAR HOUSE"}.`,
+    numberOfItems: inventoryData.totalRows,
+    itemListElement: inventoryData.items.map((car, index) => ({
+      "@type": "ListItem",
+      position: (pageNum - 1) * 12 + index + 1,
+      item: {
+        "@type": "Car",
+        name: car.name,
+        brand: {
+          "@type": "Brand",
+          name: car.brand,
+        },
+        model: car.model,
+        vehicleModelDate: car.year,
+        vehicleIdentificationNumber: car.registration_number || undefined,
+        itemCondition:
+          car.car_type === "BRAND_NEW"
+            ? "https://schema.org/NewCondition"
+            : "https://schema.org/UsedCondition",
+        image: car.image,
+        url: `${siteOrigin.replace(/\/$/, "")}/cars/${car.slug}`,
+        offers: {
+          "@type": "Offer",
+          price: car.raw_price || undefined,
+          priceCurrency: "BDT",
+          availability: "https://schema.org/InStock",
+        },
+      },
+    })),
+  };
+
   return (
-    <InventoryClient
-      initialVehicles={inventoryData.items}
-      totalRows={inventoryData.totalRows}
-      filterOptions={filterOptions}
-      branches={branches}
-      initialParams={{
-        brand: params.brand || "all",
-        type: params.type || "all",
-        branch: params.branch || "all",
-        q: params.q || "",
-      }}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+      />
+      <InventoryClient
+        initialVehicles={inventoryData.items}
+        totalRows={inventoryData.totalRows}
+        totalPages={inventoryData.totalPages}
+        currentPage={pageNum}
+        filterOptions={filterOptions}
+        branches={branches}
+        settings={settings || undefined}
+        initialParams={{
+          brand: params.brand || "all",
+          type: params.type || "all",
+          branch: params.branch || "all",
+          body_style: params.body_style || "all",
+          q: params.q || "",
+        }}
+      />
+    </>
   );
 }

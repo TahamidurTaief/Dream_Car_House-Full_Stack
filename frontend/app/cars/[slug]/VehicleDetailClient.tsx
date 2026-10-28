@@ -6,13 +6,15 @@ import Image from "next/image";
 import { Vehicle, GalleryPhoto } from "@/lib/showroomData";
 import { useUI } from "@/lib/UIContext";
 import VehicleCard from "@/components/VehicleCard";
+import type { PublicSiteSettings } from "@/lib/types";
 
 interface VehicleDetailClientProps {
   car: Vehicle;
   relatedCars: Vehicle[];
+  settings?: PublicSiteSettings;
 }
 
-export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailClientProps) {
+export default function VehicleDetailClient({ car, relatedCars, settings }: VehicleDetailClientProps) {
   const { openAppointmentModal, openGalleryLightbox } = useUI();
   const [activeImgIdx, setActiveImgIdx] = useState(0);
 
@@ -114,7 +116,15 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
       ? `Hello DREAM CAR HOUSE, I am inquiring about the ${car.name} (${car.year}) allocated at your ${branch.name}. Please share the official spec sheet, availability, and confidential valuation.`
       : `Hello DREAM CAR HOUSE, I am inquiring about the ${car.name} (${car.year}). Please share the official spec sheet, availability, and confidential valuation.`
   );
-  const waUrl = `https://wa.me/8801615121312?text=${waMessage}`;
+  const targetPhone = branch?.hotline || branch?.phone || settings?.whatsapp || settings?.hotline || "";
+  const cleanDigits = targetPhone.replace(/[^0-9]/g, "");
+  let waPhone = cleanDigits;
+  if (waPhone.startsWith("0")) {
+    waPhone = "88" + waPhone;
+  } else if (!waPhone.startsWith("880") && waPhone.length === 10) {
+    waPhone = "880" + waPhone;
+  }
+  const waUrl = waPhone ? `https://wa.me/${waPhone}?text=${waMessage}` : "";
 
   return (
     <div className="car-detail-page-container max-w-7xl">
@@ -316,7 +326,7 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
                 <line x1="16" y1="13" x2="8" y2="13" />
                 <line x1="16" y1="17" x2="8" y2="17" />
               </svg>
-              <span>Dhaka Metro Papers</span>
+              <span>{isBrandNew ? "Authentic Provenance" : (car.registration_number ? "Verified Papers" : "Verified Provenance")}</span>
             </div>
             <div className="dch-trust-pill">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5">
@@ -409,12 +419,12 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
                 <span className="spec-cell-label">Fuel Architecture</span>
                 <span className="spec-cell-val">{car.fuel_type}</span>
               </div>
-              <div className="spec-card-cell">
-                <span className="spec-cell-label">Drivetrain</span>
-                <span className="spec-cell-val">
-                  {car.drivetrain || "Full-Time Intelligent All-Wheel Drive"}
-                </span>
-              </div>
+              {car.drivetrain ? (
+                <div className="spec-card-cell">
+                  <span className="spec-cell-label">Drivetrain</span>
+                  <span className="spec-cell-val">{car.drivetrain}</span>
+                </div>
+              ) : null}
               {car.transmission && (
                 <div className="spec-card-cell">
                   <span className="spec-cell-label">Transmission</span>
@@ -436,7 +446,7 @@ export default function VehicleDetailClient({ car, relatedCars }: VehicleDetailC
               <div className="spec-card-cell">
                 <span className="spec-cell-label">Registration</span>
                 <span className="spec-cell-val">
-                  {car.registration_number || (isBrandNew ? "Unregistered Direct Import" : "Dhaka Metro Verified Papers")}
+                  {car.registration_number || (isBrandNew ? "Unregistered Direct Import" : (car.registered && car.registered !== "Available" ? car.registered : "Verified Registration"))}
                 </span>
               </div>
               <div className="spec-card-cell">

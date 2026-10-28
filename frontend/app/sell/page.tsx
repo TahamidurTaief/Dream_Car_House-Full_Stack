@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import SellClient from "./SellClient";
-import { getPageSEO, buildMetadataFromSEO } from "@/lib/server/api";
+import { getPageSEO, buildMetadataFromSEO, getSiteSettings } from "@/lib/server/api";
 
 const fallbackMetadata: Metadata = {
   title: "Sell Your Luxury Car & Trade-In Valuation | DREAM CAR HOUSE",
@@ -16,6 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildMetadataFromSEO(seo, fallbackMetadata);
 }
 
-export default function SellPage() {
-  return <SellClient />;
+export default async function SellPage() {
+  const settings = await getSiteSettings();
+  return <SellClient settings={settings} />;
 }

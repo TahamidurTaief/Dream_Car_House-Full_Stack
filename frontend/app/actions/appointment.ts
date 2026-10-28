@@ -1,6 +1,6 @@
 "use server";
 
-import { getBackendOrigin } from "@/lib/server/api";
+import { getBackendOrigin, getShowroomBranches, getSiteSettings } from "@/lib/server/api";
 
 export interface AppointmentSubmissionInput {
   fullName: string;
@@ -9,6 +9,7 @@ export interface AppointmentSubmissionInput {
   branch?: string;
   date?: string;
   notes?: string;
+  submissionKey?: string;
 }
 
 export interface AppointmentSubmissionResult {
@@ -24,30 +25,10 @@ export interface AppointmentSubmissionResult {
   };
 }
 
-// In-memory duplicate protection cache (server action lifecycle)
-interface RecentSubmission {
-  timestamp: number;
-  id?: number | string;
-  waUrl: string;
-  branchLabel: string;
-}
-const recentSubmissions = new Map<string, RecentSubmission>();
-
-// Clean up stale submissions older than 5 minutes periodically
-function pruneSubmissions() {
-  const now = Date.now();
-  for (const [key, item] of recentSubmissions.entries()) {
-    if (now - item.timestamp > 300_000) {
-      recentSubmissions.delete(key);
-    }
-  }
-}
-
 export async function submitAppointmentEnquiryAction(
   input: AppointmentSubmissionInput
 ): Promise<AppointmentSubmissionResult> {
   try {
-    pruneSubmissions();
 
     // 1. Sanitize & Validate inputs
     const fullName = (input.fullName || "").trim().replace(/[<>]/g, "");
@@ -74,36 +55,48 @@ export async function submitAppointmentEnquiryAction(
     const date = (input.date || "").trim();
     const notes = (input.notes || "").trim().replace(/[<>]/g, "").slice(0, 500);
 
-    // Resolve branch label cleanly
-    let branchLabel = "Kakrail Branch (18, Shaheed Captain Monsur Ali Soroni)";
-    if (branchKey === "gulshan" || branchKey.includes("gulshan")) {
-      branchLabel = "Gulshan Branch (House #07, Road #127, Gulshan Avenue)";
+    // Resolve branch label and phone dynamically
+    let branchLabel = branchKey;
+    let targetPhone = "";
+    try {
+      const branches = await getShowroomBranches();
+      const matched = branches.find(
+        (b) => b.branch_id?.toLowerCase() === branchKey || String(b.id) === branchKey
+      );
+      if (matched) {
+        branchLabel = `${matched.name}${matched.address ? ` (${matched.address})` : ""}`;
+        if (matched.hotline) targetPhone = matched.hotline;
+      }
+    } catch {
+      // ignore
+    }
+
+    if (!targetPhone) {
+      try {
+        const settings = await getSiteSettings();
+        targetPhone = settings?.whatsapp || settings?.hotline || "";
+      } catch {
+        // ignore
+      }
     }
 
     // 2. Generate WhatsApp URL
     const waAppointmentMsg = encodeURIComponent(
       `Hello DREAM CAR HOUSE Concierge,\n\nI have confirmed a VIP Private Consultation request:\n\n• Name: ${fullName}\n• Phone: ${cleanPhone}\n• Interest: ${interest}\n• Showroom Branch: ${branchLabel}\n• Preferred Date: ${date || "Earliest Available"}\n• Notes: ${notes || "General VIP Tour"}`
     );
-    const waUrl = `https://wa.me/8801615121312?text=${waAppointmentMsg}`;
-
-    // 3. Duplicate submit protection (key by phone + branchKey + date)
-    const duplicateKey = `${cleanPhone}_${branchKey}_${date}`;
-    const existing = recentSubmissions.get(duplicateKey);
-    const now = Date.now();
-    if (existing && now - existing.timestamp < 30_000) {
-      // Return previous confirmation within 30s window without creating duplicate row
-      return {
-        ok: true,
-        data: {
-          id: existing.id,
-          fullName,
-          branchLabel: existing.branchLabel,
-          date: date || "Earliest Available",
-          waUrl: existing.waUrl,
-          duplicatePrevented: true,
-        },
-      };
+    const cleanDigits = targetPhone.replace(/[^0-9]/g, "");
+    let waPhone = cleanDigits;
+    if (waPhone.startsWith("0")) {
+      waPhone = "88" + waPhone;
+    } else if (!waPhone.startsWith("880") && waPhone.length === 10) {
+      waPhone = "880" + waPhone;
     }
+    const waUrl = waPhone ? `https://wa.me/${waPhone}?text=${waAppointmentMsg}` : "";
+
+    // 3. Persistent backend idempotency key
+    const submissionKey =
+      input.submissionKey ||
+      `appt_${cleanPhone.replace(/[^0-9]/g, "")}_${branchKey}_${(date || "any").replace(/[^a-zA-Z0-9]/g, "")}`;
 
     // 4. Determine Django topic
     const isSelling = interest.toLowerCase().includes("sell") || interest.toLowerCase().includes("trade");
@@ -114,12 +107,13 @@ export async function submitAppointmentEnquiryAction(
       notes || "None specified"
     }\nSubmitted via VIP Consultation Reservation Modal.`;
 
-    // 5. Submit to Django ContactMessage endpoint
+    // 5. Submit to Django ContactMessage endpoint with atomic backend idempotency
     const backendOrigin = getBackendOrigin();
     const res = await fetch(`${backendOrigin}/api/v1/home/contact/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Idempotency-Key": submissionKey,
       },
       body: JSON.stringify({
         topic,
@@ -134,6 +128,12 @@ export async function submitAppointmentEnquiryAction(
     });
 
     if (!res.ok) {
+      if (res.status === 409) {
+        return {
+          ok: false,
+          error: "A reservation with different details was already submitted under this reference. Please refresh or retry.",
+        };
+      }
       let errMsg = "Unable to record your consultation reservation. Please try again or contact us directly.";
       try {
         const errorData = await res.json();
@@ -143,6 +143,8 @@ export async function submitAppointmentEnquiryAction(
           errMsg = Array.isArray(firstErrVal) ? firstErrVal[0] : String(firstErrVal);
         } else if (errorData?.message) {
           errMsg = errorData.message;
+        } else if (errorData?.error?.message) {
+          errMsg = errorData.error.message;
         }
       } catch {
         // Fall back to default message
@@ -151,15 +153,7 @@ export async function submitAppointmentEnquiryAction(
     }
 
     const payload = await res.json();
-    const recordId = payload?.data?.id || `APP-${Date.now()}`;
-
-    // Cache to prevent duplicate submission
-    recentSubmissions.set(duplicateKey, {
-      timestamp: now,
-      id: recordId,
-      waUrl,
-      branchLabel,
-    });
+    const recordId = payload?.data?.id || payload?.id || `APP-${Date.now()}`;
 
     return {
       ok: true,

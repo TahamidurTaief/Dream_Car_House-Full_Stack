@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import AboutClient from "./AboutClient";
-import { getPageSEO, buildMetadataFromSEO } from "@/lib/server/api";
+import {
+  getPageSEO,
+  buildMetadataFromSEO,
+  getSiteSettings,
+  getShowroomBranches,
+  getPublicInventory,
+} from "@/lib/server/api";
 
 const fallbackMetadata: Metadata = {
   title: "About Us • The Showroom Legacy & Provenance | DREAM CAR HOUSE",
@@ -16,6 +22,18 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildMetadataFromSEO(seo, fallbackMetadata);
 }
 
-export default function AboutPage() {
-  return <AboutClient />;
+export default async function AboutPage() {
+  const [settings, branches, inventory] = await Promise.all([
+    getSiteSettings().catch(() => null),
+    getShowroomBranches().catch(() => []),
+    getPublicInventory().catch(() => ({ items: [], totalRows: 0 })),
+  ]);
+
+  return (
+    <AboutClient
+      settings={settings || undefined}
+      branches={branches}
+      totalVehicles={inventory.totalRows || inventory.items.length}
+    />
+  );
 }

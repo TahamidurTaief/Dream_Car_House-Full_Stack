@@ -51,8 +51,22 @@ plans = {
  "home.Subscriber": ("POST home/subscribers/", "subscribers/; subscribers/<id>/", "/workspace/enquiries/subscribers"),
  "home.SalesRepresentative": ("GET home/sales-representative/", "sales-representatives/; sales-representatives/<id>/", "/workspace/content/sales-representatives"),
  "home.ContactMessage": ("POST home/contact/", "contact-messages/; contact-messages/<id>/", "/workspace/enquiries/contact"),
+ "home.SiteSettings": ("GET site-config/settings/; home/settings/", "site-settings/", "/workspace/site-settings"),
+ "home.ShowroomBranch": ("GET site-config/branches/; home/branches/", "branches/; branches/<id>/", "/workspace/branches"),
+ "home.PreferenceSection": ("GET home/preference-section/", "preference-section/", "/workspace/content/preferences"),
+ "home.PreferenceCategory": ("Nested in GET home/preference-section/", "preference-categories/; preference-categories/<id>/", "/workspace/content/preferences"),
+ "home.ConsultationSection": ("GET home/consultation/", "consultation/", "/workspace/content/consultation"),
+ "home.ExperienceSection": ("GET home/experience/", "experience/", "/workspace/content/experience"),
+ "home.ExperiencePillar": ("Nested in GET home/experience/", "experience-pillars/; experience-pillars/<id>/", "/workspace/content/experience"),
+ "home.VisualChroniclesSection": ("GET home/visual-chronicles/", "visual-chronicles/", "/workspace/content/visual-chronicles"),
+ "home.VisualChroniclesItem": ("Nested in GET home/visual-chronicles/", "visual-chronicles/items/; visual-chronicles/items/<id>/", "/workspace/content/visual-chronicles"),
+ "home.VipSanctuarySection": ("GET home/vip-sanctuary/", "vip-sanctuary/", "/workspace/content/vip-sanctuary"),
+ "home.IdempotencyKey": ("Internal persistent idempotency store for POST home/contact/", "Internal idempotency enforcement", "/workspace/enquiries/contact"),
  "seo_config.SEOConfig": ("GET site-config/seo/<page>/", "page-seo/; page-seo/<page>/", "/workspace/seo/pages"),
  "seo_config.CategoryPageSEO": ("GET site-config/category-seo/<page>/", "category-seo/; category-seo/<page>/", "/workspace/seo/categories"),
+ "auth.User": ("None", "users/; users/<id>/", "/workspace/users"),
+ "auth.Group": ("None", "groups/; groups/<id>/", "/workspace/groups"),
+ "auth.Permission": ("None", "permissions/", "/workspace/groups"),
 }
 lines = ["# Module matrix", "", "Generated from actual Django model metadata and admin registrations with a dummy database and blocked connections. No customer rows are read. See `audit_modules.py` to regenerate. Baseline: fd8d42d; foundation adds dashboard_api with no models.", "", "## Installed applications", "", *[f"- `{name}`" for name in app_names], "", "Development additionally installs `django_extensions` and `drf_yasg`; neither adds business models. Production adds no apps. `base.BaseModel` is abstract and `base` is not installed. SimpleJWT is installed, but authtoken and token_blacklist are not. Packages in requirements are not automatically installed Django apps.", "", "## Coverage and endpoint plan", "", "All listed business management endpoints are **planned, not implemented**. Every business row is source/schema verified, but CRUD, authorization, database and browser verification remain pending. GET collection/detail requires active staff plus `view_<model>`; POST requires `add_<model>`; PATCH requires `change_<model>`; DELETE requires `delete_<model>`, each under the listed app label. These are proposed per-model checks, not existing dashboard authorization. No bulk actions planned. Enquiry creation remains public through existing contracts; dashboard creation is not planned. Nested image operations additionally require parent access/change permission. User/group administration remains Django-admin-only for this phase.", "", "| Model | Public endpoint | Required management endpoints / operations | Planned dashboard route | Permissions | Implementation / verification |", "|---|---|---|---|---|---|"]
 models = sorted(apps.get_models(), key=lambda model: model._meta.label)
@@ -62,6 +76,8 @@ for model in models:
   public, api, route = plans[label]
   operations = "GET/POST/PATCH/DELETE"
   if label in {"inventory.InventoryQuote", "home.SellCar", "home.ContactMessage", "home.Subscriber"}: operations = "GET/PATCH/DELETE; no create"
+  elif label in {"home.SiteSettings", "home.PreferenceSection", "home.ConsultationSection", "home.ExperienceSection", "home.VisualChroniclesSection", "home.VipSanctuarySection"}: operations = "GET/PATCH; singleton"
+  elif label == "auth.Permission": operations = "GET; read-only"
   permission = f"active staff + {model._meta.app_label}.{{view,add,change,delete}}_{model._meta.model_name} by operation"
   if label in {"inventory.InventoryImage", "home.SellYourCarImages"}: permission += "; parent access/change"
   state = "Deferred / schema and source verified; runtime CRUD unverified"

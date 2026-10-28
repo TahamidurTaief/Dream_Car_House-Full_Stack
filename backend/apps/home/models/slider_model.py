@@ -90,6 +90,15 @@ class Slider(models.Model):
         blank=True,
     )
 
+    def clean(self):
+        super().clean()
+        if self.is_published:
+            from django.core.exceptions import ValidationError
+            if not self.heading or not self.heading.strip():
+                raise ValidationError({
+                    "heading": _("Published slider requires a valid heading.")
+                })
+
     def __str__(self):
         return self.heading or f"Slider #{self.id}"
 

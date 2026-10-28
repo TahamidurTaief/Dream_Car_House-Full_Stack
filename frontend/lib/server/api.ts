@@ -194,12 +194,14 @@ export const fetchLayoutData = cache(
   async (): Promise<{
     settings: PublicSiteSettings;
     branches: PublicShowroomBranch[];
+    featuredVehicles: PublicVehicle[];
   }> => {
-    const [settings, branches] = await Promise.all([
+    const [settings, branches, featuredVehicles] = await Promise.all([
       getSiteSettings(),
       getShowroomBranches(),
+      getFeaturedInventory().catch(() => []),
     ]);
-    return { settings, branches };
+    return { settings, branches, featuredVehicles };
   }
 );
 
@@ -231,6 +233,12 @@ export const getHeroSlider = cache(async (): Promise<PublicHeroSlider | null> =>
 
   if (res.status === 404) {
     return null;
+  }
+
+  if (res.status === 422) {
+    const errorJson = (await res.json().catch(() => ({}))) as { error?: { message?: string } | string };
+    const msg = typeof errorJson.error === "object" ? errorJson.error?.message : errorJson.error;
+    throw new Error(msg || "Published slider requires a valid heading (HTTP 422 Unprocessable Entity).");
   }
 
   if (!res.ok) {
@@ -389,13 +397,14 @@ export interface PublicInventoryParams {
   brand?: string;
   type?: string;
   branch?: string;
+  body_style?: string;
   q?: string;
   page?: number;
 }
 
 /**
  * Deduplicated, server-only public inventory listing fetcher.
- * Matches backend InventoryFilter (supports brand, car_type, branch, search).
+ * Matches backend InventoryFilter (supports brand, car_type, branch, body_style, search).
  */
 export const getPublicInventory = cache(
   async (
@@ -412,6 +421,9 @@ export const getPublicInventory = cache(
     }
     if (params.branch && params.branch !== "all") {
       query.set("branch", params.branch);
+    }
+    if (params.body_style && params.body_style !== "all") {
+      query.set("body_style", params.body_style);
     }
     if (params.q && params.q.trim()) {
       query.set("search", params.q.trim());
@@ -582,6 +594,12 @@ export const getPreferenceSection = cache(async (): Promise<PublicPreferenceSect
 
   if (res.status === 404) {
     return null;
+  }
+
+  if (res.status === 422) {
+    const errorJson = (await res.json().catch(() => ({}))) as { error?: { message?: string } | string };
+    const msg = typeof errorJson.error === "object" ? errorJson.error?.message : errorJson.error;
+    throw new Error(msg || "Preference section configuration error: requires at least 1 category (HTTP 422 Unprocessable Entity).");
   }
 
   if (!res.ok) {
@@ -758,6 +776,12 @@ export const getVisualChroniclesSection = cache(
 
     if (res.status === 404) {
       return null;
+    }
+
+    if (res.status === 422) {
+      const errorJson = (await res.json().catch(() => ({}))) as { error?: { message?: string } | string };
+      const msg = typeof errorJson.error === "object" ? errorJson.error?.message : errorJson.error;
+      throw new Error(msg || "Visual Chronicles section configuration error: requires at least 1 active story card item (HTTP 422 Unprocessable Entity).");
     }
 
     if (!res.ok) {

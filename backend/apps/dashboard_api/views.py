@@ -81,20 +81,19 @@ _WINDOW_SECONDS = 60
 
 
 def _check_login_throttle(ip_address: str):
-    now = time.time()
-    cutoff = now - _WINDOW_SECONDS
-    attempts = _LOGIN_ATTEMPTS.get(ip_address, [])
-    attempts = [t for t in attempts if t > cutoff]
-    if len(attempts) >= _MAX_ATTEMPTS_PER_WINDOW:
-        wait = int(_WINDOW_SECONDS - (now - attempts[0]))
-        raise Throttled(detail="Too many login attempts. Please try again later.", wait=max(1, wait))
-    attempts.append(now)
-    _LOGIN_ATTEMPTS[ip_address] = attempts
+    from core.throttling import check_shared_throttle
+    check_shared_throttle(
+        key_prefix="login",
+        ident=ip_address,
+        max_requests=_MAX_ATTEMPTS_PER_WINDOW,
+        window_seconds=_WINDOW_SECONDS,
+        error_message="Too many login attempts. Please try again later.",
+    )
 
 
 def _record_successful_login(ip_address: str):
-    if ip_address in _LOGIN_ATTEMPTS:
-        _LOGIN_ATTEMPTS.pop(ip_address, None)
+    from core.throttling import clear_shared_throttle
+    clear_shared_throttle(key_prefix="login", ident=ip_address)
 
 
 class DashboardBaseAPIView(APIView):
@@ -186,7 +185,8 @@ class LoginView(APIView):
         return response
 
     def post(self, request):
-        ip = request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0].strip() or request.META.get("REMOTE_ADDR", "")
+        from core.utils.network import get_client_ip
+        ip = get_client_ip(request)
         _check_login_throttle(ip)
 
         data = request.data or {}

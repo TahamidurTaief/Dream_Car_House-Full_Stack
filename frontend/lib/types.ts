@@ -113,6 +113,7 @@ export interface PublicVehicle {
   indexing?: string;
   schema_data?: Record<string, unknown>;
   previous_slug?: string;
+  status?: string;
 }
 
 export interface PublicInventoryFilterOptions {

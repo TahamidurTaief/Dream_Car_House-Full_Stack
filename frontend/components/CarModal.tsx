@@ -2,43 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import { useUI } from "@/lib/UIContext";
-import { SHOWROOM_BRANCHES, GalleryPhoto, Vehicle } from "@/lib/showroomData";
+import type { GalleryPhoto, Vehicle } from "@/lib/showroomData";
+import type { PublicSiteSettings, PublicShowroomBranch } from "@/lib/types";
 
-function getCarDrivetrain(car: Vehicle): string {
-  const nameLower = (car.name || "").toLowerCase();
-  const capLower = (car.engine_capacity || "").toLowerCase();
-  if (capLower.includes("electric") || nameLower.includes("g 580")) {
-    return "Dual Motor Electric AWD";
-  } else if (
-    nameLower.includes("mercedes") ||
-    nameLower.includes("maybach") ||
-    nameLower.includes("amg")
-  ) {
-    return "9G-Tronic 4MATIC AWD";
-  } else if (nameLower.includes("bmw")) {
-    return "8-Speed Steptronic xDrive";
-  } else if (nameLower.includes("audi")) {
-    return "S-Tronic Quattro AWD";
-  } else if (
-    nameLower.includes("land cruiser") ||
-    nameLower.includes("toyota") ||
-    nameLower.includes("prado")
-  ) {
-    return "Full-Time 4WD w/ Crawl Control";
-  } else if (nameLower.includes("lexus")) {
-    return "10-Speed Direct-Shift 4WD";
-  } else if (
-    nameLower.includes("defender") ||
-    nameLower.includes("range rover")
-  ) {
-    return "Terrain Response 2 AWD";
-  } else if (nameLower.includes("porsche")) {
-    return "8-Speed PDK AWD";
-  }
-  return "Full-Time Intelligent All-Wheel Drive";
+interface CarModalProps {
+  settings?: PublicSiteSettings;
+  branches?: PublicShowroomBranch[];
 }
 
-export default function CarModal() {
+export default function CarModal({ settings, branches = [] }: CarModalProps) {
   const {
     selectedCar,
     closeCarModal,
@@ -114,8 +86,25 @@ export default function CarModal() {
 
   if (!selectedCar) return null;
 
+  const matchedBranch = branches.find(
+    (b) => b.branch_id === selectedCar.branch_id || String(b.id) === String(selectedCar.branch_id) || b.name === selectedCar.branch_name
+  );
   const branch = selectedCar.branch
     ? selectedCar.branch
+    : matchedBranch
+    ? {
+        id: matchedBranch.branch_id || String(matchedBranch.id),
+        name: matchedBranch.name,
+        short_name: matchedBranch.name,
+        tag: matchedBranch.tag || "Showroom Allocation",
+        address: matchedBranch.address || "",
+        phone: matchedBranch.phone || "",
+        hotline: matchedBranch.hotline || "",
+        email: matchedBranch.email || "",
+        hours: matchedBranch.hours || "",
+        map_link: matchedBranch.map_link || "",
+        embed_map: matchedBranch.embed_map || "",
+      }
     : selectedCar.branch_name
     ? {
         id: selectedCar.branch_id || "",
@@ -132,12 +121,12 @@ export default function CarModal() {
       }
     : null;
   const isBrandNew = selectedCar.car_type === "BRAND_NEW";
-  const drivetrain = selectedCar.drivetrain || getCarDrivetrain(selectedCar);
+  const transmissionText = selectedCar.transmission || selectedCar.drivetrain || "";
   const regText = (selectedCar as { registration_number?: string }).registration_number || (isBrandNew
     ? "Unregistered Direct Import"
     : selectedCar.registered && selectedCar.registered !== "Available"
     ? selectedCar.registered
-    : "Dhaka Metro Verified Papers");
+    : "");
 
   const galleryList =
     selectedCar.images && selectedCar.images.length > 0
@@ -182,7 +171,15 @@ export default function CarModal() {
       ? `Hello DREAM CAR HOUSE, I am inquiring about the ${selectedCar.name} (${selectedCar.year}) allocated at your ${branch.name}. Please share the official spec sheet, showroom availability, and confidential valuation.`
       : `Hello DREAM CAR HOUSE, I am inquiring about the ${selectedCar.name} (${selectedCar.year}). Please share the official spec sheet, showroom availability, and confidential valuation.`
   );
-  const waUrl = `https://wa.me/8801615121312?text=${waMessage}`;
+  const targetPhone = branch?.hotline || branch?.phone || settings?.whatsapp || settings?.hotline || "";
+  const cleanDigits = targetPhone.replace(/[^0-9]/g, "");
+  let waPhone = cleanDigits;
+  if (waPhone.startsWith("0")) {
+    waPhone = "88" + waPhone;
+  } else if (!waPhone.startsWith("880") && waPhone.length === 10) {
+    waPhone = "880" + waPhone;
+  }
+  const waUrl = waPhone ? `https://wa.me/${waPhone}?text=${waMessage}` : "";
 
   return (
     <div className="car-modal-backdrop active" onClick={closeCarModal}>
@@ -439,7 +436,7 @@ export default function CarModal() {
                       <line x1="16" y1="13" x2="8" y2="13" />
                       <line x1="16" y1="17" x2="8" y2="17" />
                     </svg>
-                    <span>Dhaka Metro Papers</span>
+                    <span>{isBrandNew ? "Authentic Provenance" : (regText || "Verified Papers")}</span>
                   </div>
                   <div className="dch-trust-pill">
                     <svg
@@ -562,7 +559,7 @@ export default function CarModal() {
                     </div>
                     <div className="dch-spec-texts">
                       <span className="dch-spec-label">TRANSMISSION</span>
-                      <span className="dch-spec-value">{drivetrain}</span>
+                      <span className="dch-spec-value">{transmissionText || "Standard Transmission"}</span>
                     </div>
                   </div>
 
@@ -628,7 +625,7 @@ export default function CarModal() {
                     </div>
                     <div className="dch-spec-texts">
                       <span className="dch-spec-label">REGISTRATION</span>
-                      <span className="dch-spec-value">{regText}</span>
+                      <span className="dch-spec-value">{regText || "Available for Direct Registration"}</span>
                     </div>
                   </div>
 
@@ -649,7 +646,13 @@ export default function CarModal() {
                     </div>
                     <div className="dch-spec-texts">
                       <span className="dch-spec-label">INSPECTION AUDIT</span>
-                      <span className="dch-spec-value">150-Point Certified</span>
+                      <span className="dch-spec-value">
+                        {isBrandNew
+                          ? "Factory Pre-Delivery Inspection (PDI)"
+                          : selectedCar.condition
+                          ? `${selectedCar.condition} Certified`
+                          : "Verified Diagnostic Inspection"}
+                      </span>
                     </div>
                   </div>
 
@@ -669,7 +672,13 @@ export default function CarModal() {
                     </div>
                     <div className="dch-spec-texts">
                       <span className="dch-spec-label">VEHICLE STATUS</span>
-                      <span className="dch-spec-value">Physically Available</span>
+                      <span className="dch-spec-value">
+                        {selectedCar.status
+                          ? selectedCar.status === "AVAILABLE"
+                            ? "Physically Available"
+                            : selectedCar.status
+                          : "Showroom Vault Allocation"}
+                      </span>
                     </div>
                   </div>
 
@@ -689,7 +698,13 @@ export default function CarModal() {
                     </div>
                     <div className="dch-spec-texts">
                       <span className="dch-spec-label">HANDOVER</span>
-                      <span className="dch-spec-value">Immediate Delivery</span>
+                      <span className="dch-spec-value">
+                        {isBrandNew
+                          ? "Immediate Delivery / Direct Import"
+                          : selectedCar.registered
+                          ? "Ready for Instant Transfer"
+                          : "Immediate Delivery"}
+                      </span>
                     </div>
                   </div>
                 </div>

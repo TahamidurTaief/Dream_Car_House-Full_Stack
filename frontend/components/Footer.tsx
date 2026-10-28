@@ -56,66 +56,72 @@ export default function Footer({
                 <span>
                   {branches.length > 0 ? (
                     branches.map((b, idx) => (
-                      <React.Fragment key={b.branch_id}>
+                      <React.Fragment key={b.branch_id || idx}>
                         {idx > 0 && <br />}
                         <strong>{b.name || b.short_name}</strong>: {b.address}
                       </React.Fragment>
                     ))
-                  ) : (
-                    <span>{settings?.primary_address || "18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka - 1000"}</span>
-                  )}
+                  ) : settings?.primary_address ? (
+                    <span>{settings.primary_address}</span>
+                  ) : null}
                 </span>
               </li>
-              <li className="contact-item">
-                <svg
-                  className="contact-icon"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#ffffff"
-                  strokeWidth="2"
-                >
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                </svg>
-                <a href={`tel:${(settings?.hotline || "01615-121312").replace(/\s+/g, "")}`} className="contact-link">
-                  {settings?.hotline || "01615-121312"}
-                </a>
-              </li>
-              <li className="contact-item">
-                <svg
-                  className="contact-icon"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#ffffff"
-                  strokeWidth="2"
-                >
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                  <polyline points="22,6 12,13 2,6" />
-                </svg>
-                <a href={`mailto:${settings?.email || "dreamcarhouse101@gmail.com"}`} className="contact-link">
-                  {settings?.email || "dreamcarhouse101@gmail.com"}
-                </a>
-              </li>
-              <li className="contact-item">
-                <svg
-                  className="contact-icon"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#ffffff"
-                  strokeWidth="2"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-                <span>
-                  {settings?.opening_hours_text || "Sat – Thu: 10:00 AM – 9:00 PM"} <span className="status-open-pill">Open</span>
-                </span>
-              </li>
+              {settings?.hotline ? (
+                <li className="contact-item">
+                  <svg
+                    className="contact-icon"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#ffffff"
+                    strokeWidth="2"
+                  >
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                  <a href={`tel:${settings.hotline.replace(/\s+/g, "")}`} className="contact-link">
+                    {settings.hotline}
+                  </a>
+                </li>
+              ) : null}
+              {settings?.email ? (
+                <li className="contact-item">
+                  <svg
+                    className="contact-icon"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#ffffff"
+                    strokeWidth="2"
+                  >
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <polyline points="22,6 12,13 2,6" />
+                  </svg>
+                  <a href={`mailto:${settings.email}`} className="contact-link">
+                    {settings.email}
+                  </a>
+                </li>
+              ) : null}
+              {settings?.opening_hours_text ? (
+                <li className="contact-item">
+                  <svg
+                    className="contact-icon"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#ffffff"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  <span>
+                    {settings.opening_hours_text} <span className="status-open-pill">Open</span>
+                  </span>
+                </li>
+              ) : null}
             </ul>
 
             <div className="footer-social-row">

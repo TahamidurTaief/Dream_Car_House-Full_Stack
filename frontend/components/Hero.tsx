@@ -10,7 +10,7 @@ interface HeroProps {
 }
 
 function parseYouTubeId(input: string): string {
-  if (!input) return "7cxfVWs4YGw";
+  if (!input) return "";
   const trimmed = input.trim();
   if (trimmed.length <= 16 && !trimmed.includes("/") && !trimmed.includes(".")) {
     return trimmed;
@@ -58,23 +58,29 @@ export default function Hero({ initialData }: HeroProps) {
   let embedUrl = "";
   if (provider === "youtube") {
     const videoId = parseYouTubeId(source);
-    embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&iv_load_policy=3&disablekb=1&modestbranding=1&playsinline=1&enablejsapi=1&start=${startTime}`;
+    if (videoId) {
+      embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&iv_load_policy=3&disablekb=1&modestbranding=1&playsinline=1&enablejsapi=1&start=${startTime}`;
+    }
   } else if (provider === "vimeo") {
     const vimeoId = parseVimeoId(source);
-    embedUrl = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&loop=1&muted=1&background=1#t=${startTime}s`;
+    if (vimeoId) {
+      embedUrl = `https://player.vimeo.com/video/${vimeoId}?autoplay=1&loop=1&muted=1&background=1#t=${startTime}s`;
+    }
   }
 
   return (
     <section className="hero-section" id="hero-section">
       {/* Background Video Engine */}
       <div className="hero-video-wrap">
-        <div
-          className="hero-poster-backdrop"
-          id="hero-poster-backdrop"
-          style={{ backgroundImage: `url('${poster}')` }}
-        />
+        {poster ? (
+          <div
+            className="hero-poster-backdrop"
+            id="hero-poster-backdrop"
+            style={{ backgroundImage: `url('${poster}')` }}
+          />
+        ) : null}
 
-        {provider === "direct" ? (
+        {provider === "direct" && (source || initialData?.image) ? (
           <video
             id="hero-youtube-iframe"
             className={`hero-youtube-iframe ${isVideoReady ? "is-ready" : ""}`}
@@ -84,7 +90,7 @@ export default function Hero({ initialData }: HeroProps) {
             muted
             playsInline
           />
-        ) : (
+        ) : embedUrl ? (
           <iframe
             id="hero-youtube-iframe"
             className={`hero-youtube-iframe ${isVideoReady ? "is-ready" : ""}`}
@@ -94,7 +100,7 @@ export default function Hero({ initialData }: HeroProps) {
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
-        )}
+        ) : null}
       </div>
 
       <div className="hero-overlay"></div>

@@ -33,27 +33,38 @@ All listed business management endpoints are **planned, not implemented**. Every
 | Model | Public endpoint | Required management endpoints / operations | Planned dashboard route | Permissions | Implementation / verification |
 |---|---|---|---|---|---|
 | `admin.LogEntry` | None | None planned; retain Django internal/admin ownership () | `None` | Existing Django permissions; no dashboard access | Excluded / schema verified |
-| `auth.Group` | None | groups/; groups/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/groups` | active staff + auth.{view,add,change,delete}_group by operation | Completed / verified end-to-end; SSR list, permission assignments, member counts, duplicate group name protection |
-| `auth.Permission` | None | permissions/ (GET) | Direct catalog API | active staff with auth.view_permission, superuser, or auth.view_{user,group} | Completed / verified end-to-end; Django permissions catalog listing |
-| `auth.User` | None | users/; users/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/users` | active staff + auth.{view,add,change,delete}_user by operation | Completed / verified end-to-end; SSR list, password APIs (never leaks hashes/secrets), self-deletion protection, last active admin protection, privilege escalation guards |
+| `auth.Group` | None | groups/; groups/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/groups` | active staff + auth.{view,add,change,delete}_group by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `auth.Permission` | None | permissions/ (GET; read-only) | `/workspace/groups` | active staff + auth.{view,add,change,delete}_permission by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `auth.User` | None | users/; users/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/users` | active staff + auth.{view,add,change,delete}_user by operation | Deferred / schema and source verified; runtime CRUD unverified |
 | `contenttypes.ContentType` | None | None planned; retain Django internal/admin ownership () | `None` | Existing Django permissions; no dashboard access | Excluded / schema verified |
-| `home.ContactMessage` | POST home/contact/ | contact-messages/; contact-messages/<id>/ (GET/PATCH/DELETE; no create) | `/workspace/inbox/contact` | active staff + home.{view,add,change,delete}_contactmessage by operation | Completed / verified end-to-end; SSR list, detail drawer, safe customer content preservation, permission enforcement |
-| `home.PeopleTalkAboutUs` | GET home/people-talk/ | social-features/; social-features/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/content/social-features` | active staff + home.{view,add,change,delete}_peopletalkaboutus by operation | Completed / verified end-to-end; SSR list, media upload validation (.jpg/.png/.webp), title/url search, status & featured filters, publication visibility preservation |
-| `home.SalesRepresentative` | GET home/sales-representative/ | sales-representatives/; sales-representatives/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/content/sales-representatives` | active staff + home.{view,add,change,delete}_salesrepresentative by operation | Completed / verified end-to-end; SSR list, create/edit drawers, publication controls (PUBLISHED/UNPUBLISHED), public API publication filtering preserved |
-| `home.SellCar` | POST home/sell-car/ | sell-cars/; sell-cars/<id>/ (GET/PATCH/DELETE; no create) | `/workspace/sell-cars` | active staff + home.{view,add,change,delete}_sellcar by operation | Completed / verified end-to-end; SSR list, details drawer, customer content preservation, ownership boundary enforcement |
-| `home.SellYourCarImages` | Upload through POST home/sell-car/ images field; no standalone route | sell-cars/<id>/images/<image_id>/ (DELETE) | `/workspace/sell-cars` | active staff + home.{view,add,change,delete}_sellyourcarimages by operation; parent access/change | Completed / nested in SellCar list & detail; preview modal dialog, missing image fallback, scoped deletion |
-| `home.Slider` | GET home/slider/ (last record) | sliders/; sliders/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/content/sliders` | active staff + home.{view,add,change,delete}_slider by operation | Completed / verified end-to-end; SSR list, media upload validation (.mp4/.webm/.png/.jpg), live public selection indicator (Slider.objects.last()), non-singleton historical preservation |
-| `home.SocialMedia` | GET home/sm/ (last record) | social-media/; social-media/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/content/social-media` | active staff + home.{view,add,change,delete}_socialmedia by operation | Completed / verified end-to-end; SSR list, protocol validation (http/https), live public selection indicator (SocialMedia.objects.last()), non-singleton historical preservation |
-| `home.Subscriber` | POST home/subscribers/ | subscribers/; subscribers/<id>/ (GET/PATCH/DELETE; no create) | `/workspace/inbox/subscribers` | active staff + home.{view,add,change,delete}_subscriber by operation | Completed / verified end-to-end; SSR list, edit & detail drawers, permission enforcement |
-| `inventory.BodyStyle` | GET inventory/body-style/; inventory/filters/ | body-styles/; body-styles/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/body-styles` | active staff + inventory.{view,add,change,delete}_bodystyle by operation | Completed / verified end-to-end; SSR list, create/edit/delete dialogs, permission gating, and test coverage |
-| `inventory.Brand` | GET inventory/brands/; inventory/brands/<id>/seo/; inventory/filters/ | brands/; brands/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/brands` | active staff + inventory.{view,add,change,delete}_brand by operation | Completed / verified end-to-end; permission-checked, schema & cascade verified |
-| `inventory.Inventory` | GET inventory/, featured/, detail/<slug>/, detail/<slug>/related/, filters/ (all under inventory/); legacy detail/<id>/ paths declared | inventory/; inventory/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/inventory` | active staff + inventory.{view,add,change,delete}_inventory by operation | Implemented / verified endpoints, serializers & SSR workspace; vehicle create/edit/gallery forms preserved |
-| `inventory.InventoryImage` | Nested in inventory/detail/<slug>/ | inventory/<id>/images/; inventory/<id>/images/<image_id>/ (GET/POST/PATCH/DELETE) | `/workspace/inventory/[id]/images` | active staff + inventory.{view,add,change,delete}_inventoryimage by operation; parent access/change | Implemented / endpoints and gallery uploader handlers defined |
-| `inventory.InventoryQuote` | POST inventory/quote/ | quotes/; quotes/<id>/ (GET/PATCH/DELETE; no create) | `/workspace/quotes` | active staff + inventory.{view,add,change,delete}_inventoryquote by operation | Completed / verified end-to-end; permission-checked, customer contact edit & safe foreign key display |
-| `inventory.ModelGeneration` | GET inventory/generations/; inventory/filters/ | model-generations/; model-generations/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/model-generations` | active staff + inventory.{view,add,change,delete}_modelgeneration by operation | Completed / verified end-to-end; permission-checked, relationship & duplicate validation verified |
-| `inventory.Stock` | GET inventory/stocks/ | stocks/; stocks/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/stocks` | active staff + inventory.{view,add,change,delete}_stock by operation | Completed / verified end-to-end; SSR list, create/edit/detail drawers, server pagination & ordering, permission-aware navigation |
-| `seo_config.CategoryPageSEO` | GET site-config/category-seo/<page>/ | category-seo/; category-seo/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/seo/categories` | active staff + seo_config.{view,add,change,delete}_categorypageseo by operation | Completed / verified end-to-end; SSR list, editorial copy fields (H1, short, long), JSON-LD validation, robots policy control, duplicate page rejection |
-| `seo_config.SEOConfig` | GET site-config/seo/<page>/ | page-seo/; page-seo/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/seo/pages` | active staff + seo_config.{view,add,change,delete}_seoconfig by operation | Completed / verified end-to-end; SSR list, Open Graph/Twitter overrides, JSON-LD schema validation, image validation, duplicate page rejection |
+| `home.ConsultationSection` | GET home/consultation/ | consultation/ (GET/PATCH; singleton) | `/workspace/content/consultation` | active staff + home.{view,add,change,delete}_consultationsection by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.ContactMessage` | POST home/contact/ | contact-messages/; contact-messages/<id>/ (GET/PATCH/DELETE; no create) | `/workspace/enquiries/contact` | active staff + home.{view,add,change,delete}_contactmessage by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.ExperiencePillar` | Nested in GET home/experience/ | experience-pillars/; experience-pillars/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/content/experience` | active staff + home.{view,add,change,delete}_experiencepillar by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.ExperienceSection` | GET home/experience/ | experience/ (GET/PATCH; singleton) | `/workspace/content/experience` | active staff + home.{view,add,change,delete}_experiencesection by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.IdempotencyKey` | Internal persistent idempotency store for POST home/contact/ | Internal idempotency enforcement (GET/POST/PATCH/DELETE) | `/workspace/enquiries/contact` | active staff + home.{view,add,change,delete}_idempotencykey by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.PeopleTalkAboutUs` | GET home/people-talk/ | social-features/; social-features/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/content/social-features` | active staff + home.{view,add,change,delete}_peopletalkaboutus by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.PreferenceCategory` | Nested in GET home/preference-section/ | preference-categories/; preference-categories/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/content/preferences` | active staff + home.{view,add,change,delete}_preferencecategory by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.PreferenceSection` | GET home/preference-section/ | preference-section/ (GET/PATCH; singleton) | `/workspace/content/preferences` | active staff + home.{view,add,change,delete}_preferencesection by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.SalesRepresentative` | GET home/sales-representative/ | sales-representatives/; sales-representatives/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/content/sales-representatives` | active staff + home.{view,add,change,delete}_salesrepresentative by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.SellCar` | POST home/sell-car/ | sell-car-enquiries/; sell-car-enquiries/<id>/ (GET/PATCH/DELETE; no create) | `/workspace/enquiries/sell-car` | active staff + home.{view,add,change,delete}_sellcar by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.SellYourCarImages` | Upload through POST home/sell-car/ images field; no standalone route | sell-car-enquiries/<id>/images/; .../<image_id>/ (GET/POST/PATCH/DELETE) | `/workspace/enquiries/sell-car/[id]/images` | active staff + home.{view,add,change,delete}_sellyourcarimages by operation; parent access/change | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.ShowroomBranch` | GET site-config/branches/; home/branches/ | branches/; branches/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/branches` | active staff + home.{view,add,change,delete}_showroombranch by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.SiteSettings` | GET site-config/settings/; home/settings/ | site-settings/ (GET/PATCH; singleton) | `/workspace/site-settings` | active staff + home.{view,add,change,delete}_sitesettings by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.Slider` | GET home/slider/ (last record) | sliders/; sliders/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/content/sliders` | active staff + home.{view,add,change,delete}_slider by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.SocialMedia` | GET home/sm/ (last record) | social-media/; social-media/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/content/social-media` | active staff + home.{view,add,change,delete}_socialmedia by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.Subscriber` | POST home/subscribers/ | subscribers/; subscribers/<id>/ (GET/PATCH/DELETE; no create) | `/workspace/enquiries/subscribers` | active staff + home.{view,add,change,delete}_subscriber by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.VipSanctuarySection` | GET home/vip-sanctuary/ | vip-sanctuary/ (GET/PATCH; singleton) | `/workspace/content/vip-sanctuary` | active staff + home.{view,add,change,delete}_vipsanctuarysection by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.VisualChroniclesItem` | Nested in GET home/visual-chronicles/ | visual-chronicles/items/; visual-chronicles/items/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/content/visual-chronicles` | active staff + home.{view,add,change,delete}_visualchroniclesitem by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `home.VisualChroniclesSection` | GET home/visual-chronicles/ | visual-chronicles/ (GET/PATCH; singleton) | `/workspace/content/visual-chronicles` | active staff + home.{view,add,change,delete}_visualchroniclessection by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `inventory.BodyStyle` | GET inventory/body-style/; inventory/filters/ | body-styles/; body-styles/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/body-styles` | active staff + inventory.{view,add,change,delete}_bodystyle by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `inventory.Brand` | GET inventory/brands/; inventory/brands/<id>/seo/; inventory/filters/ | brands/; brands/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/brands` | active staff + inventory.{view,add,change,delete}_brand by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `inventory.Inventory` | GET inventory/, featured/, detail/<slug>/, detail/<slug>/related/, filters/ (all under inventory/); legacy detail/<id>/ paths declared | inventory/; inventory/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/inventory` | active staff + inventory.{view,add,change,delete}_inventory by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `inventory.InventoryImage` | Nested in inventory/detail/<slug>/ | inventory/<id>/images/; inventory/<id>/images/<image_id>/ (GET/POST/PATCH/DELETE) | `/workspace/inventory/[id]/images` | active staff + inventory.{view,add,change,delete}_inventoryimage by operation; parent access/change | Deferred / schema and source verified; runtime CRUD unverified |
+| `inventory.InventoryQuote` | POST inventory/quote/ | quotes/; quotes/<id>/ (GET/PATCH/DELETE; no create) | `/workspace/enquiries/quotes` | active staff + inventory.{view,add,change,delete}_inventoryquote by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `inventory.ModelGeneration` | GET inventory/generations/; inventory/filters/ | model-generations/; model-generations/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/model-generations` | active staff + inventory.{view,add,change,delete}_modelgeneration by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `inventory.Stock` | GET inventory/stocks/ | stocks/; stocks/<id>/ (GET/POST/PATCH/DELETE) | `/workspace/stocks` | active staff + inventory.{view,add,change,delete}_stock by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `seo_config.CategoryPageSEO` | GET site-config/category-seo/<page>/ | category-seo/; category-seo/<page>/ (GET/POST/PATCH/DELETE) | `/workspace/seo/categories` | active staff + seo_config.{view,add,change,delete}_categorypageseo by operation | Deferred / schema and source verified; runtime CRUD unverified |
+| `seo_config.SEOConfig` | GET site-config/seo/<page>/ | page-seo/; page-seo/<page>/ (GET/POST/PATCH/DELETE) | `/workspace/seo/pages` | active staff + seo_config.{view,add,change,delete}_seoconfig by operation | Deferred / schema and source verified; runtime CRUD unverified |
 | `sessions.Session` | None | None planned; retain Django internal/admin ownership () | `None` | Existing Django permissions; no dashboard access | Excluded / schema verified |
 
 ## Complete field, relation and admin inventory
@@ -62,7 +73,7 @@ Fields below include implicit IDs and inherited timestamps. Reverse relations ar
 
 ### admin.LogEntry
 
-Table: `django_admin_log`. Source: `backend/.venv/lib/python3.13/site-packages/django/contrib/admin/models.py`.
+Table: `django_admin_log`. Source: `/home/pixie/.venvs/backend/lib/python3.13/site-packages/django/contrib/admin/models.py`.
 
 | Field | Type | Constraints / relation |
 |---|---|---|
@@ -83,7 +94,7 @@ Model methods defined here: `is_addition`, `is_change`, `is_deletion`, `get_chan
 
 ### auth.Group
 
-Table: `auth_group`. Source: `backend/.venv/lib/python3.13/site-packages/django/contrib/auth/models.py`.
+Table: `auth_group`. Source: `/home/pixie/.venvs/backend/lib/python3.13/site-packages/django/contrib/auth/models.py`.
 
 | Field | Type | Constraints / relation |
 |---|---|---|
@@ -103,7 +114,7 @@ Model methods defined here: `natural_key`, `DoesNotExist`, `MultipleObjectsRetur
 
 ### auth.Permission
 
-Table: `auth_permission`. Source: `backend/.venv/lib/python3.13/site-packages/django/contrib/auth/models.py`.
+Table: `auth_permission`. Source: `/home/pixie/.venvs/backend/lib/python3.13/site-packages/django/contrib/auth/models.py`.
 
 | Field | Type | Constraints / relation |
 |---|---|---|
@@ -120,7 +131,7 @@ Model methods defined here: `natural_key`, `DoesNotExist`, `MultipleObjectsRetur
 
 ### auth.User
 
-Table: `auth_user`. Source: `backend/.venv/lib/python3.13/site-packages/django/contrib/auth/models.py`.
+Table: `auth_user`. Source: `/home/pixie/.venvs/backend/lib/python3.13/site-packages/django/contrib/auth/models.py`.
 
 | Field | Type | Constraints / relation |
 |---|---|---|
@@ -152,7 +163,7 @@ Model methods defined here: `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdat
 
 ### contenttypes.ContentType
 
-Table: `django_content_type`. Source: `backend/.venv/lib/python3.13/site-packages/django/contrib/contenttypes/models.py`.
+Table: `django_content_type`. Source: `/home/pixie/.venvs/backend/lib/python3.13/site-packages/django/contrib/contenttypes/models.py`.
 
 | Field | Type | Constraints / relation |
 |---|---|---|
@@ -165,6 +176,34 @@ Reverse relations: `logentry_set` ← `admin.LogEntry.content_type`; `permission
 Not registered independently in admin.
 
 Model methods defined here: `model_class`, `get_object_for_this_type`, `get_all_objects_for_this_type`, `natural_key`, `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
+
+### home.ConsultationSection
+
+Table: `tbl_consultation_section`. Source: `backend/apps/home/models/consultation_model.py`.
+
+| Field | Type | Constraints / relation |
+|---|---|---|
+| `id` | BigAutoField | primary_key; unique; blank |
+| `tag` | CharField | max_length=100; default='PRIVATE AUTOMOTIVE CONCIERGE' |
+| `heading` | CharField | max_length=200; default='Connect to Consult' |
+| `description` | TextField | default='Our dedicated automotive advisors offer bespoke consultations—whether you seek an exclusive allocation, custom reconditioned import, or confidential valuation for your vehicle trade-in.' |
+| `trust_pills` | JSONField | default=default_consultation_trust_pills |
+| `primary_cta_label` | CharField | max_length=100; default='Book Private Appointment' |
+| `primary_cta_action` | CharField | max_length=50; default=ConsultationSection.CtaAction.APPOINTMENT_MODAL; choices=appointment_modal, internal_link |
+| `primary_cta_url` | CharField | blank; max_length=255; default='' |
+| `whatsapp_cta_label` | CharField | max_length=100; default='Chat on WhatsApp' |
+| `whatsapp_number` | CharField | blank; max_length=30; default='' |
+| `whatsapp_message` | CharField | blank; max_length=255; default='Hello Dream Car House, I would like to consult regarding a luxury vehicle.' |
+| `representative` | ForeignKey | null; blank; db_index; → home.SalesRepresentative; on_delete=SET_NULL; related_name=consultation_sections |
+| `status_beacon_text` | CharField | max_length=200; default='Showroom Open Today • Kakrail & Gulshan, Dhaka' |
+| `is_active` | BooleanField | default=True |
+| `updated_at` | DateTimeField | blank; read-only |
+
+Reverse relations: none.
+
+Not registered independently in admin.
+
+Model methods defined here: `CtaAction`, `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
 
 ### home.ContactMessage
 
@@ -195,6 +234,70 @@ Registered admin: `ContactMessageAdmin`.
 
 Model methods defined here: `TopicChoices`, `PreferredContactChoices`, `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
 
+### home.ExperiencePillar
+
+Table: `tbl_experience_pillar`. Source: `backend/apps/home/models/experience_model.py`.
+
+| Field | Type | Constraints / relation |
+|---|---|---|
+| `id` | BigAutoField | primary_key; unique; blank |
+| `section` | ForeignKey | db_index; → home.ExperienceSection; on_delete=CASCADE; related_name=pillars |
+| `pillar_number` | CharField | max_length=10; default='01' |
+| `badge` | CharField | max_length=80; default='PRIVATE SANCTUARY' |
+| `title` | CharField | max_length=150 |
+| `description` | TextField |  |
+| `image` | FileField | max_length=500 |
+| `tags` | JSONField | blank; default=list |
+| `order` | PositiveIntegerField | default=1 |
+| `is_active` | BooleanField | default=True |
+
+Reverse relations: none.
+
+Not registered independently in admin.
+
+Model methods defined here: `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
+
+### home.ExperienceSection
+
+Table: `tbl_experience_section`. Source: `backend/apps/home/models/experience_model.py`.
+
+| Field | Type | Constraints / relation |
+|---|---|---|
+| `id` | BigAutoField | primary_key; unique; blank |
+| `title` | CharField | max_length=200; default='Experience Beyond Ordinary' |
+| `subtitle` | TextField | default="Dhaka's benchmark in high-luxury automotive delivery, certified diagnostic inspection, and bespoke global procurement." |
+| `video_cta_label` | CharField | max_length=100; default='Watch Showroom Reel' |
+| `video_target` | CharField | max_length=255; default='reel' |
+| `is_active` | BooleanField | default=True |
+| `updated_at` | DateTimeField | blank; read-only |
+
+Reverse relations: `pillars` ← `home.ExperiencePillar.section`.
+
+Not registered independently in admin.
+
+Model methods defined here: `clean`, `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
+
+### home.IdempotencyKey
+
+Table: `tbl_idempotency_key`. Source: `backend/apps/home/models/idempotency_model.py`.
+
+| Field | Type | Constraints / relation |
+|---|---|---|
+| `id` | BigAutoField | primary_key; unique; blank |
+| `key` | CharField | unique; db_index; max_length=128 |
+| `scope` | CharField | db_index; max_length=64; default='contact_enquiry' |
+| `request_hash` | CharField | max_length=64 |
+| `response_code` | PositiveSmallIntegerField | default=201 |
+| `response_data` | JSONField | null; blank |
+| `created_at` | DateTimeField | blank; read-only |
+| `updated_at` | DateTimeField | blank; read-only |
+
+Reverse relations: none.
+
+Not registered independently in admin.
+
+Model methods defined here: `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
+
 ### home.PeopleTalkAboutUs
 
 Table: `tbl_people_talk`. Source: `backend/apps/home/models/people_talk_model.py`.
@@ -218,6 +321,53 @@ Registered admin: `PeopleTalkAboutUsAdmin`.
 
 Model methods defined here: `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
 
+### home.PreferenceCategory
+
+Table: `home_preferencecategory`. Source: `backend/apps/home/models/preference_model.py`.
+
+| Field | Type | Constraints / relation |
+|---|---|---|
+| `id` | BigAutoField | primary_key; unique; blank |
+| `created_at` | DateTimeField | blank; read-only |
+| `updated_at` | DateTimeField | blank; read-only |
+| `section` | ForeignKey | null; blank; db_index; → home.PreferenceSection; on_delete=CASCADE; related_name=categories |
+| `category_key` | CharField | unique; max_length=50; choices=BRAND_NEW, PRE_OWNED |
+| `label` | CharField | max_length=150 |
+| `badge` | CharField | blank; max_length=100; default='' |
+| `subtext` | CharField | blank; max_length=300; default='' |
+| `image` | FileField | null; blank; max_length=500 |
+| `cta_text` | CharField | max_length=255 |
+| `cta_url` | CharField | max_length=255; default='/inventory' |
+| `highlights` | JSONField | blank; default=list |
+| `order` | PositiveIntegerField | default=1 |
+| `is_active` | BooleanField | default=True |
+
+Reverse relations: none.
+
+Not registered independently in admin.
+
+Model methods defined here: `CategoryKeyChoices`, `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
+
+### home.PreferenceSection
+
+Table: `home_preferencesection`. Source: `backend/apps/home/models/preference_model.py`.
+
+| Field | Type | Constraints / relation |
+|---|---|---|
+| `id` | BigAutoField | primary_key; unique; blank |
+| `created_at` | DateTimeField | blank; read-only |
+| `updated_at` | DateTimeField | blank; read-only |
+| `heading` | CharField | max_length=200; default='Choose per your preference' |
+| `badge` | CharField | blank; max_length=100; default='CURATED INVENTORY' |
+| `subtext` | CharField | blank; max_length=300; default='Toggle between factory-fresh zero mileage units and certified showroom pre-owned vehicles.' |
+| `is_active` | BooleanField | default=True |
+
+Reverse relations: `categories` ← `home.PreferenceCategory.section`.
+
+Not registered independently in admin.
+
+Model methods defined here: `clean`, `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
+
 ### home.SalesRepresentative
 
 Table: `tbl_sales_representative`. Source: `backend/apps/home/models/sales_representative.py`.
@@ -231,7 +381,7 @@ Table: `tbl_sales_representative`. Source: `backend/apps/home/models/sales_repre
 | `phone_number` | CharField | max_length=15 |
 | `status` | CharField | max_length=12; default=BaseModel.StatusChoices.PUBLISHED; choices=PUBLISHED, UNPUBLISHED, ARCHIVED, UNLISTED |
 
-Reverse relations: none.
+Reverse relations: `consultation_sections` ← `home.ConsultationSection.representative`.
 
 Registered admin: `SalesRepresentativeAdmin`.
 - `list_display`: `['name', 'phone_number', 'status']`
@@ -282,6 +432,72 @@ Not registered independently in admin.
 
 Model methods defined here: `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
 
+### home.ShowroomBranch
+
+Table: `tbl_showroom_branch`. Source: `backend/apps/home/models/showroom_branch_model.py`.
+
+| Field | Type | Constraints / relation |
+|---|---|---|
+| `id` | BigAutoField | primary_key; unique; blank |
+| `created_at` | DateTimeField | blank; read-only |
+| `updated_at` | DateTimeField | blank; read-only |
+| `branch_id` | SlugField | unique; db_index; max_length=100 |
+| `name` | CharField | max_length=200 |
+| `short_name` | CharField | max_length=100 |
+| `tag` | CharField | blank; max_length=150 |
+| `address` | CharField | max_length=300 |
+| `phone` | CharField | max_length=50 |
+| `hotline` | CharField | blank; max_length=50 |
+| `email` | CharField | max_length=254; default='dreamcarhouse101@gmail.com' |
+| `hours` | CharField | max_length=255 |
+| `map_link` | CharField | max_length=500 |
+| `embed_map` | TextField |  |
+| `order` | PositiveIntegerField | default=1 |
+| `status` | CharField | max_length=20; default=BaseModel.StatusChoices.PUBLISHED; choices=PUBLISHED, UNPUBLISHED, ARCHIVED, UNLISTED |
+
+Reverse relations: `sanctuary_sections` ← `home.VipSanctuarySection.branch`; `inventories` ← `inventory.Inventory.branch`.
+
+Registered admin: `ShowroomBranchAdmin`.
+- `list_display`: `['name', 'branch_id', 'phone', 'order', 'status', 'updated_at']`
+- `list_filter`: `['status']`
+- `search_fields`: `['name', 'branch_id', 'address', 'phone']`
+- Form: `django.forms.models.ModelForm`; inherited bulk action: `delete_selected`.
+
+Model methods defined here: `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
+
+### home.SiteSettings
+
+Table: `tbl_site_settings`. Source: `backend/apps/home/models/site_settings_model.py`.
+
+| Field | Type | Constraints / relation |
+|---|---|---|
+| `id` | BigAutoField | primary_key; unique; blank |
+| `created_at` | DateTimeField | blank; read-only |
+| `updated_at` | DateTimeField | blank; read-only |
+| `name` | CharField | max_length=200; default='DREAM CAR HOUSE' |
+| `tagline` | CharField | blank; max_length=300; default='Where Extraordinary Dreams Meet The Road • Kakrail & Gulshan, Dhaka.' |
+| `logo_text` | CharField | max_length=100; default='DREAM CAR HOUSE' |
+| `logo_asset` | CharField | max_length=255; default='/assets/supercar_wheel.png' |
+| `hotline` | CharField | max_length=50; default='01615-121312' |
+| `phone` | CharField | max_length=50; default='+880 1615-121312' |
+| `email` | CharField | max_length=254; default='dreamcarhouse101@gmail.com' |
+| `whatsapp` | CharField | max_length=50; default='+8801615121312' |
+| `website` | CharField | max_length=255; default='https://dreamcarhouse.com' |
+| `primary_address` | CharField | max_length=300; default='18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka - 1000' |
+| `footer_tagline` | CharField | blank; max_length=300; default='Where Extraordinary Dreams Meet The Road • Kakrail & Gulshan, Dhaka.' |
+| `footer_copy_text` | CharField | max_length=300; default='© 2026 DREAM CAR HOUSE. All rights reserved. Kakrail & Gulshan, Dhaka, Bangladesh.' |
+| `opening_hours_text` | CharField | max_length=200; default='Sat – Thu: 10:00 AM – 9:00 PM' |
+| `social_media` | ForeignKey | null; blank; db_index; → home.SocialMedia; on_delete=SET_NULL; related_name=site_settings |
+
+Reverse relations: none.
+
+Registered admin: `SiteSettingsAdmin`.
+- `list_display`: `['name', 'hotline', 'phone', 'email', 'whatsapp', 'updated_at']`
+- `search_fields`: `['name', 'hotline', 'phone', 'email']`
+- Form: `django.forms.models.ModelForm`; inherited bulk action: `delete_selected`.
+
+Model methods defined here: `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
+
 ### home.Slider
 
 Table: `tbl_video`. Source: `backend/apps/home/models/slider_model.py`.
@@ -289,8 +505,19 @@ Table: `tbl_video`. Source: `backend/apps/home/models/slider_model.py`.
 | Field | Type | Constraints / relation |
 |---|---|---|
 | `id` | BigAutoField | primary_key; unique; blank |
-| `heading` | CharField | max_length=100 |
-| `image` | FileField | max_length=500 |
+| `heading` | CharField | max_length=255; default='The Pinnacle of Luxury Automobiles' |
+| `poster` | CharField | blank; max_length=500; default='/assets/maybach_hero_poster.jpg' |
+| `video_provider` | CharField | max_length=20; default='youtube'; choices=youtube, vimeo, direct |
+| `video_source` | CharField | blank; max_length=500; default='7cxfVWs4YGw' |
+| `video_start_time` | PositiveIntegerField | default=45 |
+| `video_title` | CharField | blank; max_length=255; default='DREAM CAR HOUSE Flagship Cinema' |
+| `cta_buttons` | JSONField | blank; default=default_cta_buttons |
+| `scroll_link_label` | CharField | blank; max_length=150; default='Scroll to Current Inventory' |
+| `scroll_link_target` | CharField | blank; max_length=100; default='#carousel-section' |
+| `is_published` | BooleanField | default=True |
+| `image` | FileField | null; blank; max_length=500 |
+| `created_at` | DateTimeField | null; blank; read-only |
+| `updated_at` | DateTimeField | null; blank; read-only |
 
 Reverse relations: none.
 
@@ -299,7 +526,7 @@ Registered admin: `SliderAdmin`.
 - `search_fields`: `['heading']`
 - Form: `django.forms.models.ModelForm`; inherited bulk action: `delete_selected`.
 
-Model methods defined here: `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
+Model methods defined here: `clean`, `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
 
 ### home.SocialMedia
 
@@ -313,7 +540,7 @@ Table: `tbl_socialmedia`. Source: `backend/apps/home/models/socialmedia_model.py
 | `twitter` | CharField | null; blank; max_length=300 |
 | `youtube` | CharField | null; blank; max_length=300 |
 
-Reverse relations: none.
+Reverse relations: `site_settings` ← `home.SiteSettings.social_media`.
 
 Registered admin: `SocialMediaAdmin`.
 - `list_display`: `['facebook', 'instagram', 'twitter', 'youtube']`
@@ -337,6 +564,97 @@ Registered admin: `SubscriberAdmin`.
 - Form: `django.forms.models.ModelForm`; inherited bulk action: `delete_selected`.
 
 Model methods defined here: `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
+
+### home.VipSanctuarySection
+
+Table: `tbl_vip_sanctuary_section`. Source: `backend/apps/home/models/vip_sanctuary_model.py`.
+
+| Field | Type | Constraints / relation |
+|---|---|---|
+| `id` | BigAutoField | primary_key; unique; blank |
+| `background_image` | FileField | null; blank; max_length=500 |
+| `background_image_url` | CharField | blank; max_length=500; default='https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=2560&q=95' |
+| `eyebrow` | CharField | max_length=150; default='KAKRAIL & GULSHAN • DHAKA' |
+| `title` | CharField | max_length=255; default='Step Into The Realm of Automotive Excellence' |
+| `description` | TextField | default="DREAM CAR HOUSE specializes in bringing you the finest selection of luxury cars from around the world. With a handpicked collection of the most prestigious brands, DREAM CAR HOUSE takes pride in offering only the highest quality vehicles that combine sophistication, performance, and innovation. Whether you're searching for a sleek sports coupe, a refined executive sedan, or an iconic luxury SUV, DREAM CAR HOUSE is your ultimate destination in Dhaka." |
+| `value_pillars` | JSONField | default=default_vip_sanctuary_pillars |
+| `primary_cta_label` | CharField | max_length=100; default='Schedule Private Viewing' |
+| `primary_cta_action` | CharField | max_length=50; default='appointment_modal' |
+| `primary_cta_url` | CharField | blank; max_length=255; default='' |
+| `secondary_cta_label` | CharField | max_length=100; default='Browse Available Vault →' |
+| `secondary_cta_url` | CharField | max_length=255; default='/inventory' |
+| `card_badge` | CharField | max_length=100; default='FLAGSHIP SHOWROOM' |
+| `card_title` | CharField | max_length=150; default='DREAM CAR HOUSE Flagship' |
+| `card_live_pill` | CharField | max_length=50; default='OPEN TODAY' |
+| `branch` | ForeignKey | null; blank; db_index; → home.ShowroomBranch; on_delete=SET_NULL; related_name=sanctuary_sections |
+| `location_text` | CharField | blank; max_length=255; default='' |
+| `hours_text` | CharField | blank; max_length=255; default='' |
+| `phone_text` | CharField | blank; max_length=50; default='' |
+| `whatsapp_cta_label` | CharField | max_length=100; default='WhatsApp Concierge' |
+| `whatsapp_url` | CharField | blank; max_length=500; default='https://wa.me/8801615121312?text=Hello%20DREAM%20CAR%20HOUSE,%20I%20would%20like%20to%20inquire%20about%20a%20luxury%20vehicle' |
+| `tour_cta_label` | CharField | max_length=100; default='Showroom Tour' |
+| `tour_video_target` | CharField | max_length=50; default='tour' |
+| `is_active` | BooleanField | default=True |
+| `updated_at` | DateTimeField | blank; read-only |
+
+Reverse relations: none.
+
+Not registered independently in admin.
+
+Model methods defined here: `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
+
+### home.VisualChroniclesItem
+
+Table: `tbl_visual_chronicles_item`. Source: `backend/apps/home/models/visual_chronicles_model.py`.
+
+| Field | Type | Constraints / relation |
+|---|---|---|
+| `id` | BigAutoField | primary_key; unique; blank |
+| `section` | ForeignKey | db_index; → home.VisualChroniclesSection; on_delete=CASCADE; related_name=items |
+| `card_type` | CharField | max_length=20; default=VisualChroniclesItem.CardType.TRI; choices=hero, portrait, tri |
+| `order` | PositiveIntegerField | default=1 |
+| `front_image` | FileField | null; blank; max_length=500 |
+| `front_image_url` | CharField | blank; max_length=500; default='' |
+| `front_alt` | CharField | max_length=200; default='' |
+| `front_badge` | CharField | max_length=100; default='SHOWROOM FLAGSHIP SPOTLIGHT' |
+| `back_pill` | CharField | max_length=100; default='FIRST-CLASS COMMISSION' |
+| `back_number` | CharField | max_length=10; default='01' |
+| `title` | CharField | max_length=200 |
+| `description` | TextField |  |
+| `specs` | JSONField | blank; default=list |
+| `cta_label` | CharField | max_length=100; default='View Spotlight' |
+| `cta_url` | CharField | max_length=255; default='/inventory' |
+| `is_active` | BooleanField | default=True |
+
+Reverse relations: none.
+
+Not registered independently in admin.
+
+Model methods defined here: `CardType`, `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
+
+### home.VisualChroniclesSection
+
+Table: `tbl_visual_chronicles_section`. Source: `backend/apps/home/models/visual_chronicles_model.py`.
+
+| Field | Type | Constraints / relation |
+|---|---|---|
+| `id` | BigAutoField | primary_key; unique; blank |
+| `heading` | CharField | max_length=200; default='DREAM CAR HOUSE Visual Chronicles' |
+| `subtitle` | TextField | default='Curated high-resolution photography, delivery spotlights, and automotive cinema from our Kakrail & Gulshan showrooms.' |
+| `stats_number` | CharField | max_length=50; default='19+' |
+| `stats_label` | CharField | max_length=100; default='Curated Masterpieces' |
+| `archive_tag` | CharField | max_length=100; default='19+ SHOWROOM ARCHIVE EDITIONS' |
+| `archive_description` | TextField | default='Explore high-definition exterior profiles, handcrafted cockpits, and delivery chronicles.' |
+| `archive_cta_label` | CharField | max_length=150; default='See All Gallery & Media (19+ Photos)' |
+| `archive_cta_url` | CharField | max_length=255; default='/gallery' |
+| `is_active` | BooleanField | default=True |
+| `updated_at` | DateTimeField | blank; read-only |
+
+Reverse relations: `items` ← `home.VisualChroniclesItem.section`.
+
+Not registered independently in admin.
+
+Model methods defined here: `clean`, `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
 
 ### inventory.BodyStyle
 
@@ -366,6 +684,10 @@ Table: `tbl_brand`. Source: `backend/apps/inventory/models/brand_model.py`.
 | `name` | CharField | max_length=100 |
 | `segment` | CharField | max_length=20; default=Brand.SegmentChoices.REFINED_VERSATILE; choices=LUXURY_PERFORMANCE, REFINED_VERSATILE, ELECTRIC |
 | `image` | FileField | max_length=500 |
+| `logo_alt` | CharField | blank; max_length=150; default='' |
+| `order` | PositiveIntegerField | db_index; default=0 |
+| `is_in_runway` | BooleanField | db_index; default=True |
+| `destination_url` | CharField | blank; max_length=255; default='' |
 | `listing_footer_text` | TextField | blank; default='' |
 | `status` | CharField | max_length=12; default=BaseModel.StatusChoices.PUBLISHED; choices=PUBLISHED, UNPUBLISHED, ARCHIVED, UNLISTED |
 | `target_keyword` | CharField | null; blank; max_length=120; default=None |
@@ -391,7 +713,7 @@ Registered admin: `BrandAdmin`.
 - `fieldsets`: `(('General', {'fields': ('name', 'segment', 'image', 'listing_footer_text', 'status')}), ('On-Page Content', {'fields': ('h1_title', 'short_description', 'long_description'), 'description': "H1 heading, the intro shown above the car grid, and the detailed text shown below pagination on this brand's listing page (/cars/brand/&lt;slug&gt;)."}), ('Search Meta', {'fields': ('target_keyword', 'meta_title', 'meta_description', 'canonical_url', 'robots')}), ('Feature Image (social sharing)', {'fields': ('feature_image', 'feature_image_alt'), 'description': "Shown when this brand's listing page is shared on social media."}), ('Structured Data (JSON-LD)', {'classes': ('collapse',), 'fields': ('schema_json',)}), ('Timestamps', {'fields': ('seo_updated_at',)}))`
 - Form: `django.forms.models.ModelForm`; inherited bulk action: `delete_selected`.
 
-Model methods defined here: `SegmentChoices`, `RobotsChoices`, `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
+Model methods defined here: `SegmentChoices`, `RobotsChoices`, `clean`, `DoesNotExist`, `MultipleObjectsReturned`, `NotUpdated`.
 
 ### inventory.Inventory
 
@@ -419,6 +741,9 @@ Table: `tbl_inventories`. Source: `backend/apps/inventory/models/inventory_model
 | `condition` | CharField | max_length=10; choices=NEW, USED |
 | `registered` | CharField | max_length=12; default=Inventory.AvailabilityChoices.AVAILABLE; choices=Available, Sold, Booked, Pre-Order |
 | `body_style` | ForeignKey | null; blank; db_index; → inventory.BodyStyle; on_delete=SET_NULL; related_name=inventories_body_style |
+| `branch` | ForeignKey | null; blank; db_index; → home.ShowroomBranch; on_delete=SET_NULL; related_name=inventories |
+| `is_call_for_price` | BooleanField | default=False |
+| `registration_number` | CharField | blank; max_length=100; default='' |
 | `feature_image` | FileField | null; blank; max_length=500 |
 | `description` | TextField | null; blank |
 | `youtube` | CharField | null; blank; max_length=500 |
@@ -462,6 +787,7 @@ Table: `tbl_inventory_images`. Source: `backend/apps/inventory/models/innventory
 | `caption` | CharField | null; blank; max_length=100 |
 | `image` | FileField | max_length=500 |
 | `alt_text` | CharField | blank; max_length=200 |
+| `tag` | CharField | blank; max_length=50; default='' |
 | `order` | PositiveIntegerField | default=0 |
 
 Reverse relations: none.
@@ -590,7 +916,7 @@ Table: `seo_config_seoconfig`. Source: `backend/apps/seo_config/models.py`.
 | `og_description` | TextField | null; blank; max_length=500; default=None |
 | `og_image` | FileField | null; blank; max_length=100 |
 | `og_type` | CharField | null; blank; max_length=50; default=SEOConfig.OGTypeChoices.WEBSITE; choices=website, article |
-| `og_site_name` | CharField | null; blank; max_length=100; default='Beg Autos' |
+| `og_site_name` | CharField | null; blank; max_length=100; default='Dream Car House' |
 | `twitter_card` | CharField | null; blank; max_length=50; default=SEOConfig.TwitterCardChoices.SUMMARY_LARGE; choices=summary_large_image, summary |
 | `twitter_title` | CharField | null; blank; max_length=200; default=None |
 | `twitter_description` | TextField | null; blank; max_length=500; default=None |
@@ -612,7 +938,7 @@ Model methods defined here: `PageChoices`, `RobotsChoices`, `OGTypeChoices`, `Tw
 
 ### sessions.Session
 
-Table: `django_session`. Source: `backend/.venv/lib/python3.13/site-packages/django/contrib/sessions/models.py`.
+Table: `django_session`. Source: `/home/pixie/.venvs/backend/lib/python3.13/site-packages/django/contrib/sessions/models.py`.
 
 | Field | Type | Constraints / relation |
 |---|---|---|

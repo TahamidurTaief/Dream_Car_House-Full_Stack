@@ -17,6 +17,7 @@ interface ChroniclesClientProps {
 
 export function ChroniclesClient({ initialData, userPermissions }: ChroniclesClientProps) {
   const canChange =
+    userPermissions.includes("*") ||
     userPermissions.includes("home.change_visualchroniclessection") ||
     userPermissions.includes("admin") ||
     userPermissions.length === 0; // fallback if superuser

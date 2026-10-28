@@ -8,24 +8,26 @@ import VideoModal from "./VideoModal";
 import GalleryLightbox from "./GalleryLightbox";
 import CompareModal from "./CompareModal";
 import ShowroomStories from "./ShowroomStories";
-import type { PublicSiteSettings, PublicShowroomBranch } from "@/lib/types";
+import type { PublicSiteSettings, PublicShowroomBranch, PublicVehicle } from "@/lib/types";
 
 export default function ModalContainer({
   settings,
   branches,
+  featuredVehicles,
 }: {
   settings?: PublicSiteSettings;
   branches?: PublicShowroomBranch[];
+  featuredVehicles?: PublicVehicle[];
 }) {
   return (
     <>
       <NavDrawer settings={settings} branches={branches} />
-      <CarModal />
-      <AppointmentModal />
-      <VideoModal />
+      <CarModal settings={settings} branches={branches} />
+      <AppointmentModal settings={settings} branches={branches} />
+      <VideoModal settings={settings} branches={branches} />
       <GalleryLightbox />
-      <CompareModal />
-      <ShowroomStories />
+      <CompareModal initialVehicles={featuredVehicles} />
+      <ShowroomStories settings={settings} vehicles={featuredVehicles} />
     </>
   );
 }

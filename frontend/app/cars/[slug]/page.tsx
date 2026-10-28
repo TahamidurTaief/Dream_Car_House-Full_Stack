@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
-import { getPublicInventoryDetail, getPublicRelatedVehicles } from "@/lib/server/api";
+import { getPublicInventoryDetail, getPublicRelatedVehicles, getSiteSettings } from "@/lib/server/api";
 import VehicleDetailClient from "./VehicleDetailClient";
 
 interface PageProps {
@@ -81,7 +81,10 @@ export default async function CarDetailPage({ params }: PageProps) {
     permanentRedirect(`/cars/${car.slug}/`);
   }
 
-  const relatedCars = await getPublicRelatedVehicles(car.slug);
+  const [relatedCars, settings] = await Promise.all([
+    getPublicRelatedVehicles(car.slug),
+    getSiteSettings().catch(() => null),
+  ]);
 
   // Parse numeric price safely
   const numericPrice = car.raw_price ? parseFloat(car.raw_price) : null;
@@ -183,7 +186,7 @@ export default async function CarDetailPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <VehicleDetailClient car={car} relatedCars={relatedCars} />
+      <VehicleDetailClient car={car} relatedCars={relatedCars} settings={settings || undefined} />
     </>
   );
 }

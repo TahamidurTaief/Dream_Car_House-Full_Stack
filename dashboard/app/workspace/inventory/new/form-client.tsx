@@ -124,6 +124,11 @@ export function InventoryFormClient({
       formData.delete("model");
     }
 
+    const featImg = formData.get("feature_image");
+    if (featImg instanceof File && featImg.size === 0) {
+      formData.delete("feature_image");
+    }
+
     // Validate JSON-LD override
     if (schemaText.trim()) {
       try {
@@ -136,7 +141,7 @@ export function InventoryFormClient({
         return;
       }
     } else {
-      formData.set("schema_override", "");
+      formData.delete("schema_override");
     }
 
     let res;
@@ -252,7 +257,7 @@ export function InventoryFormClient({
   ];
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+    <form onSubmit={handleSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Link href="/workspace/inventory" className="button button--secondary" style={{ display: "inline-flex", alignItems: "center", gap: "var(--space-2)" }}>
           <ArrowLeft size={16} /> Back to Inventory
@@ -276,8 +281,7 @@ export function InventoryFormClient({
       />
 
       {/* 1. General Tab */}
-      {activeTab === "general" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
+      <div style={{ display: activeTab === "general" ? "flex" : "none", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
           <FormField label="Vehicle Heading / Name" required error={fieldErrors.name}>
             <Input name="name" defaultValue={initialCar?.name || ""} required placeholder="e.g. 2023 Toyota Land Cruiser ZX" />
           </FormField>
@@ -385,11 +389,9 @@ export function InventoryFormClient({
             />
           </div>
         </div>
-      )}
 
       {/* 2. Specifications Tab */}
-      {activeTab === "specs" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
+      <div style={{ display: activeTab === "specs" ? "flex" : "none", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
             <FormField label="Engine Capacity (cc)" error={fieldErrors.engine_capacity}>
               <Input name="engine_capacity" defaultValue={initialCar?.engine_capacity || ""} placeholder="e.g. 3500" />
@@ -449,11 +451,9 @@ export function InventoryFormClient({
             </FormField>
           </div>
         </div>
-      )}
 
       {/* 3. Pricing & Availability Tab */}
-      {activeTab === "pricing" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
+      <div style={{ display: activeTab === "pricing" ? "flex" : "none", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
             <FormField label="Price (BDT)" error={fieldErrors.price} description="Decimal numeric value preserved separately (e.g. 28000000.00)">
               <Input name="price" defaultValue={initialCar?.price ? String(initialCar.price) : ""} placeholder="e.g. 28000000.00" />
@@ -531,11 +531,9 @@ export function InventoryFormClient({
             />
           </FormField>
         </div>
-      )}
 
       {/* 4. Media & Gallery Tab */}
-      {activeTab === "media" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
+      <div style={{ display: activeTab === "media" ? "flex" : "none", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
           <FormField label="Feature Primary Image" error={fieldErrors.feature_image} description="Leave blank to keep existing image">
             {initialCar?.feature_image && (
               <div style={{ marginBottom: "var(--space-2)" }}>
@@ -722,20 +720,16 @@ export function InventoryFormClient({
             </div>
           )}
         </div>
-      )}
 
       {/* 5. Description Tab */}
-      {activeTab === "description" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
-          <FormField label="Vehicle Description (HTML)" error={fieldErrors.description} description="Detailed specifications, features, accessories and options">
-            <Textarea name="description" defaultValue={initialCar?.description || ""} rows={12} />
-          </FormField>
-        </div>
-      )}
+      <div style={{ display: activeTab === "description" ? "flex" : "none", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
+        <FormField label="Vehicle Description (HTML)" error={fieldErrors.description} description="Detailed specifications, features, accessories and options">
+          <Textarea name="description" defaultValue={initialCar?.description || ""} rows={12} />
+        </FormField>
+      </div>
 
       {/* 6. SEO Settings Tab */}
-      {activeTab === "seo" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
+      <div style={{ display: activeTab === "seo" ? "flex" : "none", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
           <FormField label="H1 Title" error={fieldErrors.h1_title} description="Heading on vehicle page; falls back to Name if blank">
             <Input name="h1_title" defaultValue={initialCar?.h1_title || ""} placeholder="e.g. 2023 Toyota Land Cruiser ZX 3.5L Turbo" />
           </FormField>
@@ -796,7 +790,6 @@ export function InventoryFormClient({
             />
           </FormField>
         </div>
-      )}
 
       <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-2)" }}>
         <Button type="submit" variant="primary" disabled={submitting}>

@@ -23,8 +23,9 @@ REST_FRAMEWORK = {
     'SEARCH_PARAM': 'q',
     'ORDERING_PARAM': 'ordering',
     'DEFAULT_THROTTLE_CLASSES': [],
-    'DEFAULT_THROTTLE_RATES': {},
-
+    'DEFAULT_THROTTLE_RATES': {
+        'enquiry': '10/minute',
+    },
 }
 
 

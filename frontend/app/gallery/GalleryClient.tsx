@@ -2,15 +2,15 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { GALLERY_DATA, GalleryPhoto } from "@/lib/showroomData";
+import type { GalleryPhoto } from "@/lib/showroomData";
 import { useUI } from "@/lib/UIContext";
 
-export default function GalleryClient({ initialPhotos }: { initialPhotos?: GalleryPhoto[] }) {
+export default function GalleryClient({ initialPhotos = [] }: { initialPhotos?: GalleryPhoto[] } = {}) {
   const { openGalleryLightbox, openAppointmentModal, openVideoModal } = useUI();
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [flippedCards, setFlippedCards] = useState<Record<number, boolean>>({});
 
-  const allPhotos = initialPhotos && initialPhotos.length > 0 ? initialPhotos : GALLERY_DATA;
+  const allPhotos = initialPhotos;
 
   const toggleFlip = (id: number) => {
     setFlippedCards((prev) => ({
@@ -85,7 +85,7 @@ export default function GalleryClient({ initialPhotos }: { initialPhotos?: Galle
             className={`gallery-filter-pill ${selectedCategory === "all" ? "active" : ""}`}
             onClick={() => setSelectedCategory("all")}
           >
-            All Showcase ({GALLERY_DATA.length})
+            All Showcase ({allPhotos.length})
           </button>
           <button
             type="button"
@@ -120,7 +120,19 @@ export default function GalleryClient({ initialPhotos }: { initialPhotos?: Galle
 
       {/* Gallery Photos Grid with Authentic Python 3D Flip System */}
       <div id="gallery-grid" className="gallery-grid-layout">
-        {filteredPhotos.map((photo, index) => {
+        {filteredPhotos.length === 0 ? (
+          <div
+            style={{
+              gridColumn: "1 / -1",
+              textAlign: "center",
+              padding: "4rem 1rem",
+              color: "#9ca3af",
+            }}
+          >
+            No showroom gallery items currently listed under this category.
+          </div>
+        ) : (
+          filteredPhotos.map((photo, index) => {
           const isFlipped = !!flippedCards[photo.id];
           return (
             <div
@@ -208,7 +220,8 @@ export default function GalleryClient({ initialPhotos }: { initialPhotos?: Galle
               </div>
             </div>
           );
-        })}
+        })
+      )}
       </div>
 
       {/* Bottom Studio Invitation Banner */}

@@ -16,7 +16,14 @@ export default function VehicleCard({ car }: VehicleCardProps) {
   const waMessage = encodeURIComponent(
     `Hello DREAM CAR HOUSE, I am inquiring about the ${car.name} (${car.year}).`
   );
-  const waUrl = `https://wa.me/8801615121312?text=${waMessage}`;
+  const targetPhone = car.branch?.hotline || car.branch?.phone || "";
+  let waPhone = targetPhone.replace(/[^0-9]/g, "");
+  if (waPhone.startsWith("0")) {
+    waPhone = "88" + waPhone;
+  } else if (waPhone && !waPhone.startsWith("880") && waPhone.length === 10) {
+    waPhone = "880" + waPhone;
+  }
+  const waUrl = waPhone ? `https://wa.me/${waPhone}?text=${waMessage}` : "";
 
   return (
     <div
@@ -70,7 +77,8 @@ export default function VehicleCard({ car }: VehicleCardProps) {
           >
             Inspect Details
           </button>
-          <a
+          {waUrl && (
+            <a
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
@@ -89,6 +97,7 @@ export default function VehicleCard({ car }: VehicleCardProps) {
               />
             </svg>
           </a>
+          )}
         </div>
       </div>
     </div>

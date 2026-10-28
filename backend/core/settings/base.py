@@ -122,6 +122,43 @@ else:
     SECURE_PROXY_SSL_HEADER = None
     USE_X_FORWARDED_HOST = False
 
+# -----------------------------------------------------------------------------
+# Cache Configuration (Shared Across Multi-Process Workers)
+# -----------------------------------------------------------------------------
+# In production with multiple WSGI/ASGI workers, configure Redis via REDIS_URL
+# or a database-backed cache via DatabaseCache. Default uses LocMemCache for local dev/testing.
+#
+# Configuration Environment Variables:
+#   - REDIS_URL: 'redis://127.0.0.1:6379/1' (uses RedisCache)
+#   - DJANGO_CACHE_BACKEND: full python path to cache backend
+#   - DJANGO_CACHE_LOCATION: cache table name or redis URI
+#   - TRUSTED_PROXY_IPS: comma-separated list of trusted proxy IPs (e.g. '127.0.0.1,10.0.0.1')
+#   - NUM_PROXIES: number of reverse proxies in front of app (default: 0)
+#   - USE_X_FORWARDED_FOR: True/False whether to parse XFF from trusted proxies
+# -----------------------------------------------------------------------------
+if os.environ.get("REDIS_URL"):
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": os.environ["REDIS_URL"],
+            "TIMEOUT": 300,
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": os.environ.get("DJANGO_CACHE_BACKEND", "django.core.cache.backends.locmem.LocMemCache"),
+            "LOCATION": os.environ.get("DJANGO_CACHE_LOCATION", "dch-shared-cache"),
+            "TIMEOUT": 300,
+        }
+    }
+
+# Trusted Proxy IP Configuration for get_client_ip
+_trusted_proxies_env = os.environ.get("TRUSTED_PROXY_IPS", "127.0.0.1,::1,localhost")
+TRUSTED_PROXY_IPS = {ip.strip() for ip in _trusted_proxies_env.split(",") if ip.strip()}
+NUM_PROXIES = int(os.environ.get("NUM_PROXIES", "0"))
+USE_X_FORWARDED_FOR = os.environ.get("USE_X_FORWARDED_FOR", "False").lower() in ("true", "1", "yes")
+
 
 
 

@@ -13,6 +13,7 @@ interface SanctuaryClientProps {
 
 export function SanctuaryClient({ initialData, branches, userPermissions }: SanctuaryClientProps) {
   const canChange =
+    userPermissions.includes("*") ||
     userPermissions.includes("home.change_vipsanctuarysection") ||
     userPermissions.includes("admin") ||
     userPermissions.length === 0;

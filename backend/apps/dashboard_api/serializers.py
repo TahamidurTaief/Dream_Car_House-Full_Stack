@@ -80,14 +80,8 @@ class BrandManagementSerializer(serializers.ModelSerializer):
                 content = value.read()
                 if hasattr(value, "seek"):
                     value.seek(0)
-                decoded = content.decode("utf-8", errors="ignore").lower()
-                if "<script" in decoded or "</script" in decoded:
-                    raise serializers.ValidationError("SVG file contains disallowed <script> tags.")
-                if "javascript:" in decoded:
-                    raise serializers.ValidationError("SVG file contains disallowed 'javascript:' URI.")
-                import re
-                if re.search(r'\bon\w+\s*=', decoded):
-                    raise serializers.ValidationError("SVG file contains disallowed inline event handlers.")
+                from core.utils.svg_sanitizer import validate_and_sanitize_svg
+                validate_and_sanitize_svg(content)
             except serializers.ValidationError:
                 raise
             except Exception as e:
@@ -95,14 +89,8 @@ class BrandManagementSerializer(serializers.ModelSerializer):
         return value
 
     def validate_destination_url(self, value):
-        if not value:
-            return ""
-        val = value.strip()
-        if "javascript:" in val.lower():
-            raise serializers.ValidationError("Destination URL cannot contain javascript: URI.")
-        if not (val.startswith("/") or val.startswith("http://") or val.startswith("https://")):
-            raise serializers.ValidationError("Destination URL must be an internal path starting with / or an absolute URL (http/https).")
-        return val
+        from core.utils.url_validator import validate_destination_url
+        return validate_destination_url(value)
 
     def validate_name(self, value):
         name_str = value.strip()
@@ -238,6 +226,9 @@ class InventoryDetailManagementSerializer(serializers.ModelSerializer):
     branch_detail = serializers.SerializerMethodField()
     inventory_images = InventoryImageManagementSerializer(many=True, read_only=True)
     slug = serializers.SlugField(required=False, allow_blank=True)
+    engine_capacity = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    wheel_base = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    mileage = serializers.CharField(required=False, allow_blank=True, max_length=100)
 
     def get_branch_detail(self, obj):
         if not obj.branch:
@@ -348,6 +339,33 @@ class InventoryDetailManagementSerializer(serializers.ModelSerializer):
         if not isinstance(value, (dict, list)):
             raise serializers.ValidationError("Schema override must be a valid JSON object or list.")
         return value
+
+    def to_internal_value(self, data):
+        if hasattr(data, "dict"):
+            data = data.dict()
+        elif hasattr(data, "copy"):
+            data = data.copy()
+        else:
+            data = dict(data)
+
+        # Handle empty feature_image on partial updates (PATCH)
+        if self.partial and "feature_image" in data:
+            val = data.get("feature_image")
+            if val == "" or val is None or (hasattr(val, "size") and val.size == 0):
+                data.pop("feature_image", None)
+
+        # Handle schema_override parsing from form data
+        if "schema_override" in data:
+            val = data.get("schema_override")
+            if val == "" or val is None:
+                data["schema_override"] = None
+            elif isinstance(val, str):
+                try:
+                    data["schema_override"] = json.loads(val)
+                except Exception:
+                    pass
+
+        return super().to_internal_value(data)
 
     def validate(self, attrs):
         # Validate that model belongs to brand if both are provided or being updated
@@ -463,6 +481,7 @@ class SubscriberManagementSerializer(serializers.ModelSerializer):
 
 class SliderManagementSerializer(serializers.ModelSerializer):
     is_public_active = serializers.SerializerMethodField()
+    is_published = serializers.BooleanField(default=True)
 
     class Meta:
         model = Slider
@@ -583,8 +602,13 @@ class SliderManagementSerializer(serializers.ModelSerializer):
         return val
 
     def to_internal_value(self, data):
-        # Allow mutation copy
-        data = data.copy() if hasattr(data, "copy") else dict(data)
+        # Convert QueryDict to standard dict to prevent DRF html-form coercion on JSON fields
+        if hasattr(data, "dict"):
+            data = data.dict()
+        elif hasattr(data, "copy"):
+            data = dict(data)
+        else:
+            data = dict(data)
 
         # Parse JSON string for cta_buttons if sent via FormData / multipart
         if "cta_buttons" in data and isinstance(data["cta_buttons"], str):
@@ -612,6 +636,15 @@ class SliderManagementSerializer(serializers.ModelSerializer):
                 data.pop("image", None)
 
         return super().to_internal_value(data)
+
+    def validate(self, attrs):
+        is_published = attrs.get("is_published", self.instance.is_published if self.instance else True)
+        heading = attrs.get("heading", self.instance.heading if self.instance else "")
+        if is_published and (not heading or not heading.strip()):
+            raise serializers.ValidationError({
+                "heading": "Published slider requires a valid heading."
+            })
+        return attrs
 
 
 
@@ -1279,6 +1312,22 @@ class PreferenceSectionManagementSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "categories", "created_at", "updated_at"]
 
+    def validate(self, attrs):
+        is_active = attrs.get("is_active", self.instance.is_active if self.instance else False)
+        if is_active:
+            section = self.instance or PreferenceSection.objects.first()
+            if section:
+                active_count = section.categories.filter(is_active=True).count()
+                if active_count < 1:
+                    raise serializers.ValidationError({
+                        "is_active": "Cannot publish Preference Section with fewer than 1 active category. Please ensure at least 1 category is active."
+                    })
+            else:
+                raise serializers.ValidationError({
+                    "is_active": "Cannot publish Preference Section with fewer than 1 active category. Please create and activate at least 1 category first."
+                })
+        return attrs
+
     def get_categories(self, obj):
         cats = obj.categories.all().order_by("order", "id")
         return PreferenceCategoryManagementSerializer(cats, many=True, context=self.context).data
@@ -1481,6 +1530,22 @@ class VisualChroniclesSectionManagementSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "items", "updated_at"]
+
+    def validate(self, attrs):
+        is_active = attrs.get("is_active", self.instance.is_active if self.instance else False)
+        if is_active:
+            section = self.instance or VisualChroniclesSection.objects.first()
+            if section:
+                active_count = section.items.filter(is_active=True).count()
+                if active_count < 1:
+                    raise serializers.ValidationError({
+                        "is_active": "Cannot publish Visual Chronicles Section with fewer than 1 active item. Please ensure at least 1 item is active."
+                    })
+            else:
+                raise serializers.ValidationError({
+                    "is_active": "Cannot publish Visual Chronicles Section with fewer than 1 active item. Please create and activate at least 1 item first."
+                })
+        return attrs
 
     def get_items(self, obj):
         items = obj.items.all().order_by("order", "id")

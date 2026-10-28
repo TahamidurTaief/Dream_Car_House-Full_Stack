@@ -310,9 +310,7 @@ export default function InventoryCarousel({ vehicles }: InventoryCarouselProps) 
             </div>
           ) : (
             marqueeData.map((car, index) => {
-              const branchName =
-                car.branch_name ||
-                (car.branch_id === "gulshan" ? "Gulshan Branch" : "Kakrail Branch");
+              const branchName = car.branch_name || car.branch?.name || "";
               return (
                 <div key={`${car.id}-${index}`} className="card-item-slider">
                   <div
@@ -330,7 +328,9 @@ export default function InventoryCarousel({ vehicles }: InventoryCarouselProps) 
                         loading="lazy"
                         draggable={false}
                       />
-                      <span className="card-branch-tag">{branchName}</span>
+                      {branchName ? (
+                        <span className="card-branch-tag">{branchName}</span>
+                      ) : null}
                     </div>
                     <h3 className="card-car-title">{car.name}</h3>
                   </div>

@@ -171,6 +171,25 @@ class Brand(models.Model):
     )
     seo_updated_at = models.DateTimeField(auto_now=True)
 
+    def clean(self):
+        super().clean()
+        if self.destination_url:
+            from core.utils.url_validator import validate_destination_url
+            self.destination_url = validate_destination_url(self.destination_url)
+        if self.image and hasattr(self.image, "name") and str(self.image.name).lower().endswith(".svg"):
+            try:
+                if hasattr(self.image, "seek"):
+                    self.image.seek(0)
+                content = self.image.read()
+                if hasattr(self.image, "seek"):
+                    self.image.seek(0)
+                if content:
+                    from core.utils.svg_sanitizer import validate_and_sanitize_svg
+                    validate_and_sanitize_svg(content)
+            except Exception as e:
+                from django.core.exceptions import ValidationError as DjangoValidationError
+                raise DjangoValidationError({"image": f"Invalid SVG file: {str(e)}"})
+
     def __str__(self):
         return self.name
 
