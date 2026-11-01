@@ -2,8 +2,8 @@
 
 import React, { useState, useTransition } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { submitSellCarAction, SellCarSubmissionResult } from "@/app/actions/sell";
+import { useUI } from "@/lib/UIContext";
 import type { PublicSiteSettings } from "@/lib/types";
 
 const POPULAR_BRANDS = [
@@ -87,6 +87,9 @@ export default function SellClient({
 }: {
   settings?: PublicSiteSettings;
 } = {}) {
+  const { theme } = useUI();
+  const isLight = theme === "light";
+
   const [fullName, setFullName] = useState("");
   const [brand, setBrand] = useState("");
   const [customBrand, setCustomBrand] = useState("");
@@ -105,6 +108,58 @@ export default function SellClient({
   const activeBrandName = brand === "Other" ? customBrand : brand;
   const hotline = settings?.hotline || "01615-121312";
   const brandName = settings?.name || "DREAM CAR HOUSE";
+
+  // Dynamic Theme Colors (Seamless Day/Night Mode)
+  const colors = {
+    bgPage: isLight ? "#f0f4f8" : "#060709",
+    bgHero: isLight
+      ? "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(217, 119, 6, 0.09) 0%, rgba(240, 244, 248, 0) 100%)"
+      : "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245, 158, 11, 0.12) 0%, rgba(6, 7, 9, 0) 100%)",
+    heroBorder: isLight ? "rgba(148, 163, 184, 0.25)" : "rgba(255, 255, 255, 0.08)",
+    heroTitle: isLight
+      ? "linear-gradient(180deg, #0f172a 40%, #334155 100%)"
+      : "linear-gradient(180deg, #ffffff 40%, rgba(255, 255, 255, 0.7) 100%)",
+    goldGradient: isLight
+      ? "linear-gradient(90deg, #d97706 0%, #b45309 60%, #92400e 100%)"
+      : "linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)",
+    textPrimary: isLight ? "#0f172a" : "#f3f4f6",
+    textSecondary: isLight ? "#475569" : "#9ca3af",
+    textMuted: isLight ? "#64748b" : "#6b7280",
+    cardBg: isLight ? "#ffffff" : "linear-gradient(180deg, #0e1117 0%, #0a0d12 100%)",
+    cardBorder: isLight ? "rgba(148, 163, 184, 0.3)" : "rgba(255, 255, 255, 0.12)",
+    cardShadow: isLight
+      ? "0 10px 30px -8px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(148, 163, 184, 0.18)"
+      : "0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
+    inputBg: isLight ? "#f8fafc" : "#11141a",
+    inputBorder: isLight ? "rgba(148, 163, 184, 0.45)" : "rgba(255, 255, 255, 0.12)",
+    inputText: isLight ? "#0f172a" : "#ffffff",
+    perkCardBg: isLight ? "#ffffff" : "rgba(255, 255, 255, 0.03)",
+    perkCardBorder: isLight ? "rgba(148, 163, 184, 0.25)" : "rgba(255, 255, 255, 0.06)",
+    perkCardShadow: isLight ? "0 4px 15px rgba(15, 23, 42, 0.04)" : "none",
+    stepBoxBg: isLight
+      ? "linear-gradient(180deg, rgba(217, 119, 6, 0.06) 0%, rgba(255, 255, 255, 0.95) 100%)"
+      : "linear-gradient(180deg, rgba(245, 158, 11, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)",
+    stepBoxBorder: isLight ? "rgba(217, 119, 6, 0.3)" : "rgba(245, 158, 11, 0.2)",
+    stepBadgeBg: isLight ? "rgba(217, 119, 6, 0.15)" : "rgba(245, 158, 11, 0.15)",
+    stepBadgeText: isLight ? "#b45309" : "#fbbf24",
+    pillBg: isLight ? "rgba(15, 23, 42, 0.04)" : "rgba(255, 255, 255, 0.04)",
+    pillBorder: isLight ? "rgba(148, 163, 184, 0.35)" : "rgba(255, 255, 255, 0.08)",
+    pillText: isLight ? "#334155" : "#9ca3af",
+    pillActiveBg: isLight ? "rgba(217, 119, 6, 0.15)" : "rgba(245, 158, 11, 0.2)",
+    pillActiveBorder: isLight ? "#d97706" : "#fbbf24",
+    pillActiveText: isLight ? "#b45309" : "#fbbf24",
+    goldAccent: isLight ? "#b45309" : "#fbbf24",
+    divider: isLight ? "rgba(148, 163, 184, 0.25)" : "rgba(255, 255, 255, 0.08)",
+    hotlineBoxBg: isLight ? "#ffffff" : "#0c0e12",
+    hotlineBoxBorder: isLight ? "rgba(148, 163, 184, 0.28)" : "rgba(255, 255, 255, 0.08)",
+    btnSubmitBg: isLight
+      ? "linear-gradient(135deg, #d97706 0%, #b45309 100%)"
+      : "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+    btnSubmitText: "#ffffff",
+    btnSubmitShadow: isLight
+      ? "0 4px 18px rgba(217, 119, 6, 0.35)"
+      : "0 4px 20px rgba(245, 158, 11, 0.35)",
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,24 +207,27 @@ export default function SellClient({
   };
 
   return (
-    <div className="sell-page-wrapper" style={{ minHeight: "100vh", backgroundColor: "#060709", color: "#f3f4f6" }}>
+    <div
+      className="sell-page-wrapper"
+      style={{
+        minHeight: "100vh",
+        backgroundColor: colors.bgPage,
+        color: colors.textPrimary,
+        transition: "background-color 0.3s ease, color 0.3s ease",
+      }}
+    >
       {/* 1. CINEMATIC HERO HEADER */}
       <section
         style={{
           position: "relative",
           padding: "5rem 1.5rem 3.5rem",
-          background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245, 158, 11, 0.12) 0%, rgba(6, 7, 9, 0) 100%)",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+          background: colors.bgHero,
+          borderBottom: `1px solid ${colors.heroBorder}`,
           textAlign: "center",
           overflow: "hidden",
         }}
       >
         <div style={{ maxWidth: "800px", margin: "0 auto", position: "relative", zIndex: 2 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.35rem 1rem", borderRadius: "9999px", background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.25)", color: "#fbbf24", fontSize: "0.78rem", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "1.25rem" }}>
-            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#fbbf24", boxShadow: "0 0 8px #fbbf24" }}></span>
-            Confidential Private Client Advisory • Dhaka
-          </div>
-
           <h1
             style={{
               fontSize: "clamp(2rem, 4.5vw, 3.4rem)",
@@ -177,13 +235,13 @@ export default function SellClient({
               letterSpacing: "-0.03em",
               lineHeight: 1.15,
               marginBottom: "1rem",
-              background: "linear-gradient(180deg, #ffffff 40%, rgba(255, 255, 255, 0.7) 100%)",
+              background: colors.heroTitle,
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
           >
             Sell Or Trade-In Your <br />
-            <span style={{ background: "linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <span style={{ background: colors.goldGradient, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               Luxury Automobile
             </span>
           </h1>
@@ -191,7 +249,7 @@ export default function SellClient({
           <p
             style={{
               fontSize: "clamp(0.95rem, 1.8vw, 1.15rem)",
-              color: "#9ca3af",
+              color: colors.textSecondary,
               lineHeight: 1.6,
               maxWidth: "680px",
               margin: "0 auto 2rem",
@@ -207,21 +265,21 @@ export default function SellClient({
               justifyContent: "center",
               gap: "2.5rem",
               flexWrap: "wrap",
-              paddingTop: "1rem",
-              borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+              paddingTop: "1.25rem",
+              borderTop: `1px solid ${colors.divider}`,
             }}
           >
             <div>
-              <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "#fff" }}>450+</div>
-              <div style={{ fontSize: "0.78rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>Discreet Acquisitions</div>
+              <div style={{ fontSize: "1.6rem", fontWeight: 800, color: colors.textPrimary }}>450+</div>
+              <div style={{ fontSize: "0.78rem", color: colors.textSecondary, textTransform: "uppercase", letterSpacing: "0.05em" }}>Discreet Acquisitions</div>
             </div>
             <div>
-              <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "#fbbf24" }}>2 Hours</div>
-              <div style={{ fontSize: "0.78rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>Rapid Preliminary Quote</div>
+              <div style={{ fontSize: "1.6rem", fontWeight: 800, color: colors.goldAccent }}>2 Hours</div>
+              <div style={{ fontSize: "0.78rem", color: colors.textSecondary, textTransform: "uppercase", letterSpacing: "0.05em" }}>Rapid Preliminary Quote</div>
             </div>
             <div>
-              <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "#fff" }}>100%</div>
-              <div style={{ fontSize: "0.78rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>BRTA Legal Protection</div>
+              <div style={{ fontSize: "1.6rem", fontWeight: 800, color: colors.textPrimary }}>100%</div>
+              <div style={{ fontSize: "0.78rem", color: colors.textSecondary, textTransform: "uppercase", letterSpacing: "0.05em" }}>BRTA Legal Protection</div>
             </div>
           </div>
         </div>
@@ -234,18 +292,19 @@ export default function SellClient({
           {/* LEFT: THE LUXURY APPRAISAL FORM */}
           <div
             style={{
-              background: "linear-gradient(180deg, #0e1117 0%, #0a0d12 100%)",
-              border: "1px solid rgba(255, 255, 255, 0.12)",
+              background: colors.cardBg,
+              border: `1px solid ${colors.cardBorder}`,
               borderRadius: "16px",
               padding: "clamp(1.5rem, 3vw, 2.5rem)",
-              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
+              boxShadow: colors.cardShadow,
+              transition: "background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease",
             }}
           >
-            <div style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", paddingBottom: "1.25rem", marginBottom: "1.75rem" }}>
-              <h2 style={{ fontSize: "1.45rem", fontWeight: 700, color: "#fff", marginBottom: "0.35rem" }}>
+            <div style={{ borderBottom: `1px solid ${colors.divider}`, paddingBottom: "1.25rem", marginBottom: "1.75rem" }}>
+              <h2 style={{ fontSize: "1.45rem", fontWeight: 700, color: colors.textPrimary, marginBottom: "0.35rem" }}>
                 Vehicle Valuation Portal
               </h2>
-              <p style={{ fontSize: "0.85rem", color: "#9ca3af" }}>
+              <p style={{ fontSize: "0.85rem", color: colors.textSecondary }}>
                 Enter your automobile details below to initialize valuation dossier.
               </p>
             </div>
@@ -253,12 +312,12 @@ export default function SellClient({
             {errorMessage && (
               <div
                 style={{
-                  background: "rgba(239, 68, 68, 0.12)",
-                  border: "1px solid rgba(239, 68, 68, 0.4)",
+                  background: isLight ? "rgba(239, 68, 68, 0.08)" : "rgba(239, 68, 68, 0.12)",
+                  border: "1px solid rgba(239, 68, 68, 0.35)",
                   borderRadius: "10px",
                   padding: "0.9rem 1.15rem",
                   marginBottom: "1.5rem",
-                  color: "#fca5a5",
+                  color: isLight ? "#b91c1c" : "#fca5a5",
                   fontSize: "0.88rem",
                   display: "flex",
                   alignItems: "center",
@@ -278,12 +337,12 @@ export default function SellClient({
               <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                 {/* STEP 1: VEHICLE PROFILE */}
                 <div>
-                  <div style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#fbbf24", marginBottom: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <div style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: colors.goldAccent, marginBottom: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
                     <span>Step 1</span> • <span>Vehicle Identity</span>
                   </div>
 
                   {/* Brand Quick Pills */}
-                  <label style={{ display: "block", fontSize: "0.82rem", color: "#d1d5db", marginBottom: "0.5rem" }}>
+                  <label style={{ display: "block", fontSize: "0.82rem", color: colors.textSecondary, marginBottom: "0.5rem" }}>
                     Select Marque / Manufacturer <span style={{ color: "#ef4444" }}>*</span>
                   </label>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.85rem" }}>
@@ -299,9 +358,9 @@ export default function SellClient({
                           fontWeight: 500,
                           cursor: "pointer",
                           transition: "all 0.2s ease",
-                          background: brand === b ? "rgba(245, 158, 11, 0.2)" : "rgba(255, 255, 255, 0.04)",
-                          border: brand === b ? "1px solid #fbbf24" : "1px solid rgba(255, 255, 255, 0.08)",
-                          color: brand === b ? "#fbbf24" : "#9ca3af",
+                          background: brand === b ? colors.pillActiveBg : colors.pillBg,
+                          border: brand === b ? `1px solid ${colors.pillActiveBorder}` : `1px solid ${colors.pillBorder}`,
+                          color: brand === b ? colors.pillActiveText : colors.pillText,
                         }}
                       >
                         {b}
@@ -317,9 +376,9 @@ export default function SellClient({
                         fontWeight: 500,
                         cursor: "pointer",
                         transition: "all 0.2s ease",
-                        background: brand === "Other" ? "rgba(245, 158, 11, 0.2)" : "rgba(255, 255, 255, 0.04)",
-                        border: brand === "Other" ? "1px solid #fbbf24" : "1px solid rgba(255, 255, 255, 0.08)",
-                        color: brand === "Other" ? "#fbbf24" : "#9ca3af",
+                        background: brand === "Other" ? colors.pillActiveBg : colors.pillBg,
+                        border: brand === "Other" ? `1px solid ${colors.pillActiveBorder}` : `1px solid ${colors.pillBorder}`,
+                        color: brand === "Other" ? colors.pillActiveText : colors.pillText,
                       }}
                     >
                       Other Marque
@@ -334,14 +393,20 @@ export default function SellClient({
                       onChange={(e) => setCustomBrand(e.target.value)}
                       placeholder="Enter Vehicle Brand (e.g. Bentley, Maserati, Ferrari)..."
                       className="cars-search-input"
-                      style={{ width: "100%", marginBottom: "1rem" }}
+                      style={{
+                        width: "100%",
+                        marginBottom: "1rem",
+                        background: colors.inputBg,
+                        borderColor: colors.inputBorder,
+                        color: colors.inputText,
+                      }}
                     />
                   )}
 
                   {/* Model & Year */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
                     <div>
-                      <label style={{ display: "block", fontSize: "0.82rem", color: "#d1d5db", marginBottom: "0.4rem" }}>
+                      <label style={{ display: "block", fontSize: "0.82rem", color: colors.textSecondary, marginBottom: "0.4rem" }}>
                         Model / Trim <span style={{ color: "#ef4444" }}>*</span>
                       </label>
                       <input
@@ -351,11 +416,16 @@ export default function SellClient({
                         onChange={(e) => setModel(e.target.value)}
                         placeholder="e.g. S 580 / Defender 110"
                         className="cars-search-input"
-                        style={{ width: "100%" }}
+                        style={{
+                          width: "100%",
+                          background: colors.inputBg,
+                          borderColor: colors.inputBorder,
+                          color: colors.inputText,
+                        }}
                       />
                     </div>
                     <div>
-                      <label style={{ display: "block", fontSize: "0.82rem", color: "#d1d5db", marginBottom: "0.4rem" }}>
+                      <label style={{ display: "block", fontSize: "0.82rem", color: colors.textSecondary, marginBottom: "0.4rem" }}>
                         Production Year <span style={{ color: "#ef4444" }}>*</span>
                       </label>
                       <input
@@ -367,7 +437,12 @@ export default function SellClient({
                         onChange={(e) => setYear(e.target.value)}
                         placeholder="e.g. 2023"
                         className="cars-search-input"
-                        style={{ width: "100%" }}
+                        style={{
+                          width: "100%",
+                          background: colors.inputBg,
+                          borderColor: colors.inputBorder,
+                          color: colors.inputText,
+                        }}
                       />
                     </div>
                   </div>
@@ -375,7 +450,7 @@ export default function SellClient({
                   {/* Mileage & Expected Price */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                     <div>
-                      <label style={{ display: "block", fontSize: "0.82rem", color: "#d1d5db", marginBottom: "0.4rem" }}>
+                      <label style={{ display: "block", fontSize: "0.82rem", color: colors.textSecondary, marginBottom: "0.4rem" }}>
                         Mileage (km) <span style={{ color: "#ef4444" }}>*</span>
                       </label>
                       <input
@@ -386,12 +461,17 @@ export default function SellClient({
                         onChange={(e) => setMileage(e.target.value)}
                         placeholder="e.g. 18,500"
                         className="cars-search-input"
-                        style={{ width: "100%" }}
+                        style={{
+                          width: "100%",
+                          background: colors.inputBg,
+                          borderColor: colors.inputBorder,
+                          color: colors.inputText,
+                        }}
                       />
                     </div>
                     <div>
-                      <label style={{ display: "block", fontSize: "0.82rem", color: "#d1d5db", marginBottom: "0.4rem" }}>
-                        Expected Price (BDT) <span style={{ color: "#6b7280" }}>(Optional)</span>
+                      <label style={{ display: "block", fontSize: "0.82rem", color: colors.textSecondary, marginBottom: "0.4rem" }}>
+                        Expected Price (BDT) <span style={{ color: colors.textMuted }}>(Optional)</span>
                       </label>
                       <input
                         type="text"
@@ -399,21 +479,26 @@ export default function SellClient({
                         onChange={(e) => setExpectedPrice(e.target.value)}
                         placeholder="e.g. 1,65,00,000"
                         className="cars-search-input"
-                        style={{ width: "100%" }}
+                        style={{
+                          width: "100%",
+                          background: colors.inputBg,
+                          borderColor: colors.inputBorder,
+                          color: colors.inputText,
+                        }}
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* STEP 2: OWNER & LOGISTICS */}
-                <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: "1.25rem" }}>
-                  <div style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#fbbf24", marginBottom: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                <div style={{ borderTop: `1px solid ${colors.divider}`, paddingTop: "1.25rem" }}>
+                  <div style={{ fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: colors.goldAccent, marginBottom: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
                     <span>Step 2</span> • <span>Owner & Inspection Preference</span>
                   </div>
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
                     <div>
-                      <label style={{ display: "block", fontSize: "0.82rem", color: "#d1d5db", marginBottom: "0.4rem" }}>
+                      <label style={{ display: "block", fontSize: "0.82rem", color: colors.textSecondary, marginBottom: "0.4rem" }}>
                         Full Name <span style={{ color: "#ef4444" }}>*</span>
                       </label>
                       <input
@@ -423,11 +508,16 @@ export default function SellClient({
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="e.g. Syed Aminul Haque"
                         className="cars-search-input"
-                        style={{ width: "100%" }}
+                        style={{
+                          width: "100%",
+                          background: colors.inputBg,
+                          borderColor: colors.inputBorder,
+                          color: colors.inputText,
+                        }}
                       />
                     </div>
                     <div>
-                      <label style={{ display: "block", fontSize: "0.82rem", color: "#d1d5db", marginBottom: "0.4rem" }}>
+                      <label style={{ display: "block", fontSize: "0.82rem", color: colors.textSecondary, marginBottom: "0.4rem" }}>
                         Contact Phone / WhatsApp <span style={{ color: "#ef4444" }}>*</span>
                       </label>
                       <input
@@ -437,21 +527,31 @@ export default function SellClient({
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="e.g. 01711-XXXXXX"
                         className="cars-search-input"
-                        style={{ width: "100%" }}
+                        style={{
+                          width: "100%",
+                          background: colors.inputBg,
+                          borderColor: colors.inputBorder,
+                          color: colors.inputText,
+                        }}
                       />
                     </div>
                   </div>
 
                   {/* Showroom Branch Selection */}
                   <div style={{ marginBottom: "1rem" }}>
-                    <label style={{ display: "block", fontSize: "0.82rem", color: "#d1d5db", marginBottom: "0.4rem" }}>
+                    <label style={{ display: "block", fontSize: "0.82rem", color: colors.textSecondary, marginBottom: "0.4rem" }}>
                       Preferred Showroom or Inspection Location
                     </label>
                     <select
                       value={branchPreference}
                       onChange={(e) => setBranchPreference(e.target.value)}
                       className="filter-select"
-                      style={{ width: "100%", background: "#11141a", color: "#fff", borderColor: "rgba(255, 255, 255, 0.12)" }}
+                      style={{
+                        width: "100%",
+                        background: colors.inputBg,
+                        color: colors.inputText,
+                        borderColor: colors.inputBorder,
+                      }}
                     >
                       <option value="kakrail">Kakrail Main Flagship Showroom (18, Monsur Ali Soroni)</option>
                       <option value="gulshan">Gulshan Private Lounge (House #07, Road #127, Gulshan Avenue)</option>
@@ -460,8 +560,8 @@ export default function SellClient({
                   </div>
 
                   <div>
-                    <label style={{ display: "block", fontSize: "0.82rem", color: "#d1d5db", marginBottom: "0.4rem" }}>
-                      Additional Notes / Custom Equipment <span style={{ color: "#6b7280" }}>(Optional)</span>
+                    <label style={{ display: "block", fontSize: "0.82rem", color: colors.textSecondary, marginBottom: "0.4rem" }}>
+                      Additional Notes / Custom Equipment <span style={{ color: colors.textMuted }}>(Optional)</span>
                     </label>
                     <textarea
                       rows={3}
@@ -469,7 +569,14 @@ export default function SellClient({
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="e.g. Single owner, full authorized dealership service history, panoramic glass roof, rear executive seat package..."
                       className="cars-search-input"
-                      style={{ width: "100%", resize: "vertical", fontFamily: "inherit" }}
+                      style={{
+                        width: "100%",
+                        resize: "vertical",
+                        fontFamily: "inherit",
+                        background: colors.inputBg,
+                        borderColor: colors.inputBorder,
+                        color: colors.inputText,
+                      }}
                     />
                   </div>
                 </div>
@@ -486,18 +593,18 @@ export default function SellClient({
                     fontWeight: 700,
                     letterSpacing: "0.03em",
                     cursor: isPending ? "not-allowed" : "pointer",
-                    background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                    color: "#050608",
+                    background: colors.btnSubmitBg,
+                    color: colors.btnSubmitText,
                     border: "none",
                     borderRadius: "10px",
-                    boxShadow: "0 4px 20px rgba(245, 158, 11, 0.35)",
+                    boxShadow: colors.btnSubmitShadow,
                     transition: "all 0.3s ease",
                   }}
                 >
                   {isPending ? "Transmitting Dossier to Valuation Desk..." : "Submit For Official Showroom Valuation →"}
                 </button>
 
-                <p style={{ textAlign: "center", fontSize: "0.78rem", color: "#6b7280", margin: 0 }}>
+                <p style={{ textAlign: "center", fontSize: "0.78rem", color: colors.textMuted, margin: 0 }}>
                   🔒 Strictly Confidential. Your information is protected under {brandName} Private Client Non-Disclosure protocols.
                 </p>
               </form>
@@ -509,9 +616,9 @@ export default function SellClient({
                     width: "64px",
                     height: "64px",
                     borderRadius: "50%",
-                    background: "rgba(34, 197, 94, 0.15)",
-                    border: "1px solid rgba(34, 197, 94, 0.4)",
-                    color: "#4ade80",
+                    background: isLight ? "rgba(22, 163, 74, 0.12)" : "rgba(34, 197, 94, 0.15)",
+                    border: isLight ? "1px solid rgba(22, 163, 74, 0.35)" : "1px solid rgba(34, 197, 94, 0.4)",
+                    color: isLight ? "#16a34a" : "#4ade80",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -523,23 +630,23 @@ export default function SellClient({
                   </svg>
                 </div>
 
-                <h3 style={{ fontSize: "1.45rem", fontWeight: 700, color: "#fff", marginBottom: "0.5rem" }}>
+                <h3 style={{ fontSize: "1.45rem", fontWeight: 700, color: colors.textPrimary, marginBottom: "0.5rem" }}>
                   Valuation Dossier Received
                 </h3>
 
-                <p style={{ color: "#d1d5db", fontSize: "0.92rem", lineHeight: 1.6, maxWidth: "440px", margin: "0 auto 1.5rem" }}>
+                <p style={{ color: colors.textSecondary, fontSize: "0.92rem", lineHeight: 1.6, maxWidth: "440px", margin: "0 auto 1.5rem" }}>
                   Thank you, <strong>{fullName}</strong>. Your {year} {activeBrandName} {model} has been securely logged into our showroom valuation system (Ref #{submissionResult.id || "DCH-VAL"}).
                 </p>
 
                 <div
                   style={{
-                    background: "rgba(245, 158, 11, 0.08)",
-                    border: "1px solid rgba(245, 158, 11, 0.25)",
+                    background: isLight ? "rgba(217, 119, 6, 0.08)" : "rgba(245, 158, 11, 0.08)",
+                    border: isLight ? "1px solid rgba(217, 119, 6, 0.25)" : "1px solid rgba(245, 158, 11, 0.25)",
                     borderRadius: "10px",
                     padding: "1rem",
                     marginBottom: "1.5rem",
                     fontSize: "0.85rem",
-                    color: "#fde68a",
+                    color: isLight ? "#92400e" : "#fde68a",
                     lineHeight: 1.5,
                     textAlign: "left",
                   }}
@@ -585,8 +692,8 @@ export default function SellClient({
                   }}
                   style={{
                     background: "transparent",
-                    border: "1px solid rgba(255, 255, 255, 0.15)",
-                    color: "#9ca3af",
+                    border: `1px solid ${colors.cardBorder}`,
+                    color: colors.textSecondary,
                     padding: "0.65rem 1.25rem",
                     borderRadius: "8px",
                     cursor: "pointer",
@@ -605,10 +712,10 @@ export default function SellClient({
             
             {/* Why Choose Dream Car House */}
             <div>
-              <div style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#fbbf24", marginBottom: "0.4rem" }}>
+              <div style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: colors.goldAccent, marginBottom: "0.4rem" }}>
                 Distinguished Excellence
               </div>
-              <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fff", marginBottom: "1.25rem" }}>
+              <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: colors.textPrimary, marginBottom: "1.25rem" }}>
                 Why Private Clients Choose Us
               </h3>
 
@@ -617,32 +724,33 @@ export default function SellClient({
                   <div
                     key={perk.title}
                     style={{
-                      background: "rgba(255, 255, 255, 0.03)",
-                      border: "1px solid rgba(255, 255, 255, 0.06)",
+                      background: colors.perkCardBg,
+                      border: `1px solid ${colors.perkCardBorder}`,
                       borderRadius: "12px",
                       padding: "1.25rem",
                       display: "flex",
                       gap: "1rem",
                       alignItems: "flex-start",
-                      transition: "border-color 0.2s ease, transform 0.2s ease",
+                      boxShadow: colors.perkCardShadow,
+                      transition: "all 0.25s ease",
                     }}
                   >
                     <div
                       style={{
                         padding: "0.65rem",
                         borderRadius: "10px",
-                        background: "rgba(245, 158, 11, 0.1)",
-                        color: "#fbbf24",
+                        background: isLight ? "rgba(217, 119, 6, 0.12)" : "rgba(245, 158, 11, 0.1)",
+                        color: colors.goldAccent,
                         flexShrink: 0,
                       }}
                     >
                       {perk.icon}
                     </div>
                     <div>
-                      <h4 style={{ fontSize: "1rem", fontWeight: 600, color: "#fff", marginBottom: "0.3rem" }}>
+                      <h4 style={{ fontSize: "1rem", fontWeight: 600, color: colors.textPrimary, marginBottom: "0.3rem" }}>
                         {perk.title}
                       </h4>
-                      <p style={{ fontSize: "0.84rem", color: "#9ca3af", lineHeight: 1.5, margin: 0 }}>
+                      <p style={{ fontSize: "0.84rem", color: colors.textSecondary, lineHeight: 1.5, margin: 0 }}>
                         {perk.desc}
                       </p>
                     </div>
@@ -654,14 +762,15 @@ export default function SellClient({
             {/* Transparent 4-Step Process */}
             <div
               style={{
-                background: "linear-gradient(180deg, rgba(245, 158, 11, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%)",
-                border: "1px solid rgba(245, 158, 11, 0.2)",
+                background: colors.stepBoxBg,
+                border: `1px solid ${colors.stepBoxBorder}`,
                 borderRadius: "16px",
                 padding: "1.75rem",
+                boxShadow: colors.perkCardShadow,
               }}
             >
-              <h4 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#fff", marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <span style={{ color: "#fbbf24" }}>✦</span> Transparent 4-Step Acquisition Process
+              <h4 style={{ fontSize: "1.15rem", fontWeight: 700, color: colors.textPrimary, marginBottom: "1.25rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <span style={{ color: colors.goldAccent }}>✦</span> Transparent 4-Step Acquisition Process
               </h4>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
@@ -671,8 +780,8 @@ export default function SellClient({
                       style={{
                         fontSize: "0.85rem",
                         fontWeight: 800,
-                        color: "#fbbf24",
-                        background: "rgba(245, 158, 11, 0.15)",
+                        color: colors.stepBadgeText,
+                        background: colors.stepBadgeBg,
                         width: "32px",
                         height: "32px",
                         borderRadius: "8px",
@@ -685,10 +794,10 @@ export default function SellClient({
                       {s.step}
                     </div>
                     <div>
-                      <div style={{ fontSize: "0.92rem", fontWeight: 600, color: "#e5e7eb", marginBottom: "0.2rem" }}>
+                      <div style={{ fontSize: "0.92rem", fontWeight: 600, color: colors.textPrimary, marginBottom: "0.2rem" }}>
                         {s.title}
                       </div>
-                      <div style={{ fontSize: "0.82rem", color: "#9ca3af", lineHeight: 1.45 }}>
+                      <div style={{ fontSize: "0.82rem", color: colors.textSecondary, lineHeight: 1.45 }}>
                         {s.desc}
                       </div>
                     </div>
@@ -700,8 +809,8 @@ export default function SellClient({
             {/* Direct Telephone Concierge Callout */}
             <div
               style={{
-                background: "#0c0e12",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
+                background: colors.hotlineBoxBg,
+                border: `1px solid ${colors.hotlineBoxBorder}`,
                 borderRadius: "14px",
                 padding: "1.5rem",
                 display: "flex",
@@ -709,13 +818,14 @@ export default function SellClient({
                 justifyContent: "space-between",
                 flexWrap: "wrap",
                 gap: "1rem",
+                boxShadow: colors.perkCardShadow,
               }}
             >
               <div>
-                <div style={{ fontSize: "0.78rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div style={{ fontSize: "0.78rem", color: colors.textSecondary, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Direct Valuation Desk Hotline
                 </div>
-                <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#fff" }}>
+                <div style={{ fontSize: "1.25rem", fontWeight: 800, color: colors.textPrimary }}>
                   {hotline}
                 </div>
               </div>
@@ -728,9 +838,9 @@ export default function SellClient({
                   gap: "0.4rem",
                   padding: "0.6rem 1.15rem",
                   borderRadius: "8px",
-                  background: "rgba(255, 255, 255, 0.08)",
-                  border: "1px solid rgba(255, 255, 255, 0.15)",
-                  color: "#fff",
+                  background: isLight ? "rgba(15, 23, 42, 0.06)" : "rgba(255, 255, 255, 0.08)",
+                  border: `1px solid ${colors.cardBorder}`,
+                  color: colors.textPrimary,
                   fontSize: "0.85rem",
                   fontWeight: 600,
                   textDecoration: "none",
