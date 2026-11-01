@@ -6,7 +6,7 @@ import { useUI } from "@/lib/UIContext";
 
 interface VehicleCardProps {
   car: Vehicle;
-  layout?: "grid" | "featured";
+  layout?: "grid" | "carousel";
 }
 
 export default function VehicleCard({ car }: VehicleCardProps) {
@@ -16,23 +16,15 @@ export default function VehicleCard({ car }: VehicleCardProps) {
   const waMessage = encodeURIComponent(
     `Hello DREAM CAR HOUSE, I am inquiring about the ${car.name} (${car.year}).`
   );
-  const targetPhone = car.branch?.hotline || car.branch?.phone || "";
-  let waPhone = targetPhone.replace(/[^0-9]/g, "");
-  if (waPhone.startsWith("0")) {
-    waPhone = "88" + waPhone;
-  } else if (waPhone && !waPhone.startsWith("880") && waPhone.length === 10) {
-    waPhone = "880" + waPhone;
-  }
-  if (!waPhone) waPhone = "8801615121312";
-  const waUrl = `https://wa.me/${waPhone}?text=${waMessage}`;
+  const waUrl = `https://wa.me/8801615121312?text=${waMessage}`;
 
   return (
     <div
-      className="preference-car-card group"
+      className="pref-car-card group"
       onClick={() => openCarModal(car)}
       style={{ cursor: "pointer" }}
     >
-      <div className="pref-car-img-wrap" style={{ position: "relative" }}>
+      <div className="pref-car-img-wrap">
         <img
           src={car.image}
           alt={car.name}
@@ -57,29 +49,32 @@ export default function VehicleCard({ car }: VehicleCardProps) {
       </div>
 
       <div className="pref-car-body">
-        <div className="pref-car-top">
-          <span className="pref-car-brand">{car.brand}</span>
-          <span className="pref-car-year">{car.year}</span>
+        <div className="pref-car-meta">
+          {car.brand} • {car.year}
         </div>
-
         <h3 className="pref-car-title">{car.name}</h3>
 
-        <div className="pref-car-specs">
-          <span>{car.engine_capacity}</span>
-          <span className="spec-dot">•</span>
-          <span>{car.mileage}</span>
-          <span className="spec-dot">•</span>
-          <span>{car.fuel_type}</span>
+        <div className="pref-specs-row">
+          <div className="pref-spec-item">
+            <span className="pref-spec-label">Engine</span>
+            <span className="pref-spec-val">{car.engine_capacity}</span>
+          </div>
+          <div className="pref-spec-item">
+            <span className="pref-spec-label">Mileage</span>
+            <span className="pref-spec-val">{car.mileage}</span>
+          </div>
+          <div className="pref-spec-item">
+            <span className="pref-spec-label">Fuel</span>
+            <span className="pref-spec-val">{car.fuel_type}</span>
+          </div>
         </div>
 
-        <div className="pref-car-footer">
+        <div className="pref-action-row" onClick={(e) => e.stopPropagation()}>
           <button
             type="button"
-            className="pref-cta-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              openCarModal(car);
-            }}
+            className="pref-inspect-btn"
+            onClick={() => openCarModal(car)}
+            aria-label={`Inspect ${car.name}`}
           >
             Inspect Details
           </button>
@@ -87,14 +82,18 @@ export default function VehicleCard({ car }: VehicleCardProps) {
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="pref-wa-icon"
-            onClick={(e) => e.stopPropagation()}
-            title="Inquire on WhatsApp"
-            aria-label={`Inquire about ${car.name} on WhatsApp`}
+            className="pref-wa-btn"
+            title="Chat on WhatsApp"
+            aria-label="WhatsApp Concierge"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.592 2.654-.696c1 .587 1.78.893 2.806.893 3.182 0 5.768-2.586 5.768-5.766.001-3.181-2.585-5.776-5.768-5.776zm3.435 8.163c-.144.404-.836.774-1.17.822-.311.045-.71.07-2.13-.518-1.815-.751-2.986-2.59-3.077-2.711-.091-.121-.739-.984-.739-1.877 0-.893.469-1.332.636-1.514.167-.182.365-.228.487-.228.122 0 .243.002.35.007.112.005.263-.042.412.315.152.365.518 1.265.564 1.356.045.091.076.197.015.318-.061.121-.091.197-.182.303-.091.106-.192.237-.274.318-.091.091-.186.19-.08.372.106.182.471.777 1.011 1.258.697.621 1.284.814 1.466.905.182.091.289.076.395-.045.106-.121.456-.531.577-.713.121-.182.243-.152.41-.091.167.061 1.062.5 1.244.591.182.091.304.136.35.212.045.076.045.44-.099.844zM12 2C6.477 2 2 6.477 2 12c0 1.891.524 3.662 1.435 5.176L2 22l4.957-1.399C8.414 21.499 10.151 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
               />
             </svg>
           </a>

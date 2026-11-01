@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import type { GalleryPhoto } from "@/lib/showroomData";
+import { GALLERY_DATA, GalleryPhoto } from "@/lib/showroomData";
 import { useUI } from "@/lib/UIContext";
 
 export default function GalleryClient({ initialPhotos = [] }: { initialPhotos?: GalleryPhoto[] } = {}) {
@@ -10,7 +10,10 @@ export default function GalleryClient({ initialPhotos = [] }: { initialPhotos?: 
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [flippedCards, setFlippedCards] = useState<Record<number, boolean>>({});
 
-  const allPhotos = initialPhotos;
+  const allPhotos =
+    initialPhotos && initialPhotos.length > 0 && !initialPhotos.some((p) => p.image.includes("demo.jpg"))
+      ? initialPhotos
+      : GALLERY_DATA;
 
   const toggleFlip = (id: number) => {
     setFlippedCards((prev) => ({

@@ -4,30 +4,17 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useUI } from "@/lib/UIContext";
-import type { PublicSiteSettings, PublicShowroomBranch } from "@/lib/types";
 
 export default function AboutClient({
   settings,
-  branches = [],
-  totalVehicles = 0,
+  branches,
+  totalVehicles,
 }: {
-  settings?: PublicSiteSettings;
-  branches?: PublicShowroomBranch[];
+  settings?: unknown;
+  branches?: unknown;
   totalVehicles?: number;
 } = {}) {
   const { openVideoModal, openAppointmentModal } = useUI();
-
-  const brandName = settings?.name || "DREAM CAR HOUSE";
-  const targetPhone = settings?.whatsapp || settings?.hotline || "8801615121312";
-  let waPhone = targetPhone.replace(/[^0-9]/g, "");
-  if (waPhone.startsWith("0")) {
-    waPhone = "88" + waPhone;
-  } else if (waPhone && !waPhone.startsWith("880") && waPhone.length === 10) {
-    waPhone = "880" + waPhone;
-  }
-  if (!waPhone) waPhone = "8801615121312";
-
-  const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(`Hello ${brandName}, I would like to schedule a private showroom consultation.`)}`;
 
   return (
     <div className="about-page-wrap">
@@ -36,7 +23,7 @@ export default function AboutClient({
         <div style={{ marginBottom: "1.25rem", display: "flex", justifyContent: "center" }}>
           <Image
             src="/assets/dch-logo.webp"
-            alt={`${brandName} Flagship Logo`}
+            alt="DREAM CAR HOUSE Flagship Logo"
             width={1020}
             height={350}
             style={{
@@ -51,7 +38,7 @@ export default function AboutClient({
           />
         </div>
         <div className="about-pill-badge">
-          THE {brandName.toUpperCase()} STORY
+          THE DREAM CAR HOUSE STORY
         </div>
         <h1 className="about-main-title">
           Where Automotive Passion Meets Unrivaled Luxury
@@ -76,7 +63,7 @@ export default function AboutClient({
           <div className="about-stat-label">Verified Global Provenance</div>
         </div>
         <div className="about-stat-card">
-          <div className="about-stat-num">{branches.length || 2}</div>
+          <div className="about-stat-num">2</div>
           <div className="about-stat-label">Dhaka Flagship Showrooms</div>
         </div>
       </section>
@@ -87,7 +74,7 @@ export default function AboutClient({
         <div
           className="about-reel-card group"
           onClick={() => openVideoModal("reel")}
-          title={`Click to Watch ${brandName} 4K Showroom Cinematic Reel`}
+          title="Click to Watch DREAM CAR HOUSE 4K Showroom Cinematic Reel"
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
@@ -99,7 +86,7 @@ export default function AboutClient({
         >
           <Image
             src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1600&q=85"
-            alt={`${brandName} Flagship Luxury Showroom Floor`}
+            alt="DREAM CAR HOUSE Flagship Luxury Showroom Floor"
             fill
             sizes="(max-width: 900px) 100vw, 50vw"
             style={{ objectFit: "cover" }}
@@ -108,246 +95,232 @@ export default function AboutClient({
           <div className="about-reel-overlay"></div>
 
           {/* Central Pulsing Play Button */}
-          <div className="about-reel-play-circle" aria-label="Play Showroom Cinema Reel">
-            <svg viewBox="0 0 24 24" className="about-play-triangle">
-              <polygon points="7 4 20 12 7 20 7 4" />
-            </svg>
+          <div className="about-reel-play-center">
+            <div className="about-play-circle" aria-label="Play Reel">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="7 4 20 12 7 20 7 4" />
+              </svg>
+            </div>
+            <span className="about-play-label">WATCH SHOWROOM REEL</span>
           </div>
 
-          {/* Bottom Reel Badge Information */}
+          {/* Bottom Bar Info */}
           <div className="about-reel-bottom">
-            <span className="about-reel-tag">4K SHOWROOM CINEMA REEL</span>
-            <h3 className="about-reel-title">Atelier Floor Tour & Supercar Deliveries</h3>
-            <span className="about-reel-hint">Click to play with engine audio ✦</span>
+            <span className="about-reel-title-sub">Flagship Automotive Showcase</span>
+            <span className="about-reel-duration-pill">4K REEL • 01:45</span>
           </div>
         </div>
 
-        {/* Editorial Text Narrative */}
+        {/* Editorial Text */}
         <div className="about-story-text">
-          <span className="about-story-eyebrow">DISTINCTION IN AUTOMOTIVE CURATION</span>
-          <h2 className="about-story-heading">Pioneering Luxury Automotive Excellence Across Bangladesh</h2>
+          <span className="about-story-eyebrow">OUR HERITAGE & PHILOSOPHY</span>
+          <h2 className="about-story-title">
+            An Uncompromising Pursuit of Automotive Perfection
+          </h2>
           <p className="about-story-p">
-            Established with a singular ambition, <strong>{brandName}</strong> has redefined high-end vehicle acquisition in Dhaka. We cater to discerning connoisseurs who demand uncompromising elegance, exceptional mechanical integrity, and absolute transparency.
+            DREAM CAR HOUSE was founded with a singular, uncompromising vision: to establish Dhaka’s foremost luxury automotive destination where discerning connoisseurs can explore, acquire, and commission the world&apos;s most coveted motorcars with absolute peace of mind.
           </p>
           <p className="about-story-p">
-            From zero-kilometer European flagship sedans to custom-spec Japanese hybrid SUVs and hypercars, every automobile in our atelier undergoes an exhaustive 150-point technical provenance check before joining our showroom vaults in Kakrail and Gulshan.
-          </p>
-          <p className="about-story-p">
-            Our private client directors provide end-to-end bespoke concierge services—handling custom global procurement, factory warranty extensions, registration documentation, and ceremonial private handovers.
+            Operating across two flagship showrooms in <strong>Kakrail (Shaheed Captain Monsur Ali Soroni)</strong> and <strong>Gulshan Avenue (Road #127)</strong>, our curated portfolio encompasses zero-meter factory imports, bespoke executive saloons, track-bred supercars, and certified pre-owned collectors&apos; editions from Mercedes-Maybach, Rolls-Royce, Porsche, Lexus, BMW, and Toyota.
           </p>
 
-          <div className="about-story-features">
-            <div className="about-feature-item">
-              <div className="about-feat-check">✓</div>
-              <div>
-                <strong>Global Auction Grade 5A & 4.5</strong>
-                <p>Only the highest-rated Japanese auction sheets with verified original certificates.</p>
-              </div>
-            </div>
-            <div className="about-feature-item">
-              <div className="about-feat-check">✓</div>
-              <div>
-                <strong>Factory-Direct European Orders</strong>
-                <p>Bespoke allocations from Mercedes-Benz, Porsche, Range Rover, and BMW ateliers.</p>
-              </div>
-            </div>
-            <div className="about-feature-item">
-              <div className="about-feat-check">✓</div>
-              <div>
-                <strong>Confidential Trade-In Valuations</strong>
-                <p>Transparent evaluation and instantaneous settlement for pre-owned luxury models.</p>
-              </div>
-            </div>
+          <div className="about-quote-box">
+            <p>
+              &ldquo;We do not merely deliver motorcars; we curate trust, pedigree, and lifelong relationships for Dhaka&apos;s most discerning motorists.&rdquo;
+            </p>
           </div>
+
+          <button
+            type="button"
+            className="see-video-btn"
+            onClick={() => openVideoModal("tour")}
+            style={{ alignSelf: "flex-start", marginTop: "0.25rem" }}
+          >
+            <div className="video-play-circle">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="6 3 20 12 6 21 6 3" />
+              </svg>
+            </div>
+            <span>Watch Full Showroom Tour (02:30)</span>
+          </button>
         </div>
       </section>
 
-      {/* 4. Atelier Values 3-Pillar Grid */}
-      <section className="about-values-section">
+      {/* 4. The 4 Pillars of Showroom Distinction */}
+      <section className="about-pillars-section">
         <div className="about-section-header">
-          <span className="about-story-eyebrow">OUR CORE PRINCIPLES</span>
-          <h2 className="about-section-title">The Three Pillars of Our Standard</h2>
+          <span className="about-story-eyebrow">THE FOUR PILLARS</span>
+          <h2 className="about-section-title">Why Connoisseurs Choose DREAM CAR HOUSE</h2>
         </div>
 
-        <div className="about-values-grid">
-          <div className="about-value-card">
-            <div className="about-value-num">01</div>
-            <h3 className="about-value-title">Uncompromising Authenticity</h3>
-            <p className="about-value-desc">
-              Every vehicle provenance record is publicly verifiable. We provide genuine auction sheets, authentic JAAI/JEVIC verification, and complete service histories.
+        <div className="about-pillars-grid">
+          {/* Pillar 1 */}
+          <div className="about-pillar-card">
+            <div className="about-pillar-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              </svg>
+            </div>
+            <h3 className="about-pillar-title">Direct Global Import</h3>
+            <p className="about-pillar-desc">
+              Exclusive relationships with premier authorized dealerships in Stuttgart, Tokyo, and London facilitate direct, turnkey container importation with verified manifests.
             </p>
           </div>
 
-          <div className="about-value-card">
-            <div className="about-value-num">02</div>
-            <h3 className="about-value-title">White-Glove Discretion</h3>
-            <p className="about-value-desc">
-              We respect the privacy of our distinguished clientele. Private viewing appointments, secluded consultation suites, and confidential handover deliveries.
+          {/* Pillar 2 */}
+          <div className="about-pillar-card">
+            <div className="about-pillar-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+            </div>
+            <h3 className="about-pillar-title">150+ Point Diagnostic Audit</h3>
+            <p className="about-pillar-desc">
+              Every vehicle undergoes exhaustive computerized diagnostic scans, chassis laser measurements, high-voltage battery audits, and genuine BRTA paper verifications.
             </p>
           </div>
 
-          <div className="about-value-card">
-            <div className="about-value-num">03</div>
-            <h3 className="about-value-title">Long-Term Partnership</h3>
-            <p className="about-value-desc">
-              Our relationship begins at delivery. Complimentary routine health-checks, priority trade-in buyback agreements, and dedicated concierge assistance for life.
+          {/* Pillar 3 */}
+          <div className="about-pillar-card">
+            <div className="about-pillar-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+            <h3 className="about-pillar-title">Private Handover Vault</h3>
+            <p className="about-pillar-desc">
+              An exclusive soundproof delivery sanctuary featuring theatrical automotive unveilings, champagne reception, and confidential documentation management.
+            </p>
+          </div>
+
+          {/* Pillar 4 */}
+          <div className="about-pillar-card">
+            <div className="about-pillar-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="8.5" cy="7" r="4" />
+                <polyline points="17 11 19 13 23 9" />
+              </svg>
+            </div>
+            <h3 className="about-pillar-title">White-Glove Concierge</h3>
+            <p className="about-pillar-desc">
+              Lifetime vehicle documentation support, tailored financing advisory, genuine factory parts procurement, and guaranteed priority buy-back valuations.
             </p>
           </div>
         </div>
       </section>
 
-      {/* 5. Physical Showroom Sanctuaries */}
+      {/* 5. Physical Showroom Sanctuaries in Dhaka */}
       <section className="about-branches-section">
         <div className="about-section-header">
           <span className="about-story-eyebrow">VISIT OUR SHOWROOMS</span>
-          <h2 className="about-section-title">
-            {branches.length > 0
-              ? `${branches.length} Flagship Sanctuaries Across Dhaka`
-              : "Two Flagship Sanctuaries Across Dhaka"}
-          </h2>
+          <h2 className="about-section-title">Two Flagship Sanctuaries Across Dhaka</h2>
         </div>
 
         <div className="about-branches-grid">
-          {branches.length > 0 ? (
-            branches.map((b) => (
-              <div key={b.branch_id || b.id} className="about-branch-card">
-                <div>
-                  <span className="about-branch-tag">{b.tag || "SHOWROOM & VAULT"}</span>
-                  <h3 className="about-branch-name">{b.name}</h3>
-                  <p className="about-branch-address">{b.address}</p>
+          {/* Branch 1: Kakrail */}
+          <div className="about-branch-card">
+            <div>
+              <span className="about-branch-tag">PRIMARY SHOWROOM & VAULT</span>
+              <h3 className="about-branch-name">Kakrail Flagship Showroom</h3>
+              <p className="about-branch-address">
+                18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000
+              </p>
 
-                  <div className="about-branch-features">
-                    <span className="about-branch-pill">Main Display Floor</span>
-                    <span className="about-branch-pill">Private Handover Vault</span>
-                    <span className="about-branch-pill">Diagnostic Lab</span>
-                  </div>
-                </div>
-
-                <div className="about-branch-actions">
-                  <button
-                    type="button"
-                    onClick={() => openAppointmentModal({ branchId: b.branch_id || String(b.id), carName: `${b.name} Consultation` })}
-                    className="about-branch-visit-btn"
-                  >
-                    <span>Schedule Private Viewing</span>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                  {b.map_link && (
-                    <a
-                      href={b.map_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="about-branch-map-link"
-                    >
-                      <span>Live Google Map Directions</span>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polygon points="3 11 22 2 13 21 11 13 3 11" />
-                      </svg>
-                    </a>
-                  )}
-                </div>
-              </div>
-            ))
-          ) : (
-            <>
-              {/* Branch 1: Kakrail */}
-              <div className="about-branch-card">
-                <div>
-                  <span className="about-branch-tag">PRIMARY SHOWROOM & VAULT</span>
-                  <h3 className="about-branch-name">Kakrail Flagship Showroom</h3>
-                  <p className="about-branch-address">
-                    18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000
-                  </p>
-
-                  <div className="about-branch-features">
-                    <span className="about-branch-pill">Main Display Floor</span>
-                    <span className="about-branch-pill">Private Handover Vault</span>
-                    <span className="about-branch-pill">Diagnostic Lab</span>
-                  </div>
-                </div>
-
-                <div className="about-branch-actions">
-                  <button
-                    type="button"
-                    onClick={() => openAppointmentModal({ branchId: "kakrail", carName: "Kakrail Showroom Visit" })}
-                    className="about-branch-visit-btn"
-                  >
-                    <span>Schedule Private Viewing</span>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                  <a
-                    href="https://maps.google.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="about-branch-map-link"
-                  >
-                    <span>Live Google Map Directions</span>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polygon points="3 11 22 2 13 21 11 13 3 11" />
-                    </svg>
-                  </a>
-                </div>
+              <div className="about-branch-features">
+                <span className="about-branch-pill">Main Display Floor</span>
+                <span className="about-branch-pill">Private Handover Vault</span>
+                <span className="about-branch-pill">Diagnostic Lab</span>
               </div>
 
-              {/* Branch 2: Gulshan */}
-              <div className="about-branch-card">
-                <div>
-                  <span className="about-branch-tag">EXECUTIVE CLIENT LOUNGE</span>
-                  <h3 className="about-branch-name">Gulshan Avenue Showroom</h3>
-                  <p className="about-branch-address">
-                    House #07, Road #127, Gulshan Avenue, Dhaka
-                  </p>
-
-                  <div className="about-branch-features">
-                    <span className="about-branch-pill">Bespoke Lounge</span>
-                    <span className="about-branch-pill">VIP Atelier Suite</span>
-                    <span className="about-branch-pill">Direct Parking</span>
-                  </div>
-                </div>
-
-                <div className="about-branch-actions">
-                  <button
-                    type="button"
-                    onClick={() => openAppointmentModal({ branchId: "gulshan", carName: "Gulshan Showroom Visit" })}
-                    className="about-branch-visit-btn"
-                  >
-                    <span>Schedule Private Viewing</span>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                  <a
-                    href="https://maps.google.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="about-branch-map-link"
-                  >
-                    <span>Live Google Map Directions</span>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polygon points="3 11 22 2 13 21 11 13 3 11" />
-                    </svg>
-                  </a>
-                </div>
+              <div className="about-branch-timing">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                <span>Sat – Thu: 10:00 AM – 9:00 PM (Fri Closed)</span>
               </div>
-            </>
-          )}
+            </div>
+
+            <div className="about-branch-actions">
+              <a
+                href="https://maps.google.com/?q=Kakrail,Dhaka"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="about-dir-btn"
+              >
+                <span>Get Directions</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </a>
+              <a href="tel:01615121312" className="about-call-btn">
+                <span>01615-121312</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Branch 2: Gulshan */}
+          <div className="about-branch-card">
+            <div>
+              <span className="about-branch-tag">BOUTIQUE CONSULTATION DESK</span>
+              <h3 className="about-branch-name">Gulshan Avenue Lounge</h3>
+              <p className="about-branch-address">
+                Road #127, Gulshan Avenue, Gulshan-2, Dhaka-1212
+              </p>
+
+              <div className="about-branch-features">
+                <span className="about-branch-pill">Executive Consultation</span>
+                <span className="about-branch-pill">Bespoke Custom Orders</span>
+                <span className="about-branch-pill">VIP Coffee Bar</span>
+              </div>
+
+              <div className="about-branch-timing">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                <span>Sat – Thu: 11:00 AM – 8:00 PM (Fri Closed)</span>
+              </div>
+            </div>
+
+            <div className="about-branch-actions">
+              <a
+                href="https://maps.google.com/?q=Gulshan+Avenue,Dhaka"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="about-dir-btn"
+              >
+                <span>Get Directions</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </a>
+              <a href="tel:01615121312" className="about-call-btn">
+                <span>01615-121312</span>
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* 6. Bottom VIP Call to Action */}
-      <section className="about-cta-section">
-        <h2 className="about-cta-title">Begin Your Journey to Automotive Distinction</h2>
-        <p className="about-cta-sub">
-          Visit our Kakrail or Gulshan viewing lounges or connect with our Senior Automotive Specialist for private procurement.
+      {/* 6. VIP Consultation Concierge CTA with Glowing WhatsApp Button */}
+      <section className="about-cta-card">
+        <h2 className="about-cta-title">
+          Experience The Difference in Person
+        </h2>
+        <p className="about-cta-desc">
+          Schedule an exclusive showroom walkthrough or speak directly with our senior automotive curators to discuss custom procurement of your next masterpiece.
         </p>
 
         <div className="about-cta-btn-group">
+          {/* Custom Styled Emerald WhatsApp Button */}
           <a
-            href={waUrl}
+            href="https://wa.me/8801615121312?text=Hello%20Dream%20Car%20House,%20I%20would%20like%20to%20schedule%20a%20private%20showroom%20consultation."
             target="_blank"
             rel="noopener noreferrer"
             className="about-wa-btn"
@@ -362,13 +335,23 @@ export default function AboutClient({
 
           <Link
             href="/inventory"
-            className="about-browse-btn"
+            className="consult-primary-btn"
+            style={{ padding: "0.9rem 2rem", fontSize: "0.95rem" }}
           >
-            <span>Browse Complete Vault</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <span>Explore Current Inventory</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </Link>
+
+          <button
+            type="button"
+            className="gallery-btn-secondary"
+            onClick={() => openAppointmentModal()}
+            style={{ padding: "0.9rem 2rem", fontSize: "0.95rem", cursor: "pointer" }}
+          >
+            <span>Schedule Showroom Tour</span>
+          </button>
         </div>
       </section>
     </div>

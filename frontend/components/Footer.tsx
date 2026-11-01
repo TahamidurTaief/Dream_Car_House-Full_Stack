@@ -5,70 +5,30 @@ import Link from "next/link";
 import Image from "next/image";
 import { SHOWROOM_BRANCHES } from "@/lib/showroomData";
 import { useUI } from "@/lib/UIContext";
-import type { PublicSiteSettings, PublicShowroomBranch } from "@/lib/types";
 
 export default function Footer({
   settings,
-  branches = [],
+  branches,
 }: {
-  settings?: PublicSiteSettings;
-  branches?: PublicShowroomBranch[];
+  settings?: unknown;
+  branches?: unknown;
 } = {}) {
   const { openCompareModal } = useUI();
+  const [activeBranch, setActiveBranch] = useState<"kakrail" | "gulshan">("kakrail");
 
-  // If database branches exist, use the first branch's ID; else default to kakrail
-  const hasDbBranches = branches && branches.length > 0;
-  const [activeBranchId, setActiveBranchId] = useState<string>(
-    hasDbBranches ? branches[0].branch_id : "kakrail"
-  );
-
-  const kakrailFallback = SHOWROOM_BRANCHES.kakrail;
-  const gulshanFallback = SHOWROOM_BRANCHES.gulshan;
-
-  const currentDbBranch = hasDbBranches
-    ? branches.find((b) => b.branch_id === activeBranchId) || branches[0]
-    : null;
-
-  const activeBranchName = currentDbBranch
-    ? currentDbBranch.name
-    : activeBranchId === "gulshan"
-    ? gulshanFallback.name
-    : kakrailFallback.name;
-
-  const activeBranchAddress = currentDbBranch
-    ? currentDbBranch.address
-    : activeBranchId === "gulshan"
-    ? gulshanFallback.address
-    : kakrailFallback.address;
-
-  const activeBranchMapSrc = currentDbBranch
-    ? currentDbBranch.embed_map || "https://maps.google.com/maps?output=embed"
-    : activeBranchId === "gulshan"
-    ? gulshanFallback.embed_map
-    : kakrailFallback.embed_map;
-
-  const activeBranchMapLink = currentDbBranch
-    ? currentDbBranch.map_link || "https://maps.google.com"
-    : activeBranchId === "gulshan"
-    ? gulshanFallback.map_link
-    : kakrailFallback.map_link;
-
-  const hotline = settings?.hotline || settings?.phone || "01615-121312";
-  const email = settings?.email || "dreamcarhouse101@gmail.com";
-  const brandName = settings?.name || "DREAM CAR HOUSE";
-  const tagline = settings?.footer_tagline || settings?.tagline || "Where Extraordinary Dreams Meet The Road • Kakrail & Gulshan, Dhaka.";
+  const branch = SHOWROOM_BRANCHES[activeBranch];
 
   return (
     <footer className="site-footer" id="contact">
-      <div className="max-w-7xl">
+      <div className="max-w-7xl" style={{ paddingLeft: "1.5rem", paddingRight: "1.5rem" }}>
         <div className="footer-grid-3col">
           {/* Col 1: Contact Info */}
           <div className="footer-col-contact">
             <div style={{ marginBottom: "1.1rem" }}>
-              <Link href="/" aria-label={`${brandName} Homepage`}>
+              <Link href="/" aria-label="DREAM CAR HOUSE Homepage">
                 <Image
                   src="/assets/dch-logo.webp"
-                  alt={`${brandName} Logo`}
+                  alt="DREAM CAR HOUSE Logo"
                   width={1020}
                   height={350}
                   style={{
@@ -83,7 +43,7 @@ export default function Footer({
               </Link>
             </div>
             <p className="footer-brand-tagline">
-              {tagline}
+              Where Extraordinary Dreams Meet The Road • Kakrail & Gulshan, Dhaka.
             </p>
 
             <ul className="contact-list">
@@ -101,20 +61,9 @@ export default function Footer({
                   <circle cx="12" cy="10" r="3" />
                 </svg>
                 <span>
-                  {hasDbBranches ? (
-                    branches.map((b, idx) => (
-                      <React.Fragment key={b.branch_id || idx}>
-                        {idx > 0 && <br />}
-                        <strong>{b.name || b.short_name}</strong>: {b.address}
-                      </React.Fragment>
-                    ))
-                  ) : (
-                    <>
-                      <strong>Kakrail Branch (Main)</strong>: 18, Shaheed Captain Monsur Ali Soroni, Kakrail
-                      <br />
-                      <strong>Gulshan Branch</strong>: House #07, Road #127, Gulshan Avenue
-                    </>
-                  )}
+                  <strong>Kakrail Branch (Main)</strong>: 18, Shaheed Captain Monsur Ali Soroni, Kakrail
+                  <br />
+                  <strong>Gulshan Branch</strong>: House #07, Road #127, Gulshan Avenue
                 </span>
               </li>
               <li className="contact-item">
@@ -129,8 +78,8 @@ export default function Footer({
                 >
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                 </svg>
-                <a href={`tel:${hotline.replace(/[^0-9+]/g, "")}`} className="contact-link">
-                  {hotline}
+                <a href="tel:01615-121312" className="contact-link">
+                  01615-121312
                 </a>
               </li>
               <li className="contact-item">
@@ -146,124 +95,111 @@ export default function Footer({
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                   <polyline points="22,6 12,13 2,6" />
                 </svg>
-                <a href={`mailto:${email}`} className="contact-link">
-                  {email}
+                <a href="mailto:dreamcarhouse101@gmail.com" className="contact-link">
+                  dreamcarhouse101@gmail.com
                 </a>
               </li>
-              {settings?.opening_hours_text && (
-                <li className="contact-item">
-                  <svg
-                    className="contact-icon"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                  <span>
-                    {settings.opening_hours_text} <span className="status-open-pill">Open</span>
-                  </span>
-                </li>
-              )}
+              <li className="contact-item">
+                <svg
+                  className="contact-icon"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                <span>
+                  Sat – Thu: 10:00 AM – 9:00 PM <span className="status-open-pill">Open</span>
+                </span>
+              </li>
             </ul>
 
             <div className="footer-social-row">
               <a
-                href={settings?.social_media?.facebook || "https://facebook.com"}
+                href="https://facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
-                className="footer-social-btn"
+                className="social-pill"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
                 </svg>
                 <span>Facebook</span>
               </a>
               <a
-                href={settings?.social_media?.instagram || "https://instagram.com"}
+                href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="footer-social-btn"
+                className="social-pill"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                  <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" />
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
                 </svg>
                 <span>Instagram</span>
               </a>
               <a
-                href={settings?.social_media?.youtube || "https://youtube.com"}
+                href="https://youtube.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="YouTube"
-                className="footer-social-btn"
+                className="social-pill"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                 </svg>
                 <span>YouTube</span>
               </a>
             </div>
           </div>
 
-          {/* Col 2: Interactive Showroom Map */}
+          {/* Col 2: Showroom Google Map (Interactive Tabs) */}
           <div className="footer-col-map">
-            <div className="map-header-row">
-              <h3 className="footer-col-title" style={{ margin: 0 }}>
+            <div className="map-col-header">
+              <h3 className="footer-heading" style={{ marginBottom: "0.25rem" }}>
                 Showroom Locations
               </h3>
               <span className="map-subtitle">
-                {activeBranchName} • {activeBranchAddress}
+                {activeBranch === "kakrail"
+                  ? "Kakrail Branch • 18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka"
+                  : "Gulshan Branch • House #07, Road #127, Gulshan Avenue, Dhaka"}
               </span>
             </div>
             <div className="footer-branch-tabs">
-              {hasDbBranches ? (
-                branches.map((b) => (
-                  <button
-                    key={b.branch_id}
-                    type="button"
-                    className={`footer-branch-tab ${activeBranchId === b.branch_id ? "active" : ""}`}
-                    onClick={() => setActiveBranchId(b.branch_id)}
-                  >
-                    {b.short_name || b.name}
-                  </button>
-                ))
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    className={`footer-branch-tab ${activeBranchId === "kakrail" ? "active" : ""}`}
-                    onClick={() => setActiveBranchId("kakrail")}
-                  >
-                    Kakrail Branch (Main)
-                  </button>
-                  <button
-                    type="button"
-                    className={`footer-branch-tab ${activeBranchId === "gulshan" ? "active" : ""}`}
-                    onClick={() => setActiveBranchId("gulshan")}
-                  >
-                    Gulshan Branch
-                  </button>
-                </>
-              )}
+              <button
+                type="button"
+                className={`footer-branch-tab ${activeBranch === "kakrail" ? "active" : ""}`}
+                onClick={() => setActiveBranch("kakrail")}
+              >
+                Kakrail Branch (Main)
+              </button>
+              <button
+                type="button"
+                className={`footer-branch-tab ${activeBranch === "gulshan" ? "active" : ""}`}
+                onClick={() => setActiveBranch("gulshan")}
+              >
+                Gulshan Branch
+              </button>
             </div>
             <div className="map-embed-wrapper-modern">
               <iframe
-                src={activeBranchMapSrc}
+                src={branch.embed_map}
                 loading="lazy"
-                title={`${brandName} Showroom Location - ${activeBranchName}`}
+                title={`DREAM CAR HOUSE Showroom Location - ${branch.name}`}
                 allowFullScreen
               />
               <div className="map-glow-border"></div>
             </div>
             <div className="map-actions-row">
               <a
-                href={activeBranchMapLink}
+                href={branch.map_link}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="map-directions-btn"
@@ -272,66 +208,60 @@ export default function Footer({
                   <polygon points="3 11 22 2 13 21 11 13 3 11" />
                 </svg>
                 <span>Get Live Directions</span>
-              </a>
-              <button
-                type="button"
-                className="map-directions-btn compare-quick-trigger"
-                onClick={openCompareModal}
-                title="Launch Vehicle Compare Engine"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="20" x2="18" y2="10" />
-                  <line x1="12" y1="20" x2="12" y2="4" />
-                  <line x1="6" y1="20" x2="6" y2="14" />
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
                 </svg>
-                <span>Compare Vehicles</span>
-              </button>
+              </a>
             </div>
           </div>
 
-          {/* Col 3: Quick Links */}
+          {/* Col 3: Shortcut Links */}
           <div className="footer-col-links">
-            <h3 className="footer-col-title">Showroom Concierge</h3>
-            <ul className="footer-nav-list">
+            <h3 className="footer-heading">Shortcut Links</h3>
+            <ul className="footer-shortcut-list">
               <li>
-                <Link href="/inventory" className="footer-nav-link">
-                  Complete Inventory
+                <Link href="/">
+                  <span className="shortcut-arrow">›</span> Home Showcase
                 </Link>
               </li>
               <li>
-                <Link href="/cars/brand-new" className="footer-nav-link">
-                  Brand New Arrivals
+                <Link href="/inventory">
+                  <span className="shortcut-arrow">›</span> Complete Inventory
                 </Link>
               </li>
               <li>
-                <Link href="/cars/reconditioned" className="footer-nav-link">
-                  Reconditioned Selection
+                <Link href="/gallery">
+                  <span className="shortcut-arrow">›</span> Showroom Gallery & Media
                 </Link>
               </li>
               <li>
-                <Link href="/cars/pre-owned" className="footer-nav-link">
-                  Certified Pre-Owned
+                <Link href="/#connect-consult">
+                  <span className="shortcut-arrow">›</span> VIP Concierge Lounge
                 </Link>
               </li>
               <li>
-                <Link href="/sell" className="footer-nav-link">
-                  Sell / Consign Your Vehicle
+                <Link href="/#brand-runway-section">
+                  <span className="shortcut-arrow">›</span> Prestigious Marques
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="footer-nav-link">
-                  About Our Heritage
+                <Link href="/#experience">
+                  <span className="shortcut-arrow">›</span> VIP Showroom Experience
                 </Link>
               </li>
               <li>
-                <Link href="/gallery" className="footer-nav-link">
-                  Showroom Visual Gallery
+                <Link href="/sell">
+                  <span className="shortcut-arrow">›</span> Sell Your Luxury Car
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="footer-nav-link">
-                  Contact & Locations
-                </Link>
+                <button
+                  type="button"
+                  onClick={openCompareModal}
+                  style={{ color: "inherit", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit" }}
+                >
+                  <span className="shortcut-arrow">›</span> Compare Vehicles
+                </button>
               </li>
             </ul>
           </div>
@@ -340,7 +270,7 @@ export default function Footer({
         {/* Bottom Copyright & Legal */}
         <div className="footer-bottom-modern">
           <div className="footer-copy-text">
-            © 2026 <strong>{brandName}</strong>. All rights reserved. Kakrail & Gulshan, Dhaka, Bangladesh.
+            © 2026 <strong>DREAM CAR HOUSE</strong>. All rights reserved. Kakrail & Gulshan, Dhaka, Bangladesh.
           </div>
           <div className="footer-sub-links">
             <span className="footer-sub-label">
@@ -351,9 +281,9 @@ export default function Footer({
               Showroom Heritage
             </Link>
             <span className="sep">•</span>
-            <Link href="/contact" className="footer-sub-link">
-              VIP Atelier Access
-            </Link>
+            <a href="#hero-section" className="back-to-top-link">
+              Back to Top ↑
+            </a>
           </div>
         </div>
       </div>

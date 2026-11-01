@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef, useTransition, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Vehicle } from "@/lib/showroomData";
+import { VEHICLE_DATA, Vehicle } from "@/lib/showroomData";
 import {
   PublicShowroomBranch,
   PublicInventoryFilterOptions,
@@ -66,16 +66,27 @@ function InventoryContent({
   }, [searchParams]);
 
   // Compute available brands dynamically
+  const effectiveVehicles = useMemo(() => {
+    if (
+      initialVehicles &&
+      initialVehicles.length > 0 &&
+      !initialVehicles.every((v) => v.image?.includes("demo.jpg"))
+    ) {
+      return initialVehicles;
+    }
+    return VEHICLE_DATA;
+  }, [initialVehicles]);
+
   const availableBrands = useMemo(() => {
     if (filterOptions?.brands && filterOptions.brands.length > 0) {
       return filterOptions.brands.map((b) => b.name);
     }
     const set = new Set<string>();
-    initialVehicles.forEach((car) => {
+    effectiveVehicles.forEach((car) => {
       if (car.brand) set.add(car.brand);
     });
     return Array.from(set).sort();
-  }, [filterOptions, initialVehicles]);
+  }, [filterOptions, effectiveVehicles]);
 
   // Compute available body styles dynamically
   const availableBodyStyles = useMemo(() => {
@@ -83,11 +94,11 @@ function InventoryContent({
       return filterOptions.bodyStyles.map((b) => b.body);
     }
     const set = new Set<string>();
-    initialVehicles.forEach((car) => {
+    effectiveVehicles.forEach((car) => {
       if (car.body_style) set.add(car.body_style);
     });
     return Array.from(set).sort();
-  }, [filterOptions, initialVehicles]);
+  }, [filterOptions, effectiveVehicles]);
 
   // Update URL search parameters smoothly
   const applyFilters = (updates: Record<string, string>, resetPage = true) => {
@@ -162,7 +173,7 @@ function InventoryContent({
 
   // Instant client-side responsiveness combined with SSR
   const filteredVehicles = useMemo(() => {
-    return initialVehicles.filter((car) => {
+    return effectiveVehicles.filter((car) => {
       // Query filter
       if (query.trim()) {
         const q = query.toLowerCase();
@@ -197,7 +208,7 @@ function InventoryContent({
 
       return true;
     });
-  }, [initialVehicles, query, selectedBrand, selectedType, selectedBranch, selectedBodyStyle]);
+  }, [effectiveVehicles, query, selectedBrand, selectedType, selectedBranch, selectedBodyStyle]);
 
   // Construct dynamic showroom branches string
   const branchesDescription = useMemo(() => {
