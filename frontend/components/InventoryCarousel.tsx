@@ -2,22 +2,23 @@
 
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { Vehicle } from "@/lib/showroomData";
+import { VEHICLE_DATA, Vehicle } from "@/lib/showroomData";
 import { useUI } from "@/lib/UIContext";
 
 interface InventoryCarouselProps {
   vehicles?: Vehicle[];
 }
 
-export default function InventoryCarousel({ vehicles }: InventoryCarouselProps) {
+export default function InventoryCarousel({ vehicles }: InventoryCarouselProps = {}) {
   const { openCarModal } = useUI();
   const trackRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const items = vehicles || [];
+  // If database vehicles are provided and non-empty, use them; else fallback to VEHICLE_DATA
+  const items = vehicles && vehicles.length > 0 ? vehicles : VEHICLE_DATA;
 
-  // Repeated dataset for mathematically seamless, infinite bidirectional wrapping
-  const marqueeData = useMemo<Vehicle[]>(() => {
+  // 3-tile duplicated dataset for mathematically seamless, infinite bidirectional wrapping
+  const marqueeData = useMemo(() => {
     if (items.length === 0) return [];
     if (items.length >= 4) {
       return [...items, ...items, ...items];
@@ -27,317 +28,231 @@ export default function InventoryCarousel({ vehicles }: InventoryCarouselProps) 
 
   // Animation & Physics Refs
   const posRef = useRef(0);
-  const singleWidthRef = useRef(0);
   const isDraggingRef = useRef(false);
-  const hasDraggedRef = useRef(false);
-  const isHoveredRef = useRef(false);
-  const dragStartXRef = useRef(0);
-  const dragStartPosRef = useRef(0);
-  const lastPointerXRef = useRef(0);
+  const [isGrabbing, setIsGrabbing] = useState(false);
+  const startXRef = useRef(0);
+  const dragDistRef = useRef(0);
+  const lastXRef = useRef(0);
   const lastTimeRef = useRef(0);
   const velocityRef = useRef(0);
-  const autoSpeedRef = useRef(0.75); // Natural slow-motion pace matching showroom style
+  const isHoveredRef = useRef(false);
+  const rafIdRef = useRef<number | null>(null);
 
-  // Touch direction lock (distinguishes horizontal swipe vs vertical page scroll)
-  const isTouchHorizontalRef = useRef<boolean | null>(null);
-  const touchStartYRef = useRef(0);
+  // Base auto-scroll speed (pixels per frame at 60fps)
+  const BASE_SPEED = 0.85;
 
-  const [isGrabbing, setIsGrabbing] = useState(false);
+  // Render position to DOM
+  const updateTransform = useCallback(() => {
+    if (!trackRef.current) return;
+    trackRef.current.style.transform = `translate3d(${posRef.current}px, 0, 0)`;
+  }, []);
 
-  // Recalculate single set width on mount and resize
-  const measureWidth = useCallback(() => {
-    const track = trackRef.current;
-    if (track) {
-      // With 3 copies, one full set width is total scrollWidth divided by 3
-      const totalWidth = track.scrollWidth;
-      const singleWidth = totalWidth / 3;
-      if (singleWidth > 0) {
-        singleWidthRef.current = singleWidth;
-        // Start in the middle copy so user can immediately swipe left or right
-        if (posRef.current === 0) {
-          posRef.current = -singleWidth;
-          track.style.transform = `translate3d(${posRef.current}px, 0, 0)`;
-        }
-      }
+  // Safe wrapping logic: calculates exact loop width based on 1/3 of the marquee track
+  const checkWrap = useCallback(() => {
+    if (!trackRef.current) return;
+    const singleSetWidth = trackRef.current.scrollWidth / (marqueeData.length / (items.length || 1));
+    if (singleSetWidth <= 0) return;
+
+    // Scrolled too far left (negative) -> wrap back right
+    if (posRef.current <= -singleSetWidth * 2) {
+      posRef.current += singleSetWidth;
     }
-  }, []);
+    // Scrolled too far right (positive) -> wrap back left
+    else if (posRef.current >= -singleSetWidth * 0.2) {
+      posRef.current -= singleSetWidth;
+    }
+  }, [marqueeData.length, items.length]);
 
+  // Main 60FPS physics and auto-scroll animation loop
   useEffect(() => {
-    measureWidth();
-    // Re-measure after images load
-    const timer = setTimeout(measureWidth, 500);
-    window.addEventListener("resize", measureWidth);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("resize", measureWidth);
-    };
-  }, [measureWidth]);
+    // Initial centering offset so right-drags don't hit edge immediately
+    if (trackRef.current) {
+      const initialOffset = -(trackRef.current.scrollWidth / 3);
+      posRef.current = initialOffset;
+      updateTransform();
+    }
 
-  // Main 60fps Physics & Motion Loop
-  useEffect(() => {
-    let animId: number;
-
-    const tick = () => {
-      const track = trackRef.current;
-      const singleWidth = singleWidthRef.current;
-
-      if (track && singleWidth > 0) {
-        if (!isDraggingRef.current) {
-          // 1. Inertia Momentum Decay (if user swiped and released)
-          if (Math.abs(velocityRef.current) > 0.08) {
-            posRef.current += velocityRef.current;
-            velocityRef.current *= 0.94; // Buttery friction
-          } else {
-            velocityRef.current = 0;
-            // 2. Continuous Natural Auto-Motion (pauses on hover)
-            if (!isHoveredRef.current) {
-              posRef.current += autoSpeedRef.current;
-            }
-          }
-
-          // 3. Seamless Infinite Modular Wrapping
-          while (posRef.current < -2 * singleWidth) {
-            posRef.current += singleWidth;
-          }
-          while (posRef.current > -singleWidth) {
-            posRef.current -= singleWidth;
-          }
-
-          track.style.transform = `translate3d(${posRef.current}px, 0, 0)`;
+    const animate = () => {
+      if (!isDraggingRef.current) {
+        // Apply friction to momentum velocity
+        velocityRef.current *= 0.94;
+        if (Math.abs(velocityRef.current) < 0.05) {
+          velocityRef.current = 0;
         }
+
+        // Auto-cruise when not hovered
+        const autoMovement = isHoveredRef.current ? 0 : -BASE_SPEED;
+        posRef.current += autoMovement + velocityRef.current;
+
+        checkWrap();
+        updateTransform();
       }
 
-      animId = requestAnimationFrame(tick);
+      rafIdRef.current = requestAnimationFrame(animate);
     };
 
-    animId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animId);
-  }, []);
+    rafIdRef.current = requestAnimationFrame(animate);
 
-  // Hover Handlers
-  const handleMouseEnter = () => {
-    isHoveredRef.current = true;
-  };
-  const handleMouseLeave = () => {
-    isHoveredRef.current = false;
-  };
+    return () => {
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+    };
+  }, [checkWrap, updateTransform]);
 
   // Mouse Drag Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Only primary mouse button (left-click)
+    // Left click only
     if (e.button !== 0) return;
-
     isDraggingRef.current = true;
-    hasDraggedRef.current = false;
-    dragStartXRef.current = e.clientX;
-    dragStartPosRef.current = posRef.current;
-    lastPointerXRef.current = e.clientX;
+    setIsGrabbing(true);
+    startXRef.current = e.clientX;
+    dragDistRef.current = 0;
+    lastXRef.current = e.clientX;
     lastTimeRef.current = performance.now();
     velocityRef.current = 0;
-    setIsGrabbing(true);
-
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (!isDraggingRef.current) return;
-
-      const deltaX = moveEvent.clientX - dragStartXRef.current;
-      if (Math.abs(deltaX) > 5) {
-        hasDraggedRef.current = true;
-      }
-
-      posRef.current = dragStartPosRef.current + deltaX;
-
-      // Handle wrapping while dragging
-      const singleWidth = singleWidthRef.current;
-      if (singleWidth > 0) {
-        while (posRef.current < -2 * singleWidth) {
-          posRef.current += singleWidth;
-          dragStartPosRef.current += singleWidth;
-        }
-        while (posRef.current > -singleWidth) {
-          posRef.current -= singleWidth;
-          dragStartPosRef.current -= singleWidth;
-        }
-      }
-
-      // Track instant velocity for release inertia
-      const now = performance.now();
-      const dt = now - lastTimeRef.current;
-      if (dt > 8) {
-        const instantVel = ((moveEvent.clientX - lastPointerXRef.current) / dt) * 16.67;
-        velocityRef.current = velocityRef.current * 0.35 + instantVel * 0.65;
-        lastPointerXRef.current = moveEvent.clientX;
-        lastTimeRef.current = now;
-      }
-
-      if (trackRef.current) {
-        trackRef.current.style.transform = `translate3d(${posRef.current}px, 0, 0)`;
-      }
-    };
-
-    const handleMouseUp = () => {
-      isDraggingRef.current = false;
-      setIsGrabbing(false);
-
-      // Clamp velocity for safe momentum
-      velocityRef.current = Math.max(-28, Math.min(28, velocityRef.current));
-
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-
-      // Reset drag flag after micro-delay so card onClick knows whether it was a drag or click
-      setTimeout(() => {
-        hasDraggedRef.current = false;
-      }, 70);
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
   };
 
-  // Touch Swipe Handlers (Mobile with vertical scroll pass-through)
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length !== 1) return;
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingRef.current) return;
+    e.preventDefault();
 
+    const currentX = e.clientX;
+    const now = performance.now();
+    const deltaX = currentX - lastXRef.current;
+    const dt = Math.max(1, now - lastTimeRef.current);
+
+    posRef.current += deltaX;
+    dragDistRef.current += Math.abs(deltaX);
+
+    // Track fling velocity (pixels/frame equivalent)
+    velocityRef.current = (deltaX / dt) * 16;
+
+    lastXRef.current = currentX;
+    lastTimeRef.current = now;
+
+    checkWrap();
+    updateTransform();
+  };
+
+  const handleMouseUp = () => {
+    if (isDraggingRef.current) {
+      isDraggingRef.current = false;
+      setIsGrabbing(false);
+      // Clamp excessive fling velocity
+      velocityRef.current = Math.max(-25, Math.min(25, velocityRef.current));
+    }
+  };
+
+  // Touch Handlers for Mobile & Tablet Swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 0) return;
     isDraggingRef.current = true;
-    hasDraggedRef.current = false;
-    isTouchHorizontalRef.current = null;
-    dragStartXRef.current = e.touches[0].clientX;
-    touchStartYRef.current = e.touches[0].clientY;
-    dragStartPosRef.current = posRef.current;
-    lastPointerXRef.current = e.touches[0].clientX;
+    setIsGrabbing(true);
+    const touchX = e.touches[0].clientX;
+    startXRef.current = touchX;
+    dragDistRef.current = 0;
+    lastXRef.current = touchX;
     lastTimeRef.current = performance.now();
     velocityRef.current = 0;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDraggingRef.current || e.touches.length !== 1) return;
+    if (!isDraggingRef.current || e.touches.length === 0) return;
 
-    const currentX = e.touches[0].clientX;
-    const currentY = e.touches[0].clientY;
-    const deltaX = currentX - dragStartXRef.current;
-    const deltaY = currentY - touchStartYRef.current;
+    const touchX = e.touches[0].clientX;
+    const now = performance.now();
+    const deltaX = touchX - lastXRef.current;
+    const dt = Math.max(1, now - lastTimeRef.current);
 
-    // Detect gesture direction on first movement
-    if (isTouchHorizontalRef.current === null) {
-      if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
-        isTouchHorizontalRef.current = Math.abs(deltaX) >= Math.abs(deltaY);
-      }
-    }
+    posRef.current += deltaX;
+    dragDistRef.current += Math.abs(deltaX);
 
-    // If scrolling vertically, let the browser scroll down the page naturally
-    if (isTouchHorizontalRef.current === false) {
-      return;
-    }
+    velocityRef.current = (deltaX / dt) * 16;
 
-    // If swiping horizontally, control carousel
-    if (isTouchHorizontalRef.current === true) {
-      hasDraggedRef.current = true;
-      posRef.current = dragStartPosRef.current + deltaX;
+    lastXRef.current = touchX;
+    lastTimeRef.current = now;
 
-      const singleWidth = singleWidthRef.current;
-      if (singleWidth > 0) {
-        while (posRef.current < -2 * singleWidth) {
-          posRef.current += singleWidth;
-          dragStartPosRef.current += singleWidth;
-        }
-        while (posRef.current > -singleWidth) {
-          posRef.current -= singleWidth;
-          dragStartPosRef.current -= singleWidth;
-        }
-      }
-
-      const now = performance.now();
-      const dt = now - lastTimeRef.current;
-      if (dt > 8) {
-        const instantVel = ((currentX - lastPointerXRef.current) / dt) * 16.67;
-        velocityRef.current = velocityRef.current * 0.35 + instantVel * 0.65;
-        lastPointerXRef.current = currentX;
-        lastTimeRef.current = now;
-      }
-
-      if (trackRef.current) {
-        trackRef.current.style.transform = `translate3d(${posRef.current}px, 0, 0)`;
-      }
-    }
+    checkWrap();
+    updateTransform();
   };
 
   const handleTouchEnd = () => {
-    isDraggingRef.current = false;
-    isTouchHorizontalRef.current = null;
-
-    // Clamp velocity for safe momentum
-    velocityRef.current = Math.max(-28, Math.min(28, velocityRef.current));
-
-    setTimeout(() => {
-      hasDraggedRef.current = false;
-    }, 70);
+    if (isDraggingRef.current) {
+      isDraggingRef.current = false;
+      setIsGrabbing(false);
+      velocityRef.current = Math.max(-25, Math.min(25, velocityRef.current));
+    }
   };
 
-  // Card Click: Only open modal if not dragging/swiping
+  // Click vs Drag discrimination (prevents accidental modal open on swipe)
   const handleCardClick = (car: Vehicle) => {
-    if (hasDraggedRef.current) return;
-    openCarModal(car);
+    if (dragDistRef.current < 6) {
+      openCarModal(car);
+    }
   };
 
   return (
-    <section id="carousel-section" className="carousel-section max-w-7xl">
+    <section
+      className="carousel-section"
+      id="carousel-section"
+      onMouseEnter={() => {
+        isHoveredRef.current = true;
+      }}
+      onMouseLeave={() => {
+        isHoveredRef.current = false;
+        handleMouseUp();
+      }}
+    >
       <div className="section-head">
         <h2 className="section-h2">Current Inventory</h2>
         <Link className="see-all-link" href="/inventory">
-          See All
+          See All ({items.length})
         </Link>
       </div>
 
       <div
+        className="carousel-viewport"
         ref={containerRef}
-        className="inventory-slider-container"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
       >
         <div
+          className="carousel-track"
           ref={trackRef}
-          id="home-slider-track"
-          className={`inventory-slider-track ${isGrabbing ? "is-grabbing" : ""}`}
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onTouchCancel={handleTouchEnd}
+          style={{ cursor: isGrabbing ? "grabbing" : "grab" }}
         >
-          {items.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#9ca3af", width: "100%" }}>
-              No featured vehicles currently available in the showroom vault.
-            </div>
-          ) : (
-            marqueeData.map((car, index) => {
-              const branchName = car.branch_name || car.branch?.name || "";
-              return (
-                <div key={`${car.id}-${index}`} className="card-item-slider">
+          {marqueeData.map((car, index) => {
+            const branchName =
+              car.branch_name ||
+              (car.branch_id === "gulshan" ? "Gulshan Branch" : "Kakrail Branch");
+            return (
+              <div key={`${car.id}-${index}`} className="card-item-slider">
+                <div
+                  className="group"
+                  onClick={() => handleCardClick(car)}
+                  style={{ cursor: isGrabbing ? "grabbing" : "pointer" }}
+                >
                   <div
-                    className="group"
-                    onClick={() => handleCardClick(car)}
-                    style={{ cursor: isGrabbing ? "grabbing" : "pointer" }}
+                    className="portrait-image-wrapper"
+                    style={{ position: "relative" }}
                   >
-                    <div
-                      className="portrait-image-wrapper"
-                      style={{ position: "relative" }}
-                    >
-                      <img
-                        src={car.image}
-                        alt={car.name}
-                        loading="lazy"
-                        draggable={false}
-                      />
-                      {branchName ? (
-                        <span className="card-branch-tag">{branchName}</span>
-                      ) : null}
-                    </div>
-                    <h3 className="card-car-title">{car.name}</h3>
+                    <img
+                      src={car.image}
+                      alt={car.name}
+                      loading="lazy"
+                      draggable={false}
+                    />
+                    <span className="card-branch-tag">{branchName}</span>
                   </div>
+                  <h3 className="card-car-title">{car.name}</h3>
                 </div>
-              );
-            })
-          )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

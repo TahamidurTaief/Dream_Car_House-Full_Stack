@@ -39,73 +39,87 @@ function getBrandAccentColor(brand: string): string {
 const SHOWROOM_STORIES: ShowroomStoryItem[] = [
   {
     id: "g580",
-    tag: "NEW ARRIVAL • KAKRAIL SHOWROOM",
-    title: "2025 Mercedes-Benz G 580 EQ",
-    subtitle: "1,164 Nm Torque • 4 Individual Electric Motors • Bespoke Nappa Leather",
-    priceNote: "Available in Showroom",
-    image: "https://images.unsplash.com/photo-1520050206274-a1ae44613e6d?auto=format&fit=crop&w=1600&q=85",
-    ctaText: "Inspect Vehicle",
-    ctaLink: "/cars/mercedes-benz-g-580-2025-black",
-    whatsappMessage: "Hello Dream Car House, I want to inquire about the Mercedes-Benz G 580 from your Showroom Story.",
+    tag: "BRAND NEW ARRIVAL • KAKRAIL MAIN VAULT",
+    title: "Mercedes-Benz G 580 Electric",
+    subtitle: "Quad-Motor Edition ONE • 116 kWh Battery • G-Turn Capable",
+    priceNote: "Exclusive Allocation • BDT 4.85 Crore",
+    image: "https://images.unsplash.com/photo-1520031441872-265e4ff70366?auto=format&fit=crop&w=1400&q=90",
+    ctaText: "Inspect G 580 Vault",
+    ctaLink: "/cars/mercedes-g580-electric",
+    whatsappMessage: "Hello Dream Car House, I want to inquire about the Mercedes-Benz G 580 Electric from your Showroom Story.",
     timeAgo: "2h ago",
-    brand: "Mercedes-Benz",
+    brand: "MERCEDES-BENZ",
     accentColor: "#38bdf8",
   },
   {
-    id: "lc250",
-    tag: "FLAGSHIP 4WD • GULSHAN AVENUE",
-    title: "2024 Land Cruiser 250 First Edition",
-    subtitle: "2400cc Turbo Hybrid • Full-Time 4WD with Torsen Differential • Rigid Chassis",
-    priceNote: "Immediate Delivery (5,000 km)",
-    image: "https://images.unsplash.com/photo-1594502184342-2e12f877aa73?auto=format&fit=crop&w=1600&q=85",
-    ctaText: "Inspect Vehicle",
-    ctaLink: "/cars/toyota-land-cruiser-250-2024-black-5000km",
-    whatsappMessage: "Hello Dream Car House, I want to inquire about the Land Cruiser 250 from your Showroom Story.",
+    id: "gt3rs",
+    tag: "TRACK WEAPON • GULSHAN SHOWROOM",
+    title: "Porsche 911 GT3 RS (992)",
+    subtitle: "Weissach Package • 4.0L Naturally Aspirated • 9,000 RPM",
+    priceNote: "Private Vault Stock • BDT 5.40 Crore",
+    image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1400&q=90",
+    ctaText: "View GT3 RS Details",
+    ctaLink: "/cars/porsche-911-gt3-rs",
+    whatsappMessage: "Hello Dream Car House, I want to inquire about the Porsche 911 GT3 RS from your Showroom Story.",
     timeAgo: "4h ago",
-    brand: "Toyota",
+    brand: "PORSCHE",
+    accentColor: "#ec4899",
+  },
+  {
+    id: "lc250",
+    tag: "FIRST EDITION • READY FOR HANDOVER",
+    title: "Toyota Land Cruiser 250",
+    subtitle: "Heritage Round LEDs • 2.4L i-FORCE MAX Turbo Hybrid 4WD",
+    priceNote: "Showroom Ready • BDT 2.65 Crore",
+    image: "https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?auto=format&fit=crop&w=1400&q=90",
+    ctaText: "Schedule LC 250 Test",
+    ctaLink: "/cars/land-cruiser-250-first-edition",
+    whatsappMessage: "Hello Dream Car House, I want to inquire about the Land Cruiser 250 First Edition from your Showroom Story.",
+    timeAgo: "6h ago",
+    brand: "TOYOTA",
     accentColor: "#ef4444",
   },
   {
-    id: "x7",
-    tag: "VIP ALLOCATION • GULSHAN LOUNGE",
-    title: "BMW X7 xDrive40i M-Sport Package",
-    subtitle: "Sky Lounge Panoramic LED Roof • 6-Seater Executive Lounge • 3000cc TwinPower Turbo",
-    priceNote: "Brand New Condition (13,000 km)",
-    image: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=1600&q=85",
-    ctaText: "Inspect Vehicle",
-    ctaLink: "/cars/bmw-x7-xdrive40i-2022-black-13000km",
-    whatsappMessage: "Hello Dream Car House, I want to inquire about the BMW X7 M-Sport from your Showroom Story.",
-    timeAgo: "6h ago",
-    brand: "BMW",
-    accentColor: "#3b82f6",
+    id: "maybach",
+    tag: "V12 PINNACLE • FIRST CLASS SUITE",
+    title: "Mercedes-Maybach S 680",
+    subtitle: "6.0L Bi-Turbo V12 • 621 HP • Two-Tone Nautical Blue / High-Tech Silver",
+    priceNote: "VIP Flagship Allocation",
+    image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1400&q=90",
+    ctaText: "Reserve Maybach Lounge",
+    ctaLink: "/cars/mercedes-maybach-s680",
+    whatsappMessage: "Hello Dream Car House, I want to inquire about the Mercedes-Maybach S 680 from your Showroom Story.",
+    timeAgo: "12h ago",
+    brand: "MAYBACH",
+    accentColor: "#eab308",
+  },
+  {
+    id: "defender",
+    tag: "V8 CARPATHIAN • GULSHAN ATELIER",
+    title: "Land Rover Defender 110 V8",
+    subtitle: "5.0L Supercharged V8 518 HP • Satin Protective Film • Quad Exhausts",
+    priceNote: "In Showroom • BDT 3.25 Crore",
+    image: "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=1400&q=90",
+    ctaText: "Explore Defender V8",
+    ctaLink: "/cars/defender-110-v8-carpathian",
+    whatsappMessage: "Hello Dream Car House, I want to inquire about the Defender 110 V8 from your Showroom Story.",
+    timeAgo: "1d ago",
+    brand: "LAND ROVER",
+    accentColor: "#22c55e",
   },
   {
     id: "lx600",
-    tag: "PRESTIGE COLLECTION • KAKRAIL",
-    title: "2023 Lexus LX 600 Ultra Luxury",
-    subtitle: "4-Seater Ottoman VIP Suite • 48° Reclining Rear Massage Seats • 3.5L Twin-Turbo V6",
-    priceNote: "Prestige Spec • Call for Price",
-    image: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1600&q=85",
-    ctaText: "Explore Collection",
-    ctaLink: "/inventory?brand=Lexus",
-    whatsappMessage: "Hello Dream Car House, I saw the Lexus LX 600 in your Stories. What is the current price?",
-    timeAgo: "9h ago",
-    brand: "Lexus",
+    tag: "VIP 4-SEATER EXECUTIVE • VIP SUITE",
+    title: "Lexus LX 600 VIP Executive",
+    subtitle: "Twin-Turbo 3.5L V6 • Rear Ottoman Recliner • Mark Levinson 25-Speaker",
+    priceNote: "Direct Allocation • BDT 3.95 Crore",
+    image: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1400&q=90",
+    ctaText: "Book LX 600 Viewing",
+    ctaLink: "/cars/lexus-lx600-vip",
+    whatsappMessage: "Hello Dream Car House, I want to inquire about the Lexus LX 600 VIP from your Showroom Story.",
+    timeAgo: "2d ago",
+    brand: "LEXUS",
     accentColor: "#f59e0b",
-  },
-  {
-    id: "bespoke",
-    tag: "CONCIERGE • BESPOKE IMPORT",
-    title: "Direct Japan & European Custom Order",
-    subtitle: "Order any Rolls-Royce, Porsche GT3, or Maybach spec with white-glove import & registration",
-    priceNote: "VIP Concierge Service",
-    image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1600&q=85",
-    ctaText: "Connect to Consult",
-    ctaLink: "/contact",
-    whatsappMessage: "Hello Dream Car House, I want to consult about custom importing a bespoke luxury car.",
-    timeAgo: "12h ago",
-    brand: "DREAM CAR HOUSE",
-    accentColor: "#10b981",
   },
 ];
 
@@ -157,9 +171,9 @@ export default function ShowroomStories({
   const [isPaused, setIsPaused] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const startTimeRef = useRef<number>(Date.now());
+  const startTimestampRef = useRef<number>(0);
   const elapsedBeforePauseRef = useRef<number>(0);
+  const rafIdRef = useRef<number | null>(null);
 
   // Advance to next story
   const nextStory = useCallback(() => {
@@ -167,12 +181,11 @@ export default function ShowroomStories({
       setCurrentIndex((prev) => prev + 1);
       setProgress(0);
       elapsedBeforePauseRef.current = 0;
-      startTimeRef.current = Date.now();
+      startTimestampRef.current = performance.now();
       if (!isMuted) {
         playNextSupercarSound();
       }
     } else {
-      // Loop or close stories when all finished
       closeStories();
     }
   }, [currentIndex, activeStories.length, isMuted, closeStories]);
@@ -183,83 +196,90 @@ export default function ShowroomStories({
       setCurrentIndex((prev) => prev - 1);
       setProgress(0);
       elapsedBeforePauseRef.current = 0;
-      startTimeRef.current = Date.now();
+      startTimestampRef.current = performance.now();
+      if (!isMuted) {
+        playNextSupercarSound();
+      }
     } else {
       setProgress(0);
       elapsedBeforePauseRef.current = 0;
-      startTimeRef.current = Date.now();
+      startTimestampRef.current = performance.now();
     }
-  }, [currentIndex]);
+  }, [currentIndex, isMuted]);
 
-  // Handle active progress bar timing
+  // Main 60fps timer animation loop
   useEffect(() => {
-    if (!isStoriesOpen) {
+    if (!isStoriesOpen) return;
+
+    startTimestampRef.current = performance.now() - elapsedBeforePauseRef.current;
+
+    const tick = (now: number) => {
+      if (!isPaused) {
+        const elapsed = now - startTimestampRef.current;
+        const currentProgress = Math.min((elapsed / STORY_DURATION_MS) * 100, 100);
+        setProgress(currentProgress);
+
+        if (elapsed >= STORY_DURATION_MS) {
+          nextStory();
+          return;
+        }
+      } else {
+        startTimestampRef.current = now - elapsedBeforePauseRef.current;
+      }
+      rafIdRef.current = requestAnimationFrame(tick);
+    };
+
+    rafIdRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+    };
+  }, [isStoriesOpen, currentIndex, isPaused, nextStory]);
+
+  // Keyboard controls
+  useEffect(() => {
+    if (!isStoriesOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeStories();
+      } else if (e.key === "ArrowRight" || e.key === " ") {
+        nextStory();
+      } else if (e.key === "ArrowLeft") {
+        prevStory();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isStoriesOpen, nextStory, prevStory, closeStories]);
+
+  // Reset when opening
+  useEffect(() => {
+    if (isStoriesOpen) {
       setCurrentIndex(0);
       setProgress(0);
       setIsPaused(false);
       elapsedBeforePauseRef.current = 0;
-      return;
-    }
-
-    if (isPaused) {
-      return;
-    }
-
-    const interval = 40; // 40ms tick for 60fps smoothness
-    const timer = setInterval(() => {
-      const now = Date.now();
-      const totalElapsed = elapsedBeforePauseRef.current + (now - startTimeRef.current);
-      const newProgress = Math.min(100, (totalElapsed / STORY_DURATION_MS) * 100);
-
-      setProgress(newProgress);
-
-      if (totalElapsed >= STORY_DURATION_MS) {
-        clearInterval(timer);
-        nextStory();
-      }
-    }, interval);
-
-    timerRef.current = timer;
-
-    return () => clearInterval(timer);
-  }, [isStoriesOpen, isPaused, currentIndex, nextStory]);
-
-  // Play sound on initial open
-  useEffect(() => {
-    if (isStoriesOpen && !isMuted) {
+      document.body.style.overflow = "hidden";
       playNextSupercarSound();
+    } else {
+      document.body.style.overflow = "";
     }
   }, [isStoriesOpen]);
 
-  // Hold to pause handlers
+  // Pause on touch/mouse hold
   const handleHoldStart = () => {
-    if (!isPaused) {
-      elapsedBeforePauseRef.current += Date.now() - startTimeRef.current;
-      setIsPaused(true);
-    }
+    setIsPaused(true);
+    elapsedBeforePauseRef.current = (progress / 100) * STORY_DURATION_MS;
   };
 
   const handleHoldEnd = () => {
-    if (isPaused) {
-      startTimeRef.current = Date.now();
-      setIsPaused(false);
-    }
+    setIsPaused(false);
+    startTimestampRef.current = performance.now() - elapsedBeforePauseRef.current;
   };
 
-  // Click on screen: left 35% = prev, right 65% = next
-  const handleStoryTap = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const ratio = clickX / rect.width;
-
-    if (ratio < 0.35) {
-      prevStory();
-    } else {
-      nextStory();
-    }
-  };
-
-  const handleCtaClick = (link: string) => {
+  const handleNavigateToCar = (link: string) => {
     closeStories();
     router.push(link);
   };
@@ -268,22 +288,21 @@ export default function ShowroomStories({
 
   const current = activeStories[currentIndex] || activeStories[0];
 
-  const targetPhone = settings?.whatsapp || settings?.hotline || "";
+  const targetPhone = settings?.whatsapp || settings?.hotline || "8801615121312";
   let waPhone = targetPhone.replace(/[^0-9]/g, "");
   if (waPhone.startsWith("0")) {
     waPhone = "88" + waPhone;
   } else if (waPhone && !waPhone.startsWith("880") && waPhone.length === 10) {
     waPhone = "880" + waPhone;
   }
-  const waUrl = waPhone
-    ? `https://wa.me/${waPhone}?text=${encodeURIComponent(current.whatsappMessage)}`
-    : "";
+  if (!waPhone) waPhone = "8801615121312";
+
+  const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(current.whatsappMessage)}`;
 
   return (
     <div className="stories-modal-backdrop" id="stories-modal-backdrop" onClick={closeStories}>
       <div
-        className="stories-viewer-container"
-        id="stories-viewer-container"
+        className="story-viewer-card"
         onClick={(e) => e.stopPropagation()}
         onMouseDown={handleHoldStart}
         onMouseUp={handleHoldEnd}
@@ -298,9 +317,9 @@ export default function ShowroomStories({
             else if (idx === currentIndex) fillPct = progress;
 
             return (
-              <div key={item.id} className="story-progress-track">
+              <div key={item.id} className="story-bar-track">
                 <div
-                  className="story-progress-fill"
+                  className="story-bar-fill"
                   style={{
                     width: `${fillPct}%`,
                     backgroundColor: idx === currentIndex ? item.accentColor : "#ffffff",
@@ -311,102 +330,100 @@ export default function ShowroomStories({
           })}
         </div>
 
-        {/* Story Top Header Bar */}
-        <div className="story-top-header">
-          <div className="story-account-info">
-            <div className="story-avatar-gold-ring">
-              <span className="story-avatar-star">✦</span>
+        {/* Story Header */}
+        <div className="story-header-overlay">
+          <div className="story-creator-info">
+            <div className="story-creator-avatar">
+              <Image
+                src="/assets/dch-logo.webp"
+                alt="DREAM CAR HOUSE"
+                width={1020}
+                height={350}
+                style={{ width: "36px", height: "auto", objectFit: "contain" }}
+                unoptimized
+              />
             </div>
-            <div>
-              <div className="story-account-name-row">
-                <span className="story-account-title">DREAM CAR HOUSE</span>
-                <span className="story-verified-check">✓</span>
-              </div>
-              <span className="story-timestamp">{current.timeAgo} • VIP Showroom Live</span>
+            <div className="story-creator-texts">
+              <span className="story-creator-title">{current.brand}</span>
+              <span className="story-creator-sub">{current.timeAgo} • VIP Showroom Spotlight</span>
             </div>
           </div>
 
           <div className="story-header-actions">
-            {/* Pause Indicator */}
-            {isPaused && <span className="story-pause-badge">PAUSED</span>}
-
-            {/* Sound Toggle Button */}
             <button
-              type="button"
-              className="story-icon-btn"
+              className="story-action-btn"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsMuted(!isMuted);
               }}
-              title={isMuted ? "Unmute Engine Audio" : "Mute Engine Audio"}
-              aria-label="Toggle Story Audio"
+              title={isMuted ? "Unmute Supercar Audio" : "Mute Audio"}
             >
               {isMuted ? (
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M11 5L6 9H2v6h4l5 4V5z"/>
-                  <line x1="23" y1="9" x2="17" y2="15"/>
-                  <line x1="17" y1="9" x2="23" y2="15"/>
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                  <line x1="23" y1="9" x2="17" y2="15" />
+                  <line x1="17" y1="9" x2="23" y2="15" />
                 </svg>
               ) : (
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
                 </svg>
               )}
             </button>
 
-            {/* Close Button */}
             <button
-              type="button"
-              className="story-icon-btn story-close-btn"
+              className="story-action-btn"
               onClick={(e) => {
                 e.stopPropagation();
                 closeStories();
               }}
-              title="Close Stories (ESC)"
-              aria-label="Close Stories"
+              title="Close Stories (Esc)"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M18 6L6 18M6 6l12 12" />
               </svg>
             </button>
           </div>
         </div>
 
-        {/* Story Media / Image Area */}
-        <div className="story-media-area" onClick={handleStoryTap}>
+        {/* Story Background Photo */}
+        <div className="story-photo-canvas">
           <Image
-            key={current.id}
             src={current.image}
             alt={current.title}
             fill
-            className="story-bg-image"
             priority
-            sizes="(max-width: 768px) 100vw, 450px"
+            sizes="(max-width: 768px) 100vw, 440px"
+            className="story-canvas-img"
           />
-
-          {/* Vignette Gradients */}
-          <div className="story-vignette-top"></div>
-          <div className="story-vignette-bottom"></div>
-
-          {/* Tap Navigation Hints (Invisible touch targets) */}
-          <div className="story-tap-left" title="Tap for Previous Story"></div>
-          <div className="story-tap-right" title="Tap for Next Story"></div>
+          <div className="story-photo-vignette" />
         </div>
 
-        {/* Story Bottom Content & Actions */}
-        <div className="story-bottom-content">
-          <div
-            className="story-tag-pill"
-            style={{
-              backgroundColor: `${current.accentColor}22`,
-              borderColor: `${current.accentColor}66`,
-              color: current.accentColor,
-            }}
-          >
-            <span className="story-tag-pulse" style={{ backgroundColor: current.accentColor }}></span>
-            <span>{current.tag}</span>
+        {/* Story Tap Navigation Zones (Left 35% = Prev, Right 65% = Next) */}
+        <div
+          className="story-tap-zone zone-left"
+          onClick={(e) => {
+            e.stopPropagation();
+            prevStory();
+          }}
+          title="Previous Story"
+        />
+        <div
+          className="story-tap-zone zone-right"
+          onClick={(e) => {
+            e.stopPropagation();
+            nextStory();
+          }}
+          title="Next Story"
+        />
+
+        {/* Story Bottom Content Card */}
+        <div className="story-bottom-panel" onClick={(e) => e.stopPropagation()}>
+          <div className="story-pill-row">
+            <span className="story-alloc-tag" style={{ borderColor: current.accentColor, color: current.accentColor }}>
+              {current.tag}
+            </span>
           </div>
 
           <h3 className="story-headline">{current.title}</h3>
@@ -419,38 +436,30 @@ export default function ShowroomStories({
             </span>
           </div>
 
-          {/* Action Buttons */}
-          <div className="story-action-buttons">
+          <div className="story-interactive-row">
             <button
-              type="button"
-              className="story-primary-cta"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCtaClick(current.ctaLink);
-              }}
+              className="story-primary-inspect-btn"
+              onClick={() => handleNavigateToCar(current.ctaLink)}
             >
               <span>{current.ctaText}</span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
+                <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </button>
 
-            {waUrl && (
-              <a
-                href={waUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="story-whatsapp-cta"
-                onClick={(e) => e.stopPropagation()}
-                title="Chat with VIP Concierge on WhatsApp"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.043.072.043.419-.101.824z" />
-                </svg>
-                <span>WhatsApp</span>
-              </a>
-            )}
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="story-whatsapp-cta"
+              onClick={(e) => e.stopPropagation()}
+              title="Chat with VIP Concierge on WhatsApp"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.043.072.043.419-.101.824z" />
+              </svg>
+              <span>WhatsApp</span>
+            </a>
           </div>
         </div>
       </div>

@@ -17,16 +17,17 @@ export default function AboutClient({
 } = {}) {
   const { openVideoModal, openAppointmentModal } = useUI();
 
-  const targetPhone = settings?.whatsapp || settings?.hotline || "";
+  const brandName = settings?.name || "DREAM CAR HOUSE";
+  const targetPhone = settings?.whatsapp || settings?.hotline || "8801615121312";
   let waPhone = targetPhone.replace(/[^0-9]/g, "");
   if (waPhone.startsWith("0")) {
     waPhone = "88" + waPhone;
   } else if (waPhone && !waPhone.startsWith("880") && waPhone.length === 10) {
     waPhone = "880" + waPhone;
   }
-  const waUrl = waPhone
-    ? `https://wa.me/${waPhone}?text=${encodeURIComponent("Hello Dream Car House, I would like to schedule a private showroom consultation.")}`
-    : "";
+  if (!waPhone) waPhone = "8801615121312";
+
+  const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(`Hello ${brandName}, I would like to schedule a private showroom consultation.`)}`;
 
   return (
     <div className="about-page-wrap">
@@ -35,15 +36,22 @@ export default function AboutClient({
         <div style={{ marginBottom: "1.25rem", display: "flex", justifyContent: "center" }}>
           <Image
             src="/assets/dch-logo.webp"
-            alt="DREAM CAR HOUSE Flagship Logo"
-            width={180}
-            height={68}
-            style={{ height: "52px", width: "auto", objectFit: "contain", filter: "drop-shadow(0 4px 14px rgba(0,0,0,0.6))" }}
+            alt={`${brandName} Flagship Logo`}
+            width={1020}
+            height={350}
+            style={{
+              height: "72px",
+              width: "auto",
+              maxWidth: "340px",
+              objectFit: "contain",
+              filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.85)) drop-shadow(0 0 16px rgba(255,255,255,0.2))",
+            }}
             priority
+            unoptimized
           />
         </div>
         <div className="about-pill-badge">
-          THE DREAM CAR HOUSE STORY
+          THE {brandName.toUpperCase()} STORY
         </div>
         <h1 className="about-main-title">
           Where Automotive Passion Meets Unrivaled Luxury
@@ -79,7 +87,7 @@ export default function AboutClient({
         <div
           className="about-reel-card group"
           onClick={() => openVideoModal("reel")}
-          title="Click to Watch DREAM CAR HOUSE 4K Showroom Cinematic Reel"
+          title={`Click to Watch ${brandName} 4K Showroom Cinematic Reel`}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
@@ -91,7 +99,7 @@ export default function AboutClient({
         >
           <Image
             src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1600&q=85"
-            alt="DREAM CAR HOUSE Flagship Luxury Showroom Floor"
+            alt={`${brandName} Flagship Luxury Showroom Floor`}
             fill
             sizes="(max-width: 900px) 100vw, 50vw"
             style={{ objectFit: "cover" }}
@@ -100,133 +108,102 @@ export default function AboutClient({
           <div className="about-reel-overlay"></div>
 
           {/* Central Pulsing Play Button */}
-          <div className="about-reel-play-center">
-            <div className="about-play-circle" aria-label="Play Reel">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <polygon points="7 4 20 12 7 20 7 4" />
-              </svg>
-            </div>
-            <span className="about-play-label">WATCH SHOWROOM REEL</span>
+          <div className="about-reel-play-circle" aria-label="Play Showroom Cinema Reel">
+            <svg viewBox="0 0 24 24" className="about-play-triangle">
+              <polygon points="7 4 20 12 7 20 7 4" />
+            </svg>
           </div>
 
-          {/* Bottom Bar Info */}
+          {/* Bottom Reel Badge Information */}
           <div className="about-reel-bottom">
-            <span className="about-reel-title-sub">Flagship Automotive Showcase</span>
-            <span className="about-reel-duration-pill">4K REEL • 01:45</span>
+            <span className="about-reel-tag">4K SHOWROOM CINEMA REEL</span>
+            <h3 className="about-reel-title">Atelier Floor Tour & Supercar Deliveries</h3>
+            <span className="about-reel-hint">Click to play with engine audio ✦</span>
           </div>
         </div>
 
-        {/* Editorial Text */}
+        {/* Editorial Text Narrative */}
         <div className="about-story-text">
-          <span className="about-story-eyebrow">OUR HERITAGE & PHILOSOPHY</span>
-          <h2 className="about-story-title">
-            An Uncompromising Pursuit of Automotive Perfection
-          </h2>
+          <span className="about-story-eyebrow">DISTINCTION IN AUTOMOTIVE CURATION</span>
+          <h2 className="about-story-heading">Pioneering Luxury Automotive Excellence Across Bangladesh</h2>
           <p className="about-story-p">
-            DREAM CAR HOUSE was founded with a singular, uncompromising vision: to establish Dhaka’s foremost luxury automotive destination where discerning connoisseurs can explore, acquire, and commission the world&apos;s most coveted motorcars with absolute peace of mind.
+            Established with a singular ambition, <strong>{brandName}</strong> has redefined high-end vehicle acquisition in Dhaka. We cater to discerning connoisseurs who demand uncompromising elegance, exceptional mechanical integrity, and absolute transparency.
           </p>
           <p className="about-story-p">
-            Operating across two flagship showrooms in <strong>Kakrail (Shaheed Captain Monsur Ali Soroni)</strong> and <strong>Gulshan Avenue (Road #127)</strong>, our curated portfolio encompasses zero-meter factory imports, bespoke executive saloons, track-bred supercars, and certified pre-owned collectors&apos; editions from Mercedes-Maybach, Rolls-Royce, Porsche, Lexus, BMW, and Toyota.
+            From zero-kilometer European flagship sedans to custom-spec Japanese hybrid SUVs and hypercars, every automobile in our atelier undergoes an exhaustive 150-point technical provenance check before joining our showroom vaults in Kakrail and Gulshan.
+          </p>
+          <p className="about-story-p">
+            Our private client directors provide end-to-end bespoke concierge services—handling custom global procurement, factory warranty extensions, registration documentation, and ceremonial private handovers.
           </p>
 
-          <div className="about-quote-box">
-            <p>
-              &ldquo;We do not merely deliver motorcars; we curate trust, pedigree, and lifelong relationships for Dhaka&apos;s most discerning motorists.&rdquo;
-            </p>
-          </div>
-
-          <button
-            type="button"
-            className="see-video-btn"
-            onClick={() => openVideoModal("tour")}
-            style={{ alignSelf: "flex-start", marginTop: "0.25rem" }}
-          >
-            <div className="video-play-circle">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                <polygon points="6 3 20 12 6 21 6 3" />
-              </svg>
+          <div className="about-story-features">
+            <div className="about-feature-item">
+              <div className="about-feat-check">✓</div>
+              <div>
+                <strong>Global Auction Grade 5A & 4.5</strong>
+                <p>Only the highest-rated Japanese auction sheets with verified original certificates.</p>
+              </div>
             </div>
-            <span>Watch Full Showroom Tour (02:30)</span>
-          </button>
+            <div className="about-feature-item">
+              <div className="about-feat-check">✓</div>
+              <div>
+                <strong>Factory-Direct European Orders</strong>
+                <p>Bespoke allocations from Mercedes-Benz, Porsche, Range Rover, and BMW ateliers.</p>
+              </div>
+            </div>
+            <div className="about-feature-item">
+              <div className="about-feat-check">✓</div>
+              <div>
+                <strong>Confidential Trade-In Valuations</strong>
+                <p>Transparent evaluation and instantaneous settlement for pre-owned luxury models.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* 4. The 4 Pillars of Showroom Distinction */}
-      <section className="about-pillars-section">
+      {/* 4. Atelier Values 3-Pillar Grid */}
+      <section className="about-values-section">
         <div className="about-section-header">
-          <span className="about-story-eyebrow">THE FOUR PILLARS</span>
-          <h2 className="about-section-title">Why Connoisseurs Choose DREAM CAR HOUSE</h2>
+          <span className="about-story-eyebrow">OUR CORE PRINCIPLES</span>
+          <h2 className="about-section-title">The Three Pillars of Our Standard</h2>
         </div>
 
-        <div className="about-pillars-grid">
-          {/* Pillar 1 */}
-          <div className="about-pillar-card">
-            <div className="about-pillar-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="2" y1="12" x2="22" y2="12" />
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-              </svg>
-            </div>
-            <h3 className="about-pillar-title">Direct Global Import</h3>
-            <p className="about-pillar-desc">
-              Exclusive relationships with premier authorized dealerships in Stuttgart, Tokyo, and London facilitate direct, turnkey container importation with verified manifests.
+        <div className="about-values-grid">
+          <div className="about-value-card">
+            <div className="about-value-num">01</div>
+            <h3 className="about-value-title">Uncompromising Authenticity</h3>
+            <p className="about-value-desc">
+              Every vehicle provenance record is publicly verifiable. We provide genuine auction sheets, authentic JAAI/JEVIC verification, and complete service histories.
             </p>
           </div>
 
-          {/* Pillar 2 */}
-          <div className="about-pillar-card">
-            <div className="about-pillar-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <polyline points="22 4 12 14.01 9 11.01" />
-              </svg>
-            </div>
-            <h3 className="about-pillar-title">150+ Point Diagnostic Audit</h3>
-            <p className="about-pillar-desc">
-              Every vehicle undergoes exhaustive computerized diagnostic scans, chassis laser measurements, high-voltage battery audits, and genuine BRTA paper verifications.
+          <div className="about-value-card">
+            <div className="about-value-num">02</div>
+            <h3 className="about-value-title">White-Glove Discretion</h3>
+            <p className="about-value-desc">
+              We respect the privacy of our distinguished clientele. Private viewing appointments, secluded consultation suites, and confidential handover deliveries.
             </p>
           </div>
 
-          {/* Pillar 3 */}
-          <div className="about-pillar-card">
-            <div className="about-pillar-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-            </div>
-            <h3 className="about-pillar-title">Private Handover Vault</h3>
-            <p className="about-pillar-desc">
-              An exclusive soundproof delivery sanctuary featuring theatrical automotive unveilings, champagne reception, and confidential documentation management.
-            </p>
-          </div>
-
-          {/* Pillar 4 */}
-          <div className="about-pillar-card">
-            <div className="about-pillar-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="8.5" cy="7" r="4" />
-                <polyline points="17 11 19 13 23 9" />
-              </svg>
-            </div>
-            <h3 className="about-pillar-title">White-Glove Concierge</h3>
-            <p className="about-pillar-desc">
-              Lifetime vehicle documentation support, tailored financing advisory, genuine factory parts procurement, and guaranteed priority buy-back valuations.
+          <div className="about-value-card">
+            <div className="about-value-num">03</div>
+            <h3 className="about-value-title">Long-Term Partnership</h3>
+            <p className="about-value-desc">
+              Our relationship begins at delivery. Complimentary routine health-checks, priority trade-in buyback agreements, and dedicated concierge assistance for life.
             </p>
           </div>
         </div>
       </section>
 
-      {/* 5. Physical Showroom Sanctuaries in Dhaka */}
+      {/* 5. Physical Showroom Sanctuaries */}
       <section className="about-branches-section">
         <div className="about-section-header">
           <span className="about-story-eyebrow">VISIT OUR SHOWROOMS</span>
           <h2 className="about-section-title">
             {branches.length > 0
-              ? `${branches.length} Flagship Showrooms Across Dhaka`
-              : "Flagship Showrooms Across Dhaka"}
+              ? `${branches.length} Flagship Sanctuaries Across Dhaka`
+              : "Two Flagship Sanctuaries Across Dhaka"}
           </h2>
         </div>
 
@@ -244,93 +221,154 @@ export default function AboutClient({
                     <span className="about-branch-pill">Private Handover Vault</span>
                     <span className="about-branch-pill">Diagnostic Lab</span>
                   </div>
-
-                  <div className="about-branch-timing">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                    <span>{b.hours || settings?.opening_hours_text || "Sat – Thu: 10:00 AM – 9:00 PM"}</span>
-                  </div>
                 </div>
 
                 <div className="about-branch-actions">
-                  <a
-                    href={b.map_link || `https://maps.google.com/?q=${encodeURIComponent(b.address)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="about-dir-btn"
+                  <button
+                    type="button"
+                    onClick={() => openAppointmentModal({ branchId: b.branch_id || String(b.id), carName: `${b.name} Consultation` })}
+                    className="about-branch-visit-btn"
                   >
-                    <span>Get Directions</span>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <span>Schedule Private Viewing</span>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M5 12h14M12 5l7 7-7 7" />
                     </svg>
-                  </a>
-                  {(b.hotline || b.phone || settings?.hotline) && (
+                  </button>
+                  {b.map_link && (
                     <a
-                      href={`tel:${(b.hotline || b.phone || settings?.hotline || "").replace(/[^0-9+]/g, "")}`}
-                      className="about-call-btn"
+                      href={b.map_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="about-branch-map-link"
                     >
-                      <span>{b.hotline || b.phone || settings?.hotline}</span>
+                      <span>Live Google Map Directions</span>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                      </svg>
                     </a>
                   )}
                 </div>
               </div>
             ))
           ) : (
-            <div style={{ color: "#9ca3af", textAlign: "center", padding: "2rem", gridColumn: "1 / -1" }}>
-              Showroom details currently updating. Please reach out via our central concierge.
-            </div>
+            <>
+              {/* Branch 1: Kakrail */}
+              <div className="about-branch-card">
+                <div>
+                  <span className="about-branch-tag">PRIMARY SHOWROOM & VAULT</span>
+                  <h3 className="about-branch-name">Kakrail Flagship Showroom</h3>
+                  <p className="about-branch-address">
+                    18, Shaheed Captain Monsur Ali Soroni, Kakrail, Dhaka-1000
+                  </p>
+
+                  <div className="about-branch-features">
+                    <span className="about-branch-pill">Main Display Floor</span>
+                    <span className="about-branch-pill">Private Handover Vault</span>
+                    <span className="about-branch-pill">Diagnostic Lab</span>
+                  </div>
+                </div>
+
+                <div className="about-branch-actions">
+                  <button
+                    type="button"
+                    onClick={() => openAppointmentModal({ branchId: "kakrail", carName: "Kakrail Showroom Visit" })}
+                    className="about-branch-visit-btn"
+                  >
+                    <span>Schedule Private Viewing</span>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                  <a
+                    href="https://maps.google.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="about-branch-map-link"
+                  >
+                    <span>Live Google Map Directions</span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+
+              {/* Branch 2: Gulshan */}
+              <div className="about-branch-card">
+                <div>
+                  <span className="about-branch-tag">EXECUTIVE CLIENT LOUNGE</span>
+                  <h3 className="about-branch-name">Gulshan Avenue Showroom</h3>
+                  <p className="about-branch-address">
+                    House #07, Road #127, Gulshan Avenue, Dhaka
+                  </p>
+
+                  <div className="about-branch-features">
+                    <span className="about-branch-pill">Bespoke Lounge</span>
+                    <span className="about-branch-pill">VIP Atelier Suite</span>
+                    <span className="about-branch-pill">Direct Parking</span>
+                  </div>
+                </div>
+
+                <div className="about-branch-actions">
+                  <button
+                    type="button"
+                    onClick={() => openAppointmentModal({ branchId: "gulshan", carName: "Gulshan Showroom Visit" })}
+                    className="about-branch-visit-btn"
+                  >
+                    <span>Schedule Private Viewing</span>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                  <a
+                    href="https://maps.google.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="about-branch-map-link"
+                  >
+                    <span>Live Google Map Directions</span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </>
           )}
         </div>
       </section>
 
-      {/* 6. VIP Consultation Concierge CTA with Glowing WhatsApp Button */}
-      <section className="about-cta-card">
-        <h2 className="about-cta-title">
-          Experience The Difference in Person
-        </h2>
-        <p className="about-cta-desc">
-          Schedule an exclusive showroom walkthrough or speak directly with our senior automotive curators to discuss custom procurement of your next masterpiece.
+      {/* 6. Bottom VIP Call to Action */}
+      <section className="about-cta-section">
+        <h2 className="about-cta-title">Begin Your Journey to Automotive Distinction</h2>
+        <p className="about-cta-sub">
+          Visit our Kakrail or Gulshan viewing lounges or connect with our Senior Automotive Specialist for private procurement.
         </p>
 
         <div className="about-cta-btn-group">
-          {/* Custom Styled Emerald WhatsApp Button */}
-          {waUrl && (
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="about-wa-btn"
-              id="about-wa-consult-btn"
-              title="Chat directly with Senior Showroom Concierge on WhatsApp"
-            >
-              <svg viewBox="0 0 24 24">
-                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
-              </svg>
-              <span>Inquire on WhatsApp</span>
-            </a>
-          )}
+          <a
+            href={waUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="about-wa-btn"
+            id="about-wa-consult-btn"
+            title="Chat directly with Senior Showroom Concierge on WhatsApp"
+          >
+            <svg viewBox="0 0 24 24">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+            </svg>
+            <span>Inquire on WhatsApp</span>
+          </a>
 
           <Link
             href="/inventory"
-            className="consult-primary-btn"
-            style={{ padding: "0.9rem 2rem", fontSize: "0.95rem" }}
+            className="about-browse-btn"
           >
-            <span>Explore Current Inventory</span>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <span>Browse Complete Vault</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </Link>
-
-          <button
-            type="button"
-            className="gallery-btn-secondary"
-            onClick={() => openAppointmentModal()}
-            style={{ padding: "0.9rem 2rem", fontSize: "0.95rem", cursor: "pointer" }}
-          >
-            <span>Schedule Showroom Tour</span>
-          </button>
         </div>
       </section>
     </div>

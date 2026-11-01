@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useUI } from "@/lib/UIContext";
-import { Vehicle } from "@/lib/showroomData";
+import { VEHICLE_DATA, Vehicle } from "@/lib/showroomData";
 
 import type { PublicVehicle } from "@/lib/types";
 
@@ -13,9 +13,11 @@ export default function CompareModal({
   initialVehicles?: (Vehicle | PublicVehicle)[];
 } = {}) {
   const { isCompareOpen, closeCompareModal, openCarModal } = useUI();
-  const [vehicles, setVehicles] = useState<Vehicle[]>(() => (initialVehicles as Vehicle[]) || []);
-  const [car1Id, setCar1Id] = useState<number>(() => initialVehicles[0]?.id || 0);
-  const [car2Id, setCar2Id] = useState<number>(() => initialVehicles[1]?.id || initialVehicles[0]?.id || 0);
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() =>
+    initialVehicles && initialVehicles.length > 0 ? (initialVehicles as Vehicle[]) : VEHICLE_DATA
+  );
+  const [car1Id, setCar1Id] = useState<number>(() => initialVehicles[0]?.id || VEHICLE_DATA[0]?.id || 1);
+  const [car2Id, setCar2Id] = useState<number>(() => initialVehicles[1]?.id || initialVehicles[0]?.id || VEHICLE_DATA[1]?.id || 2);
 
   React.useEffect(() => {
     if (initialVehicles && initialVehicles.length > 0 && vehicles.length === 0) {

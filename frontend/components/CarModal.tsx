@@ -1,797 +1,701 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { useUI } from "@/lib/UIContext";
-import type { GalleryPhoto, Vehicle } from "@/lib/showroomData";
+import { SHOWROOM_BRANCHES, GalleryPhoto, Vehicle } from "@/lib/showroomData";
 import type { PublicSiteSettings, PublicShowroomBranch } from "@/lib/types";
+
+function getCarDrivetrain(car: Vehicle): string {
+  const nameLower = (car.name || "").toLowerCase();
+  const capLower = (car.engine_capacity || "").toLowerCase();
+  if (capLower.includes("electric") || nameLower.includes("g 580")) {
+    return "Dual Motor Electric AWD";
+  } else if (
+    nameLower.includes("mercedes") ||
+    nameLower.includes("maybach") ||
+    nameLower.includes("amg")
+  ) {
+    return "9G-Tronic 4MATIC AWD";
+  } else if (nameLower.includes("bmw")) {
+    return "8-Speed Steptronic xDrive";
+  } else if (nameLower.includes("audi")) {
+    return "S-Tronic Quattro AWD";
+  } else if (
+    nameLower.includes("land cruiser") ||
+    nameLower.includes("toyota") ||
+    nameLower.includes("prado")
+  ) {
+    return "Full-Time 4WD w/ Crawl Control";
+  } else if (nameLower.includes("lexus")) {
+    return "10-Speed Direct-Shift 4WD";
+  } else if (
+    nameLower.includes("defender") ||
+    nameLower.includes("range rover")
+  ) {
+    return "Terrain Response 2 AWD";
+  } else if (nameLower.includes("porsche")) {
+    return "8-Speed PDK AWD";
+  }
+  return "Full-Time Intelligent All-Wheel Drive";
+}
 
 interface CarModalProps {
   settings?: PublicSiteSettings;
   branches?: PublicShowroomBranch[];
 }
 
-export default function CarModal({ settings, branches = [] }: CarModalProps) {
+export default function CarModal({ settings, branches = [] }: CarModalProps = {}) {
   const {
     selectedCar,
     closeCarModal,
     openAppointmentModal,
-    openGalleryLightbox,
+    openLightbox,
+    theme,
   } = useUI();
-  const [activeImgIdx, setActiveImgIdx] = useState(0);
-  const [isCopied, setIsCopied] = useState(false);
+
+  const [activeTab, setActiveTab] = useState<"overview" | "specs" | "gallery">(
+    "overview"
+  );
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
-    setActiveImgIdx(0);
+    setActiveImageIndex(0);
+    setActiveTab("overview");
   }, [selectedCar]);
 
-  const handleShare = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!selectedCar) return;
-
-    const origin =
-      typeof window !== "undefined" && window.location.origin
-        ? window.location.origin
-        : "https://dreamcarhouse.com";
-    const shareUrl = `${origin}/cars/${selectedCar.slug}`;
-    const shareTitle = `${selectedCar.name} (${selectedCar.year}) | DREAM CAR HOUSE`;
-    const shareText = `Explore this ${selectedCar.name} (${selectedCar.year}) at DREAM CAR HOUSE:`;
-
-    // 1. Try native Web Share API (WhatsApp, Messenger, SMS, AirDrop)
-    if (typeof navigator !== "undefined" && navigator.share) {
-      try {
-        await navigator.share({
-          title: shareTitle,
-          text: shareText,
-          url: shareUrl,
-        });
-        return;
-      } catch (err) {
-        if ((err as Error)?.name === "AbortError") {
-          return;
-        }
-      }
+  // Lock body scroll while modal is active
+  useEffect(() => {
+    if (selectedCar) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
     }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [selectedCar]);
 
-    // 2. Clipboard API
-    let copied = false;
-    try {
-      if (typeof navigator !== "undefined" && navigator.clipboard) {
-        await navigator.clipboard.writeText(shareUrl);
-        copied = true;
+  // Keyboard escape key listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeCarModal();
       }
-    } catch {
-      // fallback
-    }
-
-    // 3. Document execCommand fallback
-    if (!copied && typeof document !== "undefined") {
-      try {
-        const ta = document.createElement("textarea");
-        ta.value = shareUrl;
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
-        ta.focus();
-        ta.select();
-        document.execCommand("copy");
-        document.body.removeChild(ta);
-      } catch {
-        // ignore
-      }
-    }
-
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2400);
-  };
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [closeCarModal]);
 
   if (!selectedCar) return null;
 
-  const matchedBranch = branches.find(
-    (b) => b.branch_id === selectedCar.branch_id || String(b.id) === String(selectedCar.branch_id) || b.name === selectedCar.branch_name
+  // Branch matching (database branch first, else fallback)
+  const matchedDbBranch = branches.find(
+    (b) =>
+      b.branch_id === selectedCar.branch_id ||
+      String(b.id) === String(selectedCar.branch_id) ||
+      b.name === selectedCar.branch_name
   );
-  const branch = selectedCar.branch
-    ? selectedCar.branch
-    : matchedBranch
+
+  const fallbackBranch =
+    SHOWROOM_BRANCHES[selectedCar.branch_id as "kakrail" | "gulshan"] ||
+    SHOWROOM_BRANCHES.kakrail;
+
+  const branch = matchedDbBranch
     ? {
-        id: matchedBranch.branch_id || String(matchedBranch.id),
-        name: matchedBranch.name,
-        short_name: matchedBranch.name,
-        tag: matchedBranch.tag || "Showroom Allocation",
-        address: matchedBranch.address || "",
-        phone: matchedBranch.phone || "",
-        hotline: matchedBranch.hotline || "",
-        email: matchedBranch.email || "",
-        hours: matchedBranch.hours || "",
-        map_link: matchedBranch.map_link || "",
-        embed_map: matchedBranch.embed_map || "",
+        name: matchedDbBranch.name,
+        short_name: matchedDbBranch.short_name || matchedDbBranch.name,
+        tag: matchedDbBranch.tag || "Showroom Allocation",
+        address: matchedDbBranch.address || fallbackBranch.address,
+        phone: matchedDbBranch.phone || fallbackBranch.phone,
+        hotline: matchedDbBranch.hotline || fallbackBranch.hotline,
+        email: matchedDbBranch.email || fallbackBranch.email,
+        hours: matchedDbBranch.hours || fallbackBranch.hours,
+        map_link: matchedDbBranch.map_link || fallbackBranch.map_link,
+        embed_map: matchedDbBranch.embed_map || fallbackBranch.embed_map,
       }
-    : selectedCar.branch_name
-    ? {
-        id: selectedCar.branch_id || "",
-        name: selectedCar.branch_name,
-        short_name: selectedCar.branch_name,
-        tag: "Showroom Allocation",
-        address: selectedCar.branch_address || "",
-        phone: "",
-        hotline: "",
-        email: "",
-        hours: "",
-        map_link: "",
-        embed_map: "",
-      }
-    : null;
+    : fallbackBranch;
+
   const isBrandNew = selectedCar.car_type === "BRAND_NEW";
-  const transmissionText = selectedCar.transmission || selectedCar.drivetrain || "";
-  const regText = (selectedCar as { registration_number?: string }).registration_number || (isBrandNew
+  const drivetrain = selectedCar.transmission || selectedCar.drivetrain || getCarDrivetrain(selectedCar);
+  const regText = isBrandNew
     ? "Unregistered Direct Import"
     : selectedCar.registered && selectedCar.registered !== "Available"
     ? selectedCar.registered
-    : "");
+    : "Dhaka Metro Verified Papers";
 
-  const galleryList =
+  const galleryList: GalleryPhoto[] =
     selectedCar.images && selectedCar.images.length > 0
       ? selectedCar.images
       : [
           {
+            id: 1,
             url: selectedCar.image,
-            caption: "Front 3/4 Exterior Stance",
-            tag: "EXTERIOR",
+            title: `${selectedCar.name} - Front Angle`,
           },
         ];
 
-  const currentImage = galleryList[activeImgIdx] || galleryList[0];
-
-  const nextImg = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setActiveImgIdx((prev) => (prev + 1) % galleryList.length);
+  const handleConsultClick = () => {
+    const carName = `${selectedCar.year} ${selectedCar.name}`;
+    const branchId = selectedCar.branch_id;
+    closeCarModal();
+    openAppointmentModal({ carName, branchId });
   };
 
-  const prevImg = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setActiveImgIdx(
-      (prev) => (prev - 1 + galleryList.length) % galleryList.length
-    );
-  };
-
-  const handleExpandToCinema = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const convertedPhotos: GalleryPhoto[] = galleryList.map((img, i) => ({
-      id: i + 100,
-      title: `${selectedCar.name} • ${img.caption}`,
-      category: "sedans",
-      categoryLabel: selectedCar.brand,
-      image: img.url,
-      desc: selectedCar.description,
-    }));
-    openGalleryLightbox(activeImgIdx, convertedPhotos);
+  const handleLaunchLightbox = (startIndex: number) => {
+    openLightbox(galleryList, startIndex);
   };
 
   const waMessage = encodeURIComponent(
-    branch?.name
-      ? `Hello DREAM CAR HOUSE, I am inquiring about the ${selectedCar.name} (${selectedCar.year}) allocated at your ${branch.name}. Please share the official spec sheet, showroom availability, and confidential valuation.`
-      : `Hello DREAM CAR HOUSE, I am inquiring about the ${selectedCar.name} (${selectedCar.year}). Please share the official spec sheet, showroom availability, and confidential valuation.`
+    `Hello DREAM CAR HOUSE, I am inquiring about the ${selectedCar.name} (${selectedCar.year}) allocated at your ${branch.name}. Please share the official spec sheet, showroom availability, and confidential valuation.`
   );
-  const targetPhone = branch?.hotline || branch?.phone || settings?.whatsapp || settings?.hotline || "";
-  const cleanDigits = targetPhone.replace(/[^0-9]/g, "");
-  let waPhone = cleanDigits;
-  if (waPhone.startsWith("0")) {
-    waPhone = "88" + waPhone;
-  } else if (!waPhone.startsWith("880") && waPhone.length === 10) {
-    waPhone = "880" + waPhone;
-  }
-  const waUrl = waPhone ? `https://wa.me/${waPhone}?text=${waMessage}` : "";
+  const waUrl = `https://wa.me/8801615121312?text=${waMessage}`;
 
   return (
-    <div className="car-modal-backdrop active" onClick={closeCarModal}>
-      <div className="car-modal-box" onClick={(e) => e.stopPropagation()}>
+    <div
+      className={`car-modal-backdrop active ${theme === "light" ? "mode-light" : "mode-dark"}`}
+      id="car-modal-backdrop"
+      onClick={closeCarModal}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${selectedCar.name} Details`}
+    >
+      <div
+        className="car-modal-box"
+        id="car-modal-box"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           className="modal-close-x"
           onClick={closeCarModal}
-          aria-label="Close Car Details"
-          title="Close (ESC)"
+          aria-label="Close Vehicle Modal"
         >
           &times;
         </button>
 
-        <div id="modal-body-content">
-          <div className="dch-car-modal-wrapper">
-            {/* Top Status & Studio Allocation Beacon Bar */}
-            <div className="dch-modal-top-bar">
-              <div className="dch-modal-badges">
-                {isBrandNew ? (
-                  <span className="car-badge-pill pill-brandnew">
-                    BRAND NEW • ZERO METER
+        {/* Modal Top Bar */}
+        <div className="car-modal-topbar">
+          <div className="modal-title-left">
+            <span
+              className={`car-badge-pill ${
+                isBrandNew ? "pill-brandnew" : "pill-preowned"
+              }`}
+            >
+              {isBrandNew
+                ? "BRAND NEW IMPORT"
+                : "CERTIFIED PRE-OWNED"}
+            </span>
+            <span className="car-modal-year">{selectedCar.year}</span>
+            <h2 className="car-modal-title">{selectedCar.name}</h2>
+          </div>
+
+          <div className="modal-price-right">
+            <span className="modal-price-val">{selectedCar.price}</span>
+            <span className="modal-price-sub">
+              {isBrandNew ? "Direct Port / Ready Showroom Stock" : "Negotiable In-Person Valuation"}
+            </span>
+          </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="car-modal-nav-tabs">
+          <button
+            type="button"
+            className={`modal-tab-btn ${activeTab === "overview" ? "active" : ""}`}
+            onClick={() => setActiveTab("overview")}
+          >
+            Overview & Allocation
+          </button>
+          <button
+            type="button"
+            className={`modal-tab-btn ${activeTab === "specs" ? "active" : ""}`}
+            onClick={() => setActiveTab("specs")}
+          >
+            Technical Specifications
+          </button>
+          <button
+            type="button"
+            className={`modal-tab-btn ${activeTab === "gallery" ? "active" : ""}`}
+            onClick={() => setActiveTab("gallery")}
+          >
+            High-Res Gallery ({galleryList.length})
+          </button>
+        </div>
+
+        {/* Modal Body */}
+        <div className="car-modal-body-scroll">
+          {activeTab === "overview" && (
+            <div className="modal-tab-content active" id="tab-overview">
+              {/* Main Vehicle Hero Photo Showcase */}
+              <div
+                className="modal-main-photo-wrapper group"
+                onClick={() => handleLaunchLightbox(activeImageIndex)}
+                title="Click to view full-screen high-res lightbox"
+              >
+                <img
+                  src={
+                    galleryList[activeImageIndex]?.url || selectedCar.image
+                  }
+                  alt={selectedCar.name}
+                  className="modal-main-car-photo"
+                />
+                <div className="modal-photo-badges-strip">
+                  <span className="modal-photo-alloc-badge">
+                    <span className="live-pulse-dot"></span>
+                    <span>PHYSICALLY DISPLAYED AT {branch.name.toUpperCase()}</span>
                   </span>
-                ) : (
-                  <span className="car-badge-pill pill-preowned">
-                    CERTIFIED PRE-OWNED
+                  <span className="modal-photo-zoom-hint">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <circle cx="11" cy="11" r="8" />
+                      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                      <line x1="11" y1="8" x2="11" y2="14" />
+                      <line x1="8" y1="11" x2="14" y2="11" />
+                    </svg>
+                    <span>Inspect Fullscreen</span>
                   </span>
+                </div>
+
+                {galleryList.length > 1 && (
+                  <div className="modal-photo-dots">
+                    {galleryList.map((_, dotIdx) => (
+                      <button
+                        key={dotIdx}
+                        type="button"
+                        className={`modal-photo-dot ${
+                          activeImageIndex === dotIdx ? "active" : ""
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveImageIndex(dotIdx);
+                        }}
+                        aria-label={`Slide ${dotIdx + 1}`}
+                      />
+                    ))}
+                  </div>
                 )}
-                <div className="dch-showroom-beacon">
-                  <span>INVENTORY VAULT • PHYSICAL ALLOCATION</span>
+              </div>
+
+              {/* Showroom Allocation Banner */}
+              <div className="showroom-allocation-banner">
+                <div className="branch-alloc-icon">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#ffffff"
+                    strokeWidth="2"
+                  >
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                </div>
+                <div className="branch-alloc-info">
+                  <div className="branch-alloc-header">
+                    <span className="branch-alloc-tag">{branch.tag}</span>
+                    <span className="branch-alloc-status">● Open Today 10:00 AM – 10:00 PM</span>
+                  </div>
+                  <h4 className="branch-alloc-name">{branch.name}</h4>
+                  <p className="branch-alloc-addr">{branch.address}</p>
+                </div>
+                <div className="branch-alloc-actions">
+                  <div className="branch-alloc-hours">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <span>{branch.hours}</span>
+                  </div>
+                  <a
+                    href={branch.map_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="branch-alloc-map-btn"
+                  >
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                    </svg>
+                    <span>Get Directions</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Dealership Trust Verification */}
+              <div className="dch-trust-strip">
+                <div className="dch-trust-pill">
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#22c55e"
+                    strokeWidth="2"
+                  >
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  <span>100% Verified Provenance</span>
+                </div>
+                <div className="dch-trust-pill">
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#22c55e"
+                    strokeWidth="2"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                  <span>{isBrandNew ? "Authentic Provenance" : regText}</span>
+                </div>
+                <div className="dch-trust-pill">
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#22c55e"
+                    strokeWidth="2"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  <span>Immediate Handover Ready</span>
+                </div>
+                <div className="dch-trust-pill">
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#22c55e"
+                    strokeWidth="2"
+                  >
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>
+                  <span>150-Point Multi-Audit</span>
+                </div>
+              </div>
+
+              {/* Vehicle Description */}
+              <div className="modal-desc-box">
+                <h4 className="modal-section-h4">Vehicle Overview & Provenance</h4>
+                <p className="modal-desc-text">{selectedCar.description}</p>
+              </div>
+
+              {/* Highlight Specs Pill Strip */}
+              <div className="modal-highlight-specs">
+                <div className="hl-spec-card">
+                  <span className="hl-spec-label">ENGINE / POWERTRAIN</span>
+                  <span className="hl-spec-val">{selectedCar.engine_capacity}</span>
+                </div>
+                <div className="hl-spec-card">
+                  <span className="hl-spec-label">MILEAGE</span>
+                  <span className="hl-spec-val">{selectedCar.mileage}</span>
+                </div>
+                <div className="hl-spec-card">
+                  <span className="hl-spec-label">FUEL SYSTEM</span>
+                  <span className="hl-spec-val">{selectedCar.fuel_type}</span>
+                </div>
+                <div className="hl-spec-card">
+                  <span className="hl-spec-label">DRIVETRAIN</span>
+                  <span className="hl-spec-val">{drivetrain}</span>
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Main 2-Column Showcase Grid */}
-            <div className="dch-car-grid">
-              {/* Left Column: Interactive Multi-Photo Cinema Showcase */}
-              <div className="dch-car-visual-col">
-                <div
-                  className="dch-car-img-frame"
-                  id="dch-gallery-hero-frame"
-                  onClick={handleExpandToCinema}
-                  style={{ cursor: "pointer" }}
-                  title="Inspect in Full Cinema Mode"
-                >
-                  <img
-                    src={currentImage.url}
-                    alt={selectedCar.name}
-                    className="dch-car-img"
-                    id="dch-main-car-img"
-                  />
-                  <div className="dch-car-img-overlay"></div>
-
-                  {/* Top-Right: Image Counter & Cinema Lightbox Button */}
-                  <div className="dch-img-counter-wrap">
-                    <span className="dch-img-counter-pill" id="dch-img-counter">
-                      {activeImgIdx + 1} / {galleryList.length}
-                    </span>
-                    <button
-                      type="button"
-                      className="dch-img-expand-btn"
-                      onClick={handleExpandToCinema}
-                      title="Inspect in Full Cinema Mode"
-                      aria-label="Inspect in Full Cinema Mode"
-                    >
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                      >
-                        <polyline points="15 3 21 3 21 9" />
-                        <polyline points="9 21 3 21 3 15" />
-                        <line x1="21" y1="3" x2="14" y2="10" />
-                        <line x1="3" y1="21" x2="10" y2="14" />
-                      </svg>
-                    </button>
+          {activeTab === "specs" && (
+            <div className="modal-tab-content active" id="tab-specs">
+              <div className="dch-specs-full-grid">
+                <div className="dch-spec-tile">
+                  <div className="dch-spec-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                    </svg>
                   </div>
-
-                  {/* Prev & Next Gallery Navigation Arrows */}
-                  {galleryList.length > 1 && (
-                    <>
-                      <button
-                        type="button"
-                        className="dch-gallery-arrow dch-gallery-prev"
-                        onClick={prevImg}
-                        aria-label="Previous Photo"
-                      >
-                        <svg
-                          width="18"
-                          height="18"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="3"
-                        >
-                          <polyline points="15 18 9 12 15 6" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        className="dch-gallery-arrow dch-gallery-next"
-                        onClick={nextImg}
-                        aria-label="Next Photo"
-                      >
-                        <svg
-                          width="18"
-                          height="18"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="3"
-                        >
-                          <polyline points="9 18 15 12 9 6" />
-                        </svg>
-                      </button>
-                    </>
-                  )}
-
-                  {/* Bottom Left: Clean Minimal Photo Angle Pill */}
-                  <div
-                    className="dch-photo-angle-pill"
-                    id="dch-active-caption"
-                  >
-                    {currentImage.caption}
+                  <div className="dch-spec-texts">
+                    <span className="dch-spec-label">MANUFACTURER</span>
+                    <span className="dch-spec-value">{selectedCar.brand}</span>
                   </div>
                 </div>
 
-                {/* Multi-Photo Thumbnail Strip Carousel */}
-                {galleryList.length > 1 && (
-                  <div className="dch-thumbnail-strip-wrap">
-                    <div
-                      className="dch-thumbnail-strip"
-                      id="dch-thumbnail-strip"
-                    >
-                      {galleryList.map((img, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          className={`dch-thumb-btn ${
-                            idx === activeImgIdx ? "active" : ""
-                          }`}
-                          onClick={() => setActiveImgIdx(idx)}
-                          aria-label={`View photo ${idx + 1}: ${img.caption}`}
-                        >
-                          <img src={img.url} alt={img.caption} />
-                          <span className="thumb-tag">
-                            {img.tag || idx + 1}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Physical Showroom Branch Allocation Box */}
-                {branch?.name ? (
-                  <div className="dch-branch-allocation-box">
-                    <div className="branch-alloc-head">
-                      <div className="branch-alloc-icon">
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="#22c55e"
-                          strokeWidth="2.5"
-                        >
-                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                          <circle cx="12" cy="10" r="3" />
-                        </svg>
-                      </div>
-                      <div className="branch-alloc-meta">
-                        <div className="branch-alloc-eyebrow">
-                          PHYSICAL VEHICLE ALLOCATION
-                        </div>
-                        <div className="branch-alloc-name">{branch.name}</div>
-                        {branch.address ? (
-                          <div className="branch-alloc-address">
-                            {branch.address}
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-                    <div className="branch-alloc-actions">
-                      {branch.hours ? (
-                        <div className="branch-alloc-hours">
-                          <svg
-                            width="13"
-                            height="13"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <circle cx="12" cy="12" r="10" />
-                            <polyline points="12 6 12 12 16 14" />
-                          </svg>
-                          <span>{branch.hours}</span>
-                        </div>
-                      ) : null}
-                      {branch.map_link ? (
-                        <a
-                          href={branch.map_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="branch-alloc-map-btn"
-                        >
-                          <svg
-                            width="13"
-                            height="13"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <polygon points="3 11 22 2 13 21 11 13 3 11" />
-                          </svg>
-                          <span>Get Directions</span>
-                        </a>
-                      ) : null}
-                    </div>
-                  </div>
-                ) : null}
-
-                {/* Dealership Trust Verification (DREAM CAR HOUSE Flagship Standard) */}
-                <div className="dch-trust-strip">
-                  <div className="dch-trust-pill">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#22c55e"
-                      strokeWidth="2.5"
-                    >
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                      <path d="M9 12l2 2 4-4" />
+                <div className="dch-spec-tile">
+                  <div className="dch-spec-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
+                      <circle cx="7" cy="17" r="2" />
+                      <path d="M9 17h6" />
+                      <circle cx="17" cy="17" r="2" />
                     </svg>
-                    <span>Genuine Mileage</span>
                   </div>
-                  <div className="dch-trust-pill">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#22c55e"
-                      strokeWidth="2.5"
-                    >
-                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                  <div className="dch-spec-texts">
+                    <span className="dch-spec-label">MODEL NAME</span>
+                    <span className="dch-spec-value">{selectedCar.name}</span>
+                  </div>
+                </div>
+
+                <div className="dch-spec-tile">
+                  <div className="dch-spec-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                  </div>
+                  <div className="dch-spec-texts">
+                    <span className="dch-spec-label">MODEL YEAR</span>
+                    <span className="dch-spec-value">{selectedCar.year}</span>
+                  </div>
+                </div>
+
+                <div className="dch-spec-tile">
+                  <div className="dch-spec-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                    </svg>
+                  </div>
+                  <div className="dch-spec-texts">
+                    <span className="dch-spec-label">PRICE ESTIMATE</span>
+                    <span className="dch-spec-value">{selectedCar.price}</span>
+                  </div>
+                </div>
+
+                <div className="dch-spec-tile">
+                  <div className="dch-spec-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 14 14" />
+                    </svg>
+                  </div>
+                  <div className="dch-spec-texts">
+                    <span className="dch-spec-label">CURRENT MILEAGE</span>
+                    <span className="dch-spec-value">{selectedCar.mileage}</span>
+                  </div>
+                </div>
+
+                <div className="dch-spec-tile">
+                  <div className="dch-spec-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3 3v18h18" />
+                      <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
+                    </svg>
+                  </div>
+                  <div className="dch-spec-texts">
+                    <span className="dch-spec-label">ENGINE CAPACITY</span>
+                    <span className="dch-spec-value">{selectedCar.engine_capacity}</span>
+                  </div>
+                </div>
+
+                <div className="dch-spec-tile">
+                  <div className="dch-spec-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="3" y1="12" x2="21" y2="12" />
+                      <line x1="3" y1="6" x2="21" y2="6" />
+                      <line x1="3" y1="18" x2="21" y2="18" />
+                    </svg>
+                  </div>
+                  <div className="dch-spec-texts">
+                    <span className="dch-spec-label">FUEL SYSTEM</span>
+                    <span className="dch-spec-value">{selectedCar.fuel_type}</span>
+                  </div>
+                </div>
+
+                <div className="dch-spec-tile">
+                  <div className="dch-spec-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                    </svg>
+                  </div>
+                  <div className="dch-spec-texts">
+                    <span className="dch-spec-label">TRANSMISSION</span>
+                    <span className="dch-spec-value">{drivetrain}</span>
+                  </div>
+                </div>
+
+                <div className="dch-spec-tile">
+                  <div className="dch-spec-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
+                    </svg>
+                  </div>
+                  <div className="dch-spec-texts">
+                    <span className="dch-spec-label">SHOWROOM ALLOCATION</span>
+                    <span className="dch-spec-value">{branch.name}</span>
+                  </div>
+                </div>
+
+                <div className="dch-spec-tile">
+                  <div className="dch-spec-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                       <polyline points="14 2 14 8 20 8" />
                       <line x1="16" y1="13" x2="8" y2="13" />
                       <line x1="16" y1="17" x2="8" y2="17" />
                     </svg>
-                    <span>{isBrandNew ? "Authentic Provenance" : (regText || "Verified Papers")}</span>
                   </div>
-                  <div className="dch-trust-pill">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="#22c55e"
-                      strokeWidth="2.5"
-                    >
-                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  <div className="dch-spec-texts">
+                    <span className="dch-spec-label">REGISTRATION</span>
+                    <span className="dch-spec-value">{regText}</span>
+                  </div>
+                </div>
+
+                <div className="dch-spec-tile">
+                  <div className="dch-spec-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                      <polyline points="22 4 12 14.01 9 11.01" />
                     </svg>
-                    <span>Vault Ready Unit</span>
                   </div>
-                </div>
-              </div>
-
-              {/* Right Column: Vehicle Details, Technical Specifications & VIP Action Suite */}
-              <div className="dch-car-info-col">
-                <div className="dch-car-header">
-                  <div className="dch-brand-year-tag">
-                    {selectedCar.brand.toUpperCase()} • PRODUCTION {selectedCar.year}
-                  </div>
-                  <h2 className="dch-car-title">{selectedCar.name}</h2>
-                  <div className="dch-car-price-row">
-                    <div className="dch-valuation-top-bar">
-                      <span className="dch-price-label">SHOWROOM VALUATION</span>
-                      <button
-                        type="button"
-                        id="car-modal-share-btn"
-                        className={`dch-share-car-btn ${isCopied ? "is-copied" : ""}`}
-                        onClick={handleShare}
-                        title="Share this vehicle (Copy link or share via WhatsApp/Social)"
-                        aria-label="Share this vehicle"
-                      >
-                        {isCopied ? (
-                          <>
-                            <svg
-                              width="13"
-                              height="13"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.5"
-                            >
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                            <span>Link Copied!</span>
-                          </>
-                        ) : (
-                          <>
-                            <svg
-                              width="13"
-                              height="13"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <circle cx="18" cy="5" r="3" />
-                              <circle cx="6" cy="12" r="3" />
-                              <circle cx="18" cy="19" r="3" />
-                              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                            </svg>
-                            <span>Share</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-
-                    <div className="dch-price-value">
-                      {selectedCar.price === "Call for Price"
-                        ? "Price Upon Request • VIP Consultation"
-                        : selectedCar.price}
-                    </div>
+                  <div className="dch-spec-texts">
+                    <span className="dch-spec-label">INSPECTION AUDIT</span>
+                    <span className="dch-spec-value">
+                      {isBrandNew
+                        ? "Factory Pre-Delivery Inspection (PDI)"
+                        : "150-Point Certified"}
+                    </span>
                   </div>
                 </div>
 
-                <p className="dch-car-description">{selectedCar.description}</p>
-
-                {/* 8-Card Technical Specification Matrix (DREAM CAR HOUSE Flagship Standard) */}
-                <div className="dch-specs-matrix">
-                  {/* 1. Powertrain / Engine */}
-                  <div className="dch-spec-item">
-                    <div className="dch-spec-icon">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                      </svg>
-                    </div>
-                    <div className="dch-spec-texts">
-                      <span className="dch-spec-label">POWERTRAIN</span>
-                      <span className="dch-spec-value">
-                        {selectedCar.engine_capacity}
-                      </span>
-                    </div>
+                <div className="dch-spec-tile">
+                  <div className="dch-spec-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 6v6l4 2" />
+                    </svg>
                   </div>
-
-                  {/* 2. Transmission & Drive */}
-                  <div className="dch-spec-item">
-                    <div className="dch-spec-icon">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <circle cx="12" cy="12" r="3" />
-                        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
-                      </svg>
-                    </div>
-                    <div className="dch-spec-texts">
-                      <span className="dch-spec-label">TRANSMISSION</span>
-                      <span className="dch-spec-value">{transmissionText || "Standard Transmission"}</span>
-                    </div>
-                  </div>
-
-                  {/* 3. Fuel System */}
-                  <div className="dch-spec-item">
-                    <div className="dch-spec-icon">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M3 22V4a2 2 0 012-2h6a2 2 0 012 2v18M13 10h4a2 2 0 012 2v4a2 2 0 002 2 2 2 0 002-2V9l-3-3M3 22h10" />
-                      </svg>
-                    </div>
-                    <div className="dch-spec-texts">
-                      <span className="dch-spec-label">FUEL SYSTEM</span>
-                      <span className="dch-spec-value">
-                        {selectedCar.fuel_type}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 4. Odometer / Mileage */}
-                  <div className="dch-spec-item">
-                    <div className="dch-spec-icon">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                      </svg>
-                    </div>
-                    <div className="dch-spec-texts">
-                      <span className="dch-spec-label">ODOMETER</span>
-                      <span className="dch-spec-value">
-                        {selectedCar.mileage}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 5. Documentation */}
-                  <div className="dch-spec-item">
-                    <div className="dch-spec-icon">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                      </svg>
-                    </div>
-                    <div className="dch-spec-texts">
-                      <span className="dch-spec-label">REGISTRATION</span>
-                      <span className="dch-spec-value">{regText || "Available for Direct Registration"}</span>
-                    </div>
-                  </div>
-
-                  {/* 6. Inspection Audit */}
-                  <div className="dch-spec-item">
-                    <div className="dch-spec-icon">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                        <path d="M9 12l2 2 4-4" />
-                      </svg>
-                    </div>
-                    <div className="dch-spec-texts">
-                      <span className="dch-spec-label">INSPECTION AUDIT</span>
-                      <span className="dch-spec-value">
-                        {isBrandNew
-                          ? "Factory Pre-Delivery Inspection (PDI)"
-                          : selectedCar.condition
-                          ? `${selectedCar.condition} Certified`
-                          : "Verified Diagnostic Inspection"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 7. Showroom Status & Verification */}
-                  <div className="dch-spec-item">
-                    <div className="dch-spec-icon">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div className="dch-spec-texts">
-                      <span className="dch-spec-label">VEHICLE STATUS</span>
-                      <span className="dch-spec-value">
-                        {selectedCar.status
-                          ? selectedCar.status === "AVAILABLE"
-                            ? "Physically Available"
-                            : selectedCar.status
-                          : "Showroom Vault Allocation"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 8. Delivery Handover */}
-                  <div className="dch-spec-item">
-                    <div className="dch-spec-icon">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M21 2l-2 2m-2-2l2 2m-5 9l5-5-2-2-5 5v2h2zM3 21l6-6M9 9l3 3" />
-                      </svg>
-                    </div>
-                    <div className="dch-spec-texts">
-                      <span className="dch-spec-label">HANDOVER</span>
-                      <span className="dch-spec-value">
-                        {isBrandNew
-                          ? "Immediate Delivery / Direct Import"
-                          : selectedCar.registered
-                          ? "Ready for Instant Transfer"
-                          : "Immediate Delivery"}
-                      </span>
-                    </div>
+                  <div className="dch-spec-texts">
+                    <span className="dch-spec-label">VEHICLE STATUS</span>
+                    <span className="dch-spec-value">
+                      {selectedCar.status
+                        ? selectedCar.status === "AVAILABLE"
+                          ? "Physically Available"
+                          : selectedCar.status
+                        : "Physically Available"}
+                    </span>
                   </div>
                 </div>
 
-                {/* VIP Actions Suite (Twin Equal Symmetrical Standard) */}
-                <div className="dch-vip-actions">
-                  {/* 1. Titanium White Schedule Private Viewing Button */}
-                  <button
-                    type="button"
-                    className="dch-viewing-vip-btn"
-                    onClick={() => {
-                      closeCarModal();
-                      openAppointmentModal({
-                        carName: selectedCar.name,
-                        carYear: selectedCar.year,
-                        branchId: selectedCar.branch_id,
-                      });
-                    }}
-                  >
-                    <div className="dch-viewing-icon-box">
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#0a0c10"
-                        strokeWidth="2.2"
-                      >
-                        <rect
-                          x="3"
-                          y="4"
-                          width="18"
-                          height="18"
-                          rx="2"
-                          ry="2"
-                        />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                    </div>
-                    <div className="dch-btn-text-wrap">
-                      <span
-                        className="dch-btn-main"
-                        style={{ color: "#0a0c10" }}
-                      >
-                        BOOK PRIVATE VIEWING
-                      </span>
-                      <span
-                        className="dch-btn-sub"
-                        style={{ color: "#475569" }}
-                      >
-                        Showroom Appointment
-                      </span>
-                    </div>
-                  </button>
-
-                  {/* 2. VIP WhatsApp Concierge Button */}
-                  <a
-                    href={waUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="dch-wa-vip-btn"
-                    id="dch-wa-action-btn"
-                  >
-                    <div className="dch-wa-icon-box">
-                      <svg
-                        viewBox="0 0 24 24"
-                        width="19"
-                        height="19"
-                        fill="#ffffff"
-                      >
-                        <path d="M12.031 2C6.496 2 2 6.496 2 12.031c0 1.838.497 3.633 1.442 5.213L2 22l4.908-1.408c1.517.854 3.238 1.439 5.123 1.439 5.535 0 10.031-4.496 10.031-10.031C22.062 6.496 17.566 2 12.031 2zm5.795 14.285c-.244.686-1.42 1.321-1.956 1.378-.536.057-1.196.229-3.957-.869-3.327-1.323-5.46-4.717-5.626-4.94-.166-.223-1.352-1.8-1.352-3.433 0-1.633.856-2.438 1.161-2.771.305-.333.666-.416.888-.416.222 0 .444.002.638.012.206.01.482-.078.754.577.28.674.957 2.33.1042 2.502.085.172.142.374.028.6-.114.226-.172.367-.342.566-.17.199-.358.444-.512.597-.171.171-.349.356-.15.698.199.342.887 1.464 1.902 2.37 1.309 1.168 2.413 1.53 2.756 1.701.343.171.543.143.744-.086.2-.229.856-.998 1.085-1.341.229-.343.457-.286.771-.171.314.114 1.996.941 2.339 1.112.343.171.571.257.657.4.086.143.086.828-.158 1.514z" />
-                      </svg>
-                    </div>
-                    <div className="dch-btn-text-wrap">
-                      <span className="dch-btn-main">
-                        INQUIRE ON WHATSAPP
-                      </span>
-                      <span className="dch-btn-sub">
-                        Direct Concierge Desk
-                      </span>
-                    </div>
-                  </a>
+                <div className="dch-spec-tile">
+                  <div className="dch-spec-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <div className="dch-spec-texts">
+                    <span className="dch-spec-label">HANDOVER</span>
+                    <span className="dch-spec-value">Immediate Delivery</span>
+                  </div>
                 </div>
               </div>
             </div>
+          )}
+
+          {activeTab === "gallery" && (
+            <div className="modal-tab-content active" id="tab-gallery">
+              <div className="modal-gallery-grid-dense">
+                {galleryList.map((photo, pIdx) => (
+                  <div
+                    key={photo.id || pIdx}
+                    className="modal-gallery-thumb-dense group"
+                    onClick={() => handleLaunchLightbox(pIdx)}
+                    title={`Click to view image ${pIdx + 1} in fullscreen`}
+                  >
+                    <img src={photo.url} alt={photo.title || `${selectedCar.name} ${pIdx + 1}`} loading="lazy" />
+                    <div className="dense-thumb-overlay">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        <line x1="11" y1="8" x2="11" y2="14" />
+                        <line x1="8" y1="11" x2="14" y2="11" />
+                      </svg>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Modal Sticky Bottom Actions Bar */}
+        <div className="car-modal-bottom-actions">
+          <div className="modal-actions-group">
+            <button
+              type="button"
+              className="consult-primary-btn modal-action-btn"
+              onClick={handleConsultClick}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+              <span>Book Showroom Viewing</span>
+            </button>
+
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="consult-whatsapp-btn modal-action-btn"
+              title="Inquire directly on WhatsApp"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.592 2.654-.696c1 .587 1.78.893 2.806.893 3.182 0 5.768-2.586 5.768-5.766.001-3.181-2.585-5.776-5.768-5.776zm3.435 8.163c-.144.404-.836.774-1.17.822-.311.045-.71.07-2.13-.518-1.815-.751-2.986-2.59-3.077-2.711-.091-.121-.739-.984-.739-1.877 0-.893.469-1.332.636-1.514.167-.182.365-.228.487-.228.122 0 .243.002.35.007.112.005.263-.042.412.315.152.365.518 1.265.564 1.356.045.091.076.197.015.318-.061.121-.091.197-.182.303-.091.106-.192.237-.274.318-.091.091-.186.19-.08.372.106.182.471.777 1.011 1.258.697.621 1.284.814 1.466.905.182.091.289.076.395-.045.106-.121.456-.531.577-.713.121-.182.243-.152.41-.091.167.061 1.062.5 1.244.591.182.091.304.136.35.212.045.076.045.44-.099.844zM12 2C6.477 2 2 6.477 2 12c0 1.891.524 3.662 1.435 5.176L2 22l4.957-1.399C8.414 21.499 10.151 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" />
+              </svg>
+              <span>WhatsApp Valuation Desk</span>
+            </a>
+
+            <a
+              href={`tel:${branch.hotline ? branch.hotline.replace(/[^0-9+]/g, "") : "01615121312"}`}
+              className="consult-phone-btn modal-action-btn"
+              title="Call Showroom Desk"
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+              >
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+              </svg>
+              <span>{branch.phone || branch.hotline || "01615-121312"}</span>
+            </a>
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { ALL_RUNWAY_BRANDS } from "@/lib/showroomData";
 import { PublicBrand } from "@/lib/types";
 
 export interface RunwayItem {
@@ -20,15 +21,22 @@ interface BrandRunwayProps {
 
 // Sleek Stealth GT Sweeper - Dark carbon silhouette, dual glowing exhaust flames, red LED taillight
 const CAR_SVG_SWEEPER = `
-<svg class="runway-car-svg" viewBox="0 0 190 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="240" height="74" viewBox="0 0 240 74" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="exhaustFlame" x1="0" y1="37" x2="24" y2="37" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#ff0044" stop-opacity="0"/>
-      <stop offset="35%" stop-color="#ff3300" stop-opacity="0.95"/>
-      <stop offset="75%" stop-color="#ffbb00" stop-opacity="1"/>
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="1"/>
+    <linearGradient id="bodyGradSweeper" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stopColor="#050608" stopOpacity="0.95"/>
+      <stop offset="25%" stopColor="#0d1117"/>
+      <stop offset="55%" stopColor="#1a202c"/>
+      <stop offset="85%" stopColor="#2d3748"/>
+      <stop offset="100%" stopColor="#e2e8f0"/>
     </linearGradient>
-    <filter id="neonRedGlow" x="-20%" y="-20%" width="140%" height="140%">
+    <linearGradient id="exhaustGrad" x1="100%" y1="50%" x2="0%" y2="50%">
+      <stop offset="0%" stopColor="#ff4500" stopOpacity="0.9"/>
+      <stop offset="35%" stopColor="#ff8c00" stopOpacity="0.7"/>
+      <stop offset="70%" stopColor="#00bfff" stopOpacity="0.5"/>
+      <stop offset="100%" stopColor="#00bfff" stopOpacity="0"/>
+    </linearGradient>
+    <filter id="exhaustGlow" x="-30%" y="-30%" width="160%" height="160%">
       <feGaussianBlur stdDeviation="3" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
@@ -37,53 +45,48 @@ const CAR_SVG_SWEEPER = `
     </filter>
   </defs>
 
-  <!-- Ground Underglow Neon Red Strip -->
-  <line x1="26" y1="47" x2="155" y2="47" stroke="#ef4444" stroke-width="3" stroke-linecap="round" opacity="0.85" filter="url(#neonRedGlow)"/>
+  <!-- Dual high-temp exhaust trails shooting backwards -->
+  <polygon points="12,50 -25,47 -20,50 -25,53" fill="url(#exhaustGrad)" filter="url(#exhaustGlow)"/>
+  <polygon points="12,54 -28,52 -22,54 -28,57" fill="url(#exhaustGrad)" filter="url(#exhaustGlow)"/>
 
-  <!-- Exhaust Jet Flames at Rear -->
-  <polygon points="2,37 20,33 20,41" fill="url(#exhaustFlame)"/>
-  <ellipse cx="6" cy="37" rx="6" ry="2.5" fill="#ff4400" filter="drop-shadow(-4px 0 6px #ff0044)"/>
+  <!-- Low-slung supercar aerodynamic chassis -->
+  <path d="M12 55 L24 55 Q35 55 48 51 L80 43 Q110 25 155 24 Q185 24 205 38 L228 46 Q238 50 238 56 L12 56 Z" fill="url(#bodyGradSweeper)"/>
+  
+  <!-- Swept-back greenhouse & stealth cockpit tint -->
+  <path d="M85 41 Q110 27 150 26 Q175 26 195 38 Z" fill="#000000" stroke="#4a5568" strokeWidth="0.8"/>
+  
+  <!-- Front hyper-LED razor blade headlight -->
+  <polygon points="228,45 238,48 234,49 226,47" fill="#ffffff" filter="url(#exhaustGlow)"/>
+  <line x1="225" y1="47" x2="238" y2="49" stroke="#38bdf8" strokeWidth="1.5"/>
 
-  <!-- Rear Wing / Aerodynamic Spoiler -->
-  <path d="M4 27 L18 27 L16 31 L6 31 Z" fill="#1e293b" stroke="#dc2626" stroke-width="0.8"/>
-  <line x1="10" y1="31" x2="10" y2="38" stroke="#dc2626" stroke-width="1.8"/>
+  <!-- Rear continuous lightbar LED -->
+  <path d="M12 50 Q16 48 24 49" stroke="#ef4444" strokeWidth="2.5" filter="url(#exhaustGlow)"/>
 
-  <!-- Main Body Shell - Carbon fiber low silhouette -->
-  <path d="M14 36 C18 31 30 29 42 29 C52 29 60 19 82 15 C104 12 136 14 152 23 C164 25 174 29 180 34 C183 37 181 40 176 42 C168 44 154 44 144 44 C141 38 134 33 125 33 C116 33 109 38 107 44 L60 44 C58 38 51 33 42 33 C33 33 26 38 24 44 L12 44 C8 44 6 40 14 36 Z" 
-        fill="#0a0d14" stroke="#dc2626" stroke-width="1.4"/>
-
-  <!-- Tinted Cockpit Glass / Canopy -->
-  <path d="M72 18 C88 15 124 15 140 23 L130 25 C114 19 90 19 76 22 Z" fill="#ef4444" opacity="0.35"/>
-  <path d="M84 17 L120 17 L115 24 L78 24 Z" fill="#030508" opacity="0.95"/>
-
-  <!-- Red LED Tail Light Bar -->
-  <path d="M8 34 L22 34" stroke="#ff0033" stroke-width="3" stroke-linecap="round" filter="drop-shadow(-3px 0 5px #ff0000)"/>
-
-  <!-- Rear Wheel with Red Brembo Caliper -->
-  <circle cx="42" cy="42" r="10.5" fill="#040609" stroke="#7f1d1d" stroke-width="2"/>
-  <circle cx="42" cy="42" r="6" fill="#1e293b"/>
-  <circle cx="42" cy="42" r="3" fill="#dc2626"/>
-  <path d="M38 37 A 7 7 0 0 1 44 35" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/>
-
-  <!-- Front Wheel with Red Brembo Caliper -->
-  <circle cx="125" cy="42" r="10.5" fill="#040609" stroke="#7f1d1d" stroke-width="2"/>
-  <circle cx="125" cy="42" r="6" fill="#1e293b"/>
-  <circle cx="125" cy="42" r="3" fill="#dc2626"/>
-  <path d="M121 37 A 7 7 0 0 1 127 35" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Carbon ceramic wheels with aerodynamic speed spokes -->
+  <circle cx="58" cy="54" r="14" fill="#0a0d14" stroke="#4a5568" strokeWidth="2.5"/>
+  <circle cx="58" cy="54" r="7" fill="#171923" stroke="#e2e8f0" strokeWidth="1.2"/>
+  <circle cx="192" cy="54" r="14" fill="#0a0d14" stroke="#4a5568" strokeWidth="2.5"/>
+  <circle cx="192" cy="54" r="7" fill="#171923" stroke="#e2e8f0" strokeWidth="1.2"/>
 </svg>`;
 
-// Luminous Hypercar Deployer - Liquid platinum, forward projector high-beam, cyan LED underglow
+// Golden Prestige GT Deployer - Polished metallic silver body, champagne gold accents, xenon white beam
 const CAR_SVG_DEPLOYER = `
-<svg class="runway-car-svg" viewBox="0 0 190 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="240" height="74" viewBox="0 0 240 74" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="deployHeadlightGrad" x1="178" y1="34" x2="255" y2="34" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98"/>
-      <stop offset="25%" stop-color="#67e8f9" stop-opacity="0.7"/>
-      <stop offset="65%" stop-color="#38bdf8" stop-opacity="0.2"/>
-      <stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
+    <linearGradient id="bodyGradDeployer" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stopColor="#1a202c"/>
+      <stop offset="30%" stopColor="#4a5568"/>
+      <stop offset="65%" stopColor="#cbd5e0"/>
+      <stop offset="90%" stopColor="#ffffff"/>
+      <stop offset="100%" stopColor="#e2e8f0"/>
     </linearGradient>
-    <filter id="neonCyanGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="3" result="blur"/>
+    <linearGradient id="headlightBeam" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.8"/>
+      <stop offset="40%" stopColor="#38bdf8" stopOpacity="0.4"/>
+      <stop offset="100%" stopColor="#38bdf8" stopOpacity="0"/>
+    </linearGradient>
+    <filter id="xenonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -91,89 +94,79 @@ const CAR_SVG_DEPLOYER = `
     </filter>
   </defs>
 
-  <!-- Forward Projected Headlight Beam Cone onto Road Surface -->
-  <polygon points="178,34 260,8 260,56" fill="url(#deployHeadlightGrad)" opacity="0.88"/>
+  <!-- Forward-projected laser headlight beam cone -->
+  <polygon points="236,47 285,38 285,58" fill="url(#headlightBeam)" opacity="0.6"/>
 
-  <!-- Ground Underglow Neon Cyan Strip -->
-  <line x1="26" y1="47" x2="155" y2="47" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" opacity="0.9" filter="url(#neonCyanGlow)"/>
+  <!-- Sculpted GT aerodynamic profile -->
+  <path d="M14 55 L26 55 Q36 55 50 51 L84 43 Q114 24 158 23 Q188 23 207 37 L230 45 Q239 49 239 55 L14 56 Z" fill="url(#bodyGradDeployer)"/>
+  
+  <!-- Panoramic canopy cockpit -->
+  <path d="M88 41 Q113 26 153 25 Q178 25 197 37 Z" fill="#090d16" stroke="#d69e2e" strokeWidth="0.75"/>
+  
+  <!-- Laser headlight cluster -->
+  <polygon points="230,44 239,47 236,48 228,46" fill="#ffffff" filter="url(#xenonGlow)"/>
+  <circle cx="233" cy="46" r="2" fill="#38bdf8"/>
 
-  <!-- Main Body Shell - Liquid platinum & titanium alloy -->
-  <path d="M14 36 C18 31 30 29 42 29 C52 29 60 19 82 15 C104 12 136 14 152 23 C164 25 174 29 180 34 C183 37 181 40 176 42 C168 44 154 44 144 44 C141 38 134 33 125 33 C116 33 109 38 107 44 L60 44 C58 38 51 33 42 33 C33 33 26 38 24 44 L12 44 C8 44 6 40 14 36 Z" 
-        fill="#0f172a" stroke="rgba(255, 255, 255, 0.85)" stroke-width="1.4"/>
+  <!-- Sleek metallic silver side-blade & gold accent line -->
+  <path d="M68 49 L175 49" stroke="#d69e2e" strokeWidth="1.2" opacity="0.85"/>
 
-  <!-- Tinted Panoramic Canopy Glass -->
-  <path d="M72 18 C88 15 124 15 140 23 L130 25 C114 19 90 19 76 22 Z" fill="#ffffff" opacity="0.45"/>
-  <path d="M84 17 L120 17 L115 24 L78 24 Z" fill="#020617" opacity="0.92"/>
-
-  <!-- Headlight Cluster (Glowing Projector Lens) -->
-  <circle cx="178" cy="33" r="3.5" fill="#ffffff" filter="drop-shadow(0 0 8px #38bdf8)"/>
-  <path d="M172 32 L178 34" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
-
-  <!-- Rear Wheel with Silver Monoblock -->
-  <circle cx="42" cy="42" r="10.5" fill="#020617" stroke="rgba(255, 255, 255, 0.8)" stroke-width="2"/>
-  <circle cx="42" cy="42" r="6" fill="#334155"/>
-  <circle cx="42" cy="42" r="3" fill="#ffffff"/>
-
-  <!-- Front Wheel with Silver Monoblock -->
-  <circle cx="125" cy="42" r="10.5" fill="#020617" stroke="rgba(255, 255, 255, 0.8)" stroke-width="2"/>
-  <circle cx="125" cy="42" r="6" fill="#334155"/>
-  <circle cx="125" cy="42" r="3" fill="#ffffff"/>
+  <!-- Diamond-cut alloy wheels -->
+  <circle cx="60" cy="54" r="14" fill="#090d16" stroke="#d69e2e" strokeWidth="2.5"/>
+  <circle cx="60" cy="54" r="7" fill="#2d3748" stroke="#ffffff" strokeWidth="1.5"/>
+  <circle cx="194" cy="54" r="14" fill="#090d16" stroke="#d69e2e" strokeWidth="2.5"/>
+  <circle cx="194" cy="54" r="7" fill="#2d3748" stroke="#ffffff" strokeWidth="1.5"/>
 </svg>`;
 
 export default function BrandRunway({ brands }: BrandRunwayProps = {}) {
   const router = useRouter();
 
-  if (!brands || brands.length === 0) {
-    return null;
-  }
-
-  // Normalize database brands
-  const brandList: RunwayItem[] = brands.map((b, idx) => ({
-    name: b.name.toUpperCase(),
-    filterBrand: b.name,
-    destination_url:
-      b.destination_url ||
-      `/inventory?brand=${encodeURIComponent(b.name)}`,
-    image: b.image || null,
-    logo_alt: b.logo_alt || `${b.name} luxury marque`,
-    originalIndex: idx,
-  }));
+  // Normalize brands (use database brands if present, else fallback to ALL_RUNWAY_BRANDS)
+  const brandList: RunwayItem[] = React.useMemo(() => {
+    if (brands && brands.length > 0) {
+      return brands.map((b, idx) => ({
+        name: b.name.toUpperCase(),
+        filterBrand: b.name,
+        destination_url:
+          b.destination_url ||
+          `/inventory?brand=${encodeURIComponent(b.name)}`,
+        image: b.image || null,
+        logo_alt: b.logo_alt || `${b.name} luxury marque`,
+        originalIndex: idx,
+      }));
+    }
+    return ALL_RUNWAY_BRANDS.map((b, idx) => ({
+      name: b.name,
+      filterBrand: b.filterBrand,
+      svg: b.svg,
+      originalIndex: idx,
+    }));
+  }, [brands]);
 
   // Responsive page size: Mobile = 3, Tablet = 6, Desktop = 8
   const [pageSize, setPageSize] = useState<number>(8);
   const [startIndex, setStartIndex] = useState<number>(0);
+
   const [dissolvedIndexes, setDissolvedIndexes] = useState<number[]>([]);
   const [deployingIndexes, setDeployingIndexes] = useState<number[]>([]);
 
   const trackRef = useRef<HTMLDivElement>(null);
   const carActorRef = useRef<HTMLDivElement>(null);
-  const fxLayerRef = useRef<HTMLDivElement>(null);
-  const isAnimatingRef = useRef(false);
-  const isHoveredRef = useRef(false);
-  const animFrameIdRef = useRef<number | null>(null);
+  const isCruisingRef = useRef<boolean>(false);
 
-  // Determine page size based on window width
+  // Dynamic responsive sizing hook
   const calculatePageSize = useCallback(() => {
     if (typeof window === "undefined") return 8;
-    const width = window.innerWidth;
-    if (width < 640) return 3; // Mobile: 3 brands at a time
-    if (width < 1024) return 6; // Tablet: 6 brands at a time
-    return 8; // Desktop: 8 brands at a time
+    const w = window.innerWidth;
+    if (w < 640) return 3;
+    if (w < 1024) return 6;
+    return 8;
   }, []);
 
   useEffect(() => {
     const handleResize = () => {
       const newSize = calculatePageSize();
-      setPageSize((prevSize) => {
-        if (prevSize !== newSize) {
-          // Snap startIndex to new chunk boundary
-          setStartIndex((prevIndex) => Math.floor(prevIndex / newSize) * newSize);
-          return newSize;
-        }
-        return prevSize;
-      });
+      setPageSize(newSize);
     };
-
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -189,86 +182,56 @@ export default function BrandRunway({ brands }: BrandRunwayProps = {}) {
 
   // Run the majestic luxury car cruise with real-time wake synchronization
   const runRunwayCycle = useCallback(() => {
-    if (isAnimatingRef.current) return;
-    if (isHoveredRef.current) return;
+    if (isCruisingRef.current || !trackRef.current || !carActorRef.current) return;
+    isCruisingRef.current = true;
 
     const track = trackRef.current;
     const carActor = carActorRef.current;
-    const fxLayer = fxLayerRef.current;
-    if (!track || !carActor) return;
+    const trackWidth = track.offsetWidth;
 
-    const cards = Array.from(track.querySelectorAll<HTMLElement>(".runway-brand-card"));
-    if (!cards.length) return;
-
-    isAnimatingRef.current = true;
-
-    // Majestic cruise duration: 5.6 seconds (stately, luxurious, clearly visible)
-    const cruiseDuration = 5600;
-
-    // ==========================================
-    // PHASE 1: SWEEPER CAR (Dissolves in wake)
-    // ==========================================
+    // Phase 1: Carbon Sweeper Car Speeds Across Track (1.9s cruise)
+    const cruiseDuration = 1900;
     carActor.innerHTML = CAR_SVG_SWEEPER;
     carActor.style.transition = "none";
     carActor.style.left = "-240px";
-    void carActor.offsetWidth; // Force reflow
+    carActor.style.opacity = "1";
 
-    // Smooth luxury cruise transition
-    carActor.style.transition = `left ${cruiseDuration}ms cubic-bezier(0.35, 0.05, 0.25, 0.98)`;
-    carActor.style.left = "calc(100% + 90px)";
+    // Force layout reflow before launching physics motion
+    void carActor.offsetWidth;
 
-    const processedDissolve = new Set<number>();
+    carActor.style.transition = `left ${cruiseDuration}ms cubic-bezier(0.25, 1, 0.5, 1)`;
+    carActor.style.left = `${trackWidth + 60}px`;
 
-    // Real-time animation frame loop to synchronize card dissolve right behind the car's tail
-    const checkSweepWake = () => {
-      if (!carActor || !track) return;
-      const trackRect = track.getBoundingClientRect();
-      const carRect = carActor.getBoundingClientRect();
-      const currentCards = Array.from(track.querySelectorAll<HTMLElement>(".runway-brand-card"));
+    // Real-Time Card Wake Collision Loop (60 FPS calculation)
+    const sweepStartTime = performance.now();
+    const sweptCards = new Set<number>();
 
-      // The exhaust / wake is at the rear bumper of the car (carRect.left + 15px)
-      const carExhaustX = carRect.left + 15;
+    const checkSweepCollisions = (now: number) => {
+      const elapsed = now - sweepStartTime;
+      const progress = Math.min(elapsed / cruiseDuration, 1);
+      const currentCarFront = -240 + progress * (trackWidth + 300) + 210;
 
-      currentCards.forEach((card, idx) => {
-        if (processedDissolve.has(idx)) return;
-        const cardRect = card.getBoundingClientRect();
-        // Dissolve the instant the car's tail/exhaust has covered the card's center
-        const cardTriggerX = cardRect.left + cardRect.width * 0.42;
-
-        if (carExhaustX >= cardTriggerX) {
-          processedDissolve.add(idx);
-          setDissolvedIndexes((prev) => [...prev, idx]);
-
-          // Spawn tire smoke & dust puffs right in the wake behind the exhaust
-          if (fxLayer) {
-            const cardCenterX = cardRect.left - trackRect.left + cardRect.width / 2;
-            const cardCenterY = cardRect.top - trackRect.top + cardRect.height / 2;
-            for (let p = 0; p < 4; p++) {
-              const puff = document.createElement("div");
-              puff.className = "fx-dust-puff";
-              const size = 32 + Math.random() * 32;
-              puff.style.width = `${size}px`;
-              puff.style.height = `${size}px`;
-              puff.style.left = `${cardCenterX + (Math.random() * 26 - 13)}px`;
-              puff.style.top = `${cardCenterY + (Math.random() * 18 - 9)}px`;
-              fxLayer.appendChild(puff);
-              setTimeout(() => puff.remove(), 850);
-            }
+      const cardNodes = track.querySelectorAll<HTMLDivElement>(".runway-brand-card");
+      cardNodes.forEach((cardNode) => {
+        const idx = Number(cardNode.getAttribute("data-index"));
+        if (!sweptCards.has(idx)) {
+          const cardLeft = cardNode.offsetLeft;
+          if (currentCarFront >= cardLeft + 25) {
+            sweptCards.add(idx);
+            setDissolvedIndexes((prev) => [...prev, idx]);
           }
         }
       });
 
-      if (processedDissolve.size < currentCards.length && carRect.left < trackRect.right + 50) {
-        animFrameIdRef.current = requestAnimationFrame(checkSweepWake);
+      if (progress < 1) {
+        requestAnimationFrame(checkSweepCollisions);
       }
     };
+    requestAnimationFrame(checkSweepCollisions);
 
-    animFrameIdRef.current = requestAnimationFrame(checkSweepWake);
-
-    // When Sweeper Car finishes its cruise across the track
+    // Phase 2: Once the track is fully swept, swap the batch seamlessly behind the scenes
     setTimeout(() => {
-      if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
-
+      carActor.style.opacity = "0";
       carActor.style.transition = "none";
       carActor.style.left = "-240px";
 
@@ -277,72 +240,60 @@ export default function BrandRunway({ brands }: BrandRunwayProps = {}) {
 
       // Initialize all incoming cards in dissolved state so they materialize cleanly
       setDissolvedIndexes(Array.from({ length: pageSize }, (_, i) => i));
-      setDeployingIndexes([]);
 
-      // ==========================================
-      // PHASE 2: DEPLOYER CAR (Deploys in wake)
-      // ==========================================
+      // Phase 3: Golden GT Deployer Car Cruises Across Track, Materializing New Brands
       setTimeout(() => {
         carActor.innerHTML = CAR_SVG_DEPLOYER;
         carActor.style.transition = "none";
         carActor.style.left = "-240px";
-        void carActor.offsetWidth; // Force reflow
+        carActor.style.opacity = "1";
 
-        carActor.style.transition = `left ${cruiseDuration}ms cubic-bezier(0.35, 0.05, 0.25, 0.98)`;
-        carActor.style.left = "calc(100% + 90px)";
+        void carActor.offsetWidth;
 
-        const processedDeploy = new Set<number>();
+        carActor.style.transition = `left ${cruiseDuration}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+        carActor.style.left = `${trackWidth + 60}px`;
 
-        // Real-time animation frame loop to deploy cards right behind the car's rear wheels
-        const checkDeployWake = () => {
-          if (!carActor || !track) return;
-          const trackRect = track.getBoundingClientRect();
-          const carRect = carActor.getBoundingClientRect();
-          const currentCards = Array.from(track.querySelectorAll<HTMLElement>(".runway-brand-card"));
+        const deployStartTime = performance.now();
+        const deployedCards = new Set<number>();
 
-          // Deployer reveals logos right behind its rear wheels
-          const carRearWheelX = carRect.left + 35;
+        const checkDeployCollisions = (now: number) => {
+          const elapsed = now - deployStartTime;
+          const progress = Math.min(elapsed / cruiseDuration, 1);
+          const currentCarBack = -240 + progress * (trackWidth + 300) + 40;
 
-          currentCards.forEach((card, idx) => {
-            if (processedDeploy.has(idx)) return;
-            const cardRect = card.getBoundingClientRect();
-            const cardTriggerX = cardRect.left + cardRect.width * 0.42;
+          const cardNodes = track.querySelectorAll<HTMLDivElement>(".runway-brand-card");
+          cardNodes.forEach((cardNode) => {
+            const idx = Number(cardNode.getAttribute("data-index"));
+            if (!deployedCards.has(idx)) {
+              const cardLeft = cardNode.offsetLeft;
+              // Materialize card immediately behind deployer car
+              if (currentCarBack >= cardLeft) {
+                deployedCards.add(idx);
+                // Remove from dissolved set
+                setDissolvedIndexes((prev) => prev.filter((item) => item !== idx));
+                // Add to deploying wave set
+                setDeployingIndexes((prev) => [...prev, idx]);
 
-            if (carRearWheelX >= cardTriggerX) {
-              processedDeploy.add(idx);
-              // Un-dissolve and trigger stamp down deployment
-              setDissolvedIndexes((prev) => prev.filter((id) => id !== idx));
-              setDeployingIndexes((prev) => [...prev, idx]);
-
-              // Spawn luxury friction flare / cyan spark burst right behind the wheels
-              if (fxLayer) {
-                const cardCenterX = cardRect.left - trackRect.left + cardRect.width / 2;
-                const cardCenterY = cardRect.top - trackRect.top + cardRect.height / 2;
-                const flare = document.createElement("div");
-                flare.className = "fx-stamp-flare";
-                flare.style.left = `${cardCenterX}px`;
-                flare.style.top = `${cardCenterY}px`;
-                fxLayer.appendChild(flare);
-                setTimeout(() => flare.remove(), 600);
+                // Clear deploying glow effect after materialization completes
+                setTimeout(() => {
+                  setDeployingIndexes((prev) => prev.filter((item) => item !== idx));
+                }, 750);
               }
             }
           });
 
-          if (processedDeploy.size < currentCards.length && carRect.left < trackRect.right + 50) {
-            animFrameIdRef.current = requestAnimationFrame(checkDeployWake);
+          if (progress < 1) {
+            requestAnimationFrame(checkDeployCollisions);
           }
         };
+        requestAnimationFrame(checkDeployCollisions);
 
-        animFrameIdRef.current = requestAnimationFrame(checkDeployWake);
-
-        // When Deployer Car exits to the right
+        // Phase 4: Finalize Cycle & Reset Guard Flag
         setTimeout(() => {
-          if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
-
-          carActor.style.transition = "none";
-          carActor.style.left = "-240px";
+          carActor.style.opacity = "0";
+          setDissolvedIndexes([]);
           setDeployingIndexes([]);
-          isAnimatingRef.current = false;
+          isCruisingRef.current = false;
         }, cruiseDuration + 300);
       }, 450);
     }, cruiseDuration + 150);
@@ -350,21 +301,22 @@ export default function BrandRunway({ brands }: BrandRunwayProps = {}) {
 
   // Recurring interval: Cruise runs every 19 seconds (allowing ~8 seconds of resting interaction)
   useEffect(() => {
-    const handleTrigger = () => runRunwayCycle();
-    window.addEventListener("trigger-runway-cycle", handleTrigger);
-
     const timer = setInterval(() => {
       runRunwayCycle();
-    }, 19500);
+    }, 19000);
+
+    // Initial first cruise triggers elegantly 3 seconds after page landing
+    const initialTimer = setTimeout(() => {
+      runRunwayCycle();
+    }, 3200);
 
     return () => {
       clearInterval(timer);
-      window.removeEventListener("trigger-runway-cycle", handleTrigger);
-      if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
+      clearTimeout(initialTimer);
     };
   }, [runRunwayCycle]);
 
-  // Sliced brands for current active view (handles single brand edge case gracefully)
+  // Sliced brands for current active view
   const visibleBrands = Array.from({ length: pageSize }, (_, i) => {
     const len = brandList.length || 1;
     const idx = (startIndex + i) % len;
@@ -372,82 +324,75 @@ export default function BrandRunway({ brands }: BrandRunwayProps = {}) {
   });
 
   return (
-    <section className="brand-strip-section" id="brand-runway-section">
-      <div className="max-w-7xl">
-        <div className="runway-header">
-          <h2 className="section-h2" style={{ marginBottom: "0.35rem" }}>
-            Prestigious Automotive Marques
-          </h2>
-          <p className="runway-subtext">
-            Official luxury dealerships & certified engineering partners at DREAM CAR HOUSE.
+    <section className="brand-runway-section max-w-7xl" id="marques">
+      <div className="runway-header">
+        <div className="runway-header-text">
+          <span className="runway-eyebrow">WORLD-CLASS AUTOMOTIVE MARQUES</span>
+          <h2 className="runway-title">Prestigious Marque Runway</h2>
+          <p className="runway-subtitle">
+            Curated allocations from the world&apos;s most revered luxury automotive houses.
           </p>
         </div>
+        <div className="runway-header-action">
+          <button
+            type="button"
+            className="runway-manual-cruise-btn"
+            onClick={runRunwayCycle}
+            title="Launch Supercar Cruise"
+            aria-label="Cycle Brand Runway"
+          >
+            <span>Cycle Marque Runway</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
 
-        {/* Asphalt Runway Track */}
-        <div
-          ref={trackRef}
-          className="runway-track-wrapper"
-          id="runway-track-wrapper"
-          onMouseEnter={() => {
-            isHoveredRef.current = true;
-          }}
-          onMouseLeave={() => {
-            isHoveredRef.current = false;
-          }}
-          style={{ "--runway-cols": pageSize } as React.CSSProperties}
-        >
-          {/* Road Surface */}
-          <div className="runway-road-surface">
-            <div className="runway-speed-lines"></div>
-            <div className="runway-center-dashes"></div>
-          </div>
+      {/* Runway Interactive Track */}
+      <div className="runway-track-wrap" ref={trackRef}>
+        {/* Animated Hypercar Actor (Positioned Dynamically by Physics Loop) */}
+        <div className="runway-car-actor" ref={carActorRef}></div>
 
-          {/* Dynamic Particle FX Layer */}
-          <div ref={fxLayerRef} className="runway-fx-layer" id="runway-fx-layer"></div>
+        {/* Dynamic Brand Cards Grid */}
+        <div className="runway-cards-grid">
+          {visibleBrands.map((brand, i) => {
+            const isDissolved = dissolvedIndexes.includes(i);
+            const isDeploying = deployingIndexes.includes(i);
 
-          {/* The Moving Car Actor */}
-          <div ref={carActorRef} className="runway-car-actor" id="runway-car-actor"></div>
-
-          {/* The Dynamically Sized Brand Logos Grid */}
-          <div className="brand-runway-row" id="brand-runway-row">
-            {visibleBrands.map((brand, i) => {
-              const isDissolved = dissolvedIndexes.includes(i);
-              const isDeploying = deployingIndexes.includes(i);
-
-              return (
-                <div
-                  key={`${brand.name}-${brand.originalIndex}-${i}`}
-                  className={`runway-brand-card ${isDissolved ? "is-dissolved" : ""} ${
-                    isDeploying ? "is-deploying" : ""
-                  }`}
-                  data-index={i}
-                  onClick={() => filterByBrand(brand)}
-                  title={`View ${brand.name} Collection`}
-                >
-                  <div className="brand-badge-inner">
-                    {brand.image ? (
-                      <img
-                        src={brand.image}
-                        alt={brand.logo_alt || brand.name}
-                        className="brand-runway-img"
-                        loading="lazy"
-                      />
-                    ) : brand.svg ? (
-                      <div
-                        style={{ display: "contents" }}
-                        dangerouslySetInnerHTML={{ __html: brand.svg }}
-                      />
-                    ) : (
-                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "#e2e8f0" }}>
-                        {brand.name.slice(0, 2)}
-                      </span>
-                    )}
-                    <span className="runway-brand-name">{brand.name}</span>
-                  </div>
+            return (
+              <div
+                key={`${brand.name}-${brand.originalIndex}-${i}`}
+                className={`runway-brand-card ${isDissolved ? "is-dissolved" : ""} ${
+                  isDeploying ? "is-deploying" : ""
+                }`}
+                data-index={i}
+                onClick={() => filterByBrand(brand)}
+                title={`View ${brand.name} Collection`}
+              >
+                <div className="brand-badge-inner">
+                  {brand.image ? (
+                    <img
+                      src={brand.image}
+                      alt={brand.logo_alt || brand.name}
+                      className="brand-runway-img"
+                      loading="lazy"
+                    />
+                  ) : brand.svg ? (
+                    <div
+                      style={{ display: "contents" }}
+                      dangerouslySetInnerHTML={{ __html: brand.svg }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "#e2e8f0" }}>
+                      {brand.name.slice(0, 2)}
+                    </span>
+                  )}
+                  <span className="runway-brand-name">{brand.name}</span>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
