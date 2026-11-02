@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { getPublicInventory, getAllPageSEO, getAllCategorySEO } from "@/lib/server/api";
+import { getPublicInventory, getAllPageSEO, getAllCategorySEO, getAllPublicBrands } from "@/lib/server/api";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://dreamcarhouse.com";
@@ -56,6 +56,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: `${baseUrl}/cars/pre-owned/`,
       pageKey: "pre-owned",
+      type: "category",
+      changeFrequency: "daily" as const,
+      priority: 0.85,
+    },
+    {
+      url: `${baseUrl}/cars/brand/`,
+      pageKey: "brands",
       type: "category",
       changeFrequency: "daily" as const,
       priority: 0.85,
@@ -118,12 +125,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     vehiclePages = res.items.map((car) => ({
       url: `${baseUrl}/cars/${car.slug}/`,
       lastModified: now,
-      changeFrequency: "weekly",
+      changeFrequency: "weekly" as const,
       priority: 0.85,
     }));
   } catch {
     vehiclePages = [];
   }
 
-  return [...staticPages, ...vehiclePages];
+  let brandPages: MetadataRoute.Sitemap = [];
+  try {
+    const brands = await getAllPublicBrands();
+    brandPages = brands
+      .filter((b) => b.slug)
+      .map((b) => ({
+        url: `${baseUrl}/cars/brand/${b.slug}/`,
+        lastModified: now,
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      }));
+  } catch {
+    brandPages = [];
+  }
+
+  return [...staticPages, ...vehiclePages, ...brandPages];
 }

@@ -17,6 +17,7 @@ export type NavigationItem = Readonly<{
     | "/workspace/content/experience"
     | "/workspace/content/visual-chronicles"
     | "/workspace/content/vip-sanctuary"
+    | "/workspace/content/about-us"
     | "/workspace/content/social-media"
     | "/workspace/content/social-features"
     | "/workspace/content/sales-representatives"
@@ -52,6 +53,7 @@ export const navigation: readonly NavigationItem[] = [
   { href: "/workspace/content/experience", label: "Experience Pillars", symbol: "🏛️", permission: "home.view_experiencesection" },
   { href: "/workspace/content/visual-chronicles", label: "Visual Chronicles", symbol: "📸", permission: "home.view_visualchroniclessection" },
   { href: "/workspace/content/vip-sanctuary", label: "VIP Sanctuary", symbol: "👑", permission: "home.view_vipsanctuarysection" },
+  { href: "/workspace/content/about-us", label: "About Us Page", symbol: "🏛️", permission: "home.view_aboutsection" },
   { href: "/workspace/content/social-media", label: "Social Links", symbol: "🌐", permission: "home.view_socialmedia" },
   { href: "/workspace/content/social-features", label: "Social Features", symbol: "🌟", permission: "home.view_peopletalkaboutus" },
   { href: "/workspace/content/sales-representatives", label: "Sales Reps", symbol: "👤", permission: "home.view_salesrepresentative" },
@@ -82,6 +84,7 @@ export const allRoutes: Record<string, { label: string; symbol: string }> = {
   "/workspace/content/experience": { label: "Experience Pillars", symbol: "🏛️" },
   "/workspace/content/visual-chronicles": { label: "Visual Chronicles", symbol: "📸" },
   "/workspace/content/vip-sanctuary": { label: "VIP Sanctuary", symbol: "👑" },
+  "/workspace/content/about-us": { label: "About Us Page", symbol: "🏛️" },
   "/workspace/content/social-media": { label: "Social Links", symbol: "🌐" },
   "/workspace/content/social-features": { label: "Social Features", symbol: "🌟" },
   "/workspace/content/sales-representatives": { label: "Sales Reps", symbol: "👤" },

@@ -13,5 +13,6 @@ from apps.home.models.consultation_model import ConsultationSection, default_con
 from apps.home.models.experience_model import ExperienceSection, ExperiencePillar
 from apps.home.models.visual_chronicles_model import VisualChroniclesSection, VisualChroniclesItem
 from apps.home.models.vip_sanctuary_model import VipSanctuarySection, default_vip_sanctuary_pillars
+from apps.home.models.about_model import AboutSection, default_about_stats, default_about_pillars
 from apps.home.models.idempotency_model import IdempotencyKey
 

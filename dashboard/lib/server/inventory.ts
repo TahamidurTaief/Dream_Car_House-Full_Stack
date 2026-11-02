@@ -39,6 +39,7 @@ import type {
   VisualChroniclesSectionItem,
   VisualChroniclesItemData,
   VipSanctuarySectionItem,
+  AboutSectionItem,
 } from "../types";
 
 export type {
@@ -1135,6 +1136,23 @@ export async function getVipSanctuarySectionDashboard(): Promise<ApiResult<VipSa
     decode: (val) => val as VipSanctuarySectionItem,
   });
 }
+
+// ----------------- About Section (home.AboutSection) -----------------
+export async function getAboutSectionDashboard(): Promise<ApiResult<AboutSectionItem>> {
+  const access = await getManagementAccess();
+  if (!access.ok) return access;
+
+  const { origin, cookieHeader, csrftoken } = await getAuthHeaders();
+  return requestDashboard<AboutSectionItem>({
+    origin,
+    path: "about-us/",
+    method: "GET",
+    cookie: cookieHeader,
+    csrfToken: csrftoken,
+    decode: (val) => val as AboutSectionItem,
+  });
+}
+
 
 
 

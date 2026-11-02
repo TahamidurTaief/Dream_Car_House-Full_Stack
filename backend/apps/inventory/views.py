@@ -173,19 +173,39 @@ class BrandListView(generics.ListAPIView):
 class BrandSEODetailView(APIView):
     """
     GET /api/v1/inventory/brands/<brand_id>/seo/
+    GET /api/v1/inventory/brands/<slug>/seo/
     Returns the SEO + on-page content for a single brand's listing page.
-    404 if the brand doesn't exist or isn't published — same visibility rule
-    as BrandListView, via `status` (Brand has no separate hidden/visibility
-    flag the way CategoryPageSEO does).
+    404 if the brand doesn't exist or isn't published.
     """
     permission_classes = []
 
-    def get(self, request, brand_id, format=None):
-        try:
-            brand = Brand.objects.get(id=brand_id, status=BaseModel.StatusChoices.PUBLISHED)
-        except Brand.DoesNotExist:
+    def get(self, request, brand_id=None, slug=None, format=None):
+        brand = None
+        if brand_id is not None:
+            brand = Brand.objects.filter(id=brand_id, status=BaseModel.StatusChoices.PUBLISHED).first()
+        elif slug:
+            norm_slug = slug.strip().lower()
+            from django.utils.text import slugify
+            for b in Brand.objects.filter(status=BaseModel.StatusChoices.PUBLISHED):
+                if slugify(b.name) == norm_slug:
+                    brand = b
+                    break
+            if not brand:
+                brand = Brand.objects.filter(
+                    name__iexact=norm_slug.replace('-', ' '),
+                    status=BaseModel.StatusChoices.PUBLISHED
+                ).first()
+            if not brand and norm_slug.isdigit():
+                brand = Brand.objects.filter(
+                    id=int(norm_slug),
+                    status=BaseModel.StatusChoices.PUBLISHED
+                ).first()
+
+
+        if not brand:
+            identifier = brand_id if brand_id is not None else slug
             return Response(
-                {'detail': f'No published brand found for id "{brand_id}".'},
+                {'detail': f'No published brand found for "{identifier}".'},
                 status=status.HTTP_404_NOT_FOUND,
             )
 

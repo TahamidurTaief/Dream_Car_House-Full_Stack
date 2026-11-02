@@ -342,5 +342,21 @@ class PublicVipSanctuarySectionAPIView(APIView):
         return Response({"success": True, "data": serializer.data}, status=status.HTTP_200_OK)
 
 
+from apps.home.models.about_model import AboutSection
+from apps.home.serializers import PublicAboutSectionSerializer
+
+class PublicAboutSectionAPIView(APIView):
+    def get(self, request, format=None):
+        section = AboutSection.objects.filter(is_active=True).first()
+        if not section:
+            section = AboutSection.objects.first()
+            if not section:
+                section = AboutSection()
+        serializer = PublicAboutSectionSerializer(section, context={"request": request})
+        return Response({"success": True, "data": serializer.data}, status=status.HTTP_200_OK)
+
+
+
+
 
 

@@ -14,6 +14,7 @@ export type DashboardAccess =
 export type BrandItem = {
   id: number;
   name: string;
+  slug?: string;
   segment: string;
   image: string;
   logo_alt?: string;
@@ -618,5 +619,49 @@ export type VipSanctuarySectionItem = {
   tour_video_target: string;
   is_active: boolean;
 };
+
+export type AboutStatItem = {
+  number: string;
+  label: string;
+};
+
+export type AboutPillarItem = {
+  title: string;
+  description: string;
+  icon?: string;
+};
+
+export type AboutSectionItem = {
+  id: number;
+  hero_badge: string;
+  hero_title: string;
+  hero_subtitle: string;
+  stats: AboutStatItem[];
+  story_eyebrow: string;
+  story_title: string;
+  story_content_p1: string;
+  story_content_p2: string;
+  quote_text: string;
+  quote_author: string;
+  reel_image: string | null;
+  reel_image_url: string;
+  reel_image_display: string | null;
+  reel_title: string;
+  reel_duration: string;
+  reel_video_target: string;
+  tour_cta_label: string;
+  tour_video_target: string;
+  pillars_eyebrow: string;
+  pillars_title: string;
+  pillars: AboutPillarItem[];
+  cta_title: string;
+  cta_description: string;
+  cta_primary_label: string;
+  cta_secondary_label: string;
+  cta_whatsapp_label: string;
+  is_active: boolean;
+  updated_at: string;
+};
+
 
 

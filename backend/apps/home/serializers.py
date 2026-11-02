@@ -496,3 +496,47 @@ class PublicVipSanctuarySectionSerializer(serializers.ModelSerializer, Optimized
         return ""
 
 
+from apps.home.models.about_model import AboutSection
+
+class PublicAboutSectionSerializer(serializers.ModelSerializer, OptimizedImageSerializerMixin):
+    reel_image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AboutSection
+        fields = [
+            'id',
+            'hero_badge',
+            'hero_title',
+            'hero_subtitle',
+            'stats',
+            'story_eyebrow',
+            'story_title',
+            'story_content_p1',
+            'story_content_p2',
+            'quote_text',
+            'quote_author',
+            'reel_image',
+            'reel_image_url',
+            'reel_title',
+            'reel_duration',
+            'reel_video_target',
+            'tour_cta_label',
+            'tour_video_target',
+            'pillars_eyebrow',
+            'pillars_title',
+            'pillars',
+            'cta_title',
+            'cta_description',
+            'cta_primary_label',
+            'cta_secondary_label',
+            'cta_whatsapp_label',
+            'updated_at',
+        ]
+
+    def get_reel_image(self, obj):
+        if obj.reel_image:
+            return self.get_optimized_image_url(obj, 'reel_image')
+        return obj.reel_image_url or None
+
+
+

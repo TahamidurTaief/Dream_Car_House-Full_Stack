@@ -17,6 +17,8 @@ import type {
   PublicVipSanctuarySection,
   PublicPageSEO,
   PublicCategorySEO,
+  PublicBrandSEO,
+  PublicAboutSection,
 } from "@/lib/types";
 
 export function getBackendOrigin(): string {
@@ -648,6 +650,63 @@ export const getRunwayBrands = cache(async (): Promise<PublicBrand[]> => {
 });
 
 /**
+ * Deduplicated, server-only public fetcher for all published brands.
+ * Orders by brand.order, name. Includes slug, image, starting_price, and car count.
+ */
+export const getAllPublicBrands = cache(async (): Promise<PublicBrand[]> => {
+  const origin = getBackendOrigin();
+  const url = `${origin}/api/v1/inventory/brands/`;
+
+  try {
+    const res = await fetch(url, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!res.ok) return [];
+
+    const json = (await res.json()) as { success?: boolean; data?: PublicBrand[] };
+    if (!json || json.success !== true || !Array.isArray(json.data)) {
+      return [];
+    }
+    return json.data;
+  } catch (error) {
+    console.error("[getAllPublicBrands] Failed to fetch brands:", error);
+    return [];
+  }
+});
+
+/**
+ * Deduplicated, server-only public Brand SEO fetcher.
+ * Retrieves on-page content and SEO metadata for a single brand (/cars/brand/<slug>).
+ * Supports lookup by brand slug (e.g. 'mercedes-benz', 'bmw', 'rolls-royce') or integer id.
+ */
+export const getBrandSEODetail = cache(async (slugOrId: string | number): Promise<PublicBrandSEO | null> => {
+  const origin = getBackendOrigin();
+  const url = `${origin}/api/v1/inventory/brands/${encodeURIComponent(String(slugOrId).trim())}/seo/`;
+
+  try {
+    const res = await fetch(url, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!res.ok) return null;
+
+    const json = (await res.json()) as { success?: boolean; data?: PublicBrandSEO };
+    if (!json || json.success !== true || !json.data) {
+      return null;
+    }
+    return json.data;
+  } catch (error) {
+    console.error(`[getBrandSEODetail] Failed to fetch brand SEO for "${slugOrId}":`, error);
+    return null;
+  }
+});
+
+/**
  * Deduplicated, server-only public Consultation Section fetcher.
  */
 export const getConsultationSection = cache(async (): Promise<PublicConsultationSection | null> => {
@@ -875,6 +934,33 @@ export const getVipSanctuarySection = cache(
   }
 );
 
+/**
+ * Deduplicated, server-only public About Section fetcher.
+ */
+export const getAboutSection = cache(async (): Promise<PublicAboutSection | null> => {
+  const origin = getBackendOrigin();
+  const url = `${origin}/api/v1/home/about/`;
+
+  try {
+    const res = await fetch(url, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!res.ok) return null;
+
+    const json = (await res.json()) as { success?: boolean; data?: PublicAboutSection };
+    if (!json || json.success !== true || !json.data) {
+      return null;
+    }
+    return json.data;
+  } catch (error) {
+    console.error("[getAboutSection] Failed to fetch about section:", error);
+    return null;
+  }
+});
+
 // ----------------- SEO Configs (apps.seo_config: SEOConfig & CategoryPageSEO) -----------------
 
 export const getPageSEO = cache(async (page: string): Promise<PublicPageSEO | null> => {
@@ -935,10 +1021,10 @@ export const getAllCategorySEO = cache(async (): Promise<PublicCategorySEO[]> =>
 });
 
 export function buildMetadataFromSEO(
-  seo: PublicPageSEO | PublicCategorySEO | null,
+  seo: PublicPageSEO | PublicCategorySEO | PublicBrandSEO | null,
   fallback: Metadata
 ): Metadata {
-  if (!seo || seo.visibility === "HIDDEN") {
+  if (!seo || ("visibility" in seo && seo.visibility === "HIDDEN")) {
     return fallback;
   }
 
@@ -948,8 +1034,9 @@ export function buildMetadataFromSEO(
 
   let robots = fallback.robots;
   if (seo.robots) {
-    const isNoIndex = seo.robots.includes("noindex");
-    const isNoFollow = seo.robots.includes("nofollow");
+    const lower = seo.robots.toLowerCase();
+    const isNoIndex = lower.includes("noindex");
+    const isNoFollow = lower.includes("nofollow");
     robots = {
       index: !isNoIndex,
       follow: !isNoFollow,
@@ -962,7 +1049,7 @@ export function buildMetadataFromSEO(
 
   const ogTitle = ("og_title" in seo && seo.og_title) || seo.meta_title || fallback.openGraph?.title;
   const ogDescription = ("og_description" in seo && seo.og_description) || seo.meta_description || fallback.openGraph?.description;
-  const ogImage = ("og_image" in seo && seo.og_image) || ("feature_image" in seo && seo.feature_image) || undefined;
+  const ogImage = ("og_image" in seo && seo.og_image) || ("feature_image" in seo && seo.feature_image) || ("image" in seo && seo.image) || undefined;
   const ogType = ("og_type" in seo && seo.og_type === "article" ? "article" : "website") as "website" | "article";
   const ogSiteName = ("og_site_name" in seo && seo.og_site_name) || "DREAM CAR HOUSE";
 
@@ -985,7 +1072,7 @@ export function buildMetadataFromSEO(
       url: canonicalUrl as string,
       siteName: ogSiteName,
       type: ogType,
-      images: ogImage ? [{ url: ogImage, alt: ("feature_image_alt" in seo && seo.feature_image_alt) || "" }] : undefined,
+      images: ogImage ? [{ url: ogImage, alt: ("feature_image_alt" in seo && seo.feature_image_alt) || ("logo_alt" in seo && seo.logo_alt) || "" }] : undefined,
     },
     twitter: {
       card: "summary_large_image",

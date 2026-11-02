@@ -58,6 +58,7 @@ from .views import (
     VisualChroniclesItemListCreateView,
     VisualChroniclesItemDetailView,
     VipSanctuarySectionManagementView,
+    AboutSectionManagementView,
 )
 
 
@@ -173,6 +174,9 @@ urlpatterns = [
 
     # Homepage VIP Sanctuary Section (home.VipSanctuarySection)
     path("vip-sanctuary/", VipSanctuarySectionManagementView.as_view(), name="vip_sanctuary"),
+
+    # About Us Page Section (home.AboutSection)
+    path("about-us/", AboutSectionManagementView.as_view(), name="about_us"),
 ]
 
 

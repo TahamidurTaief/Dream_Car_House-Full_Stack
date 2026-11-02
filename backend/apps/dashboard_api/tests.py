@@ -2316,5 +2316,111 @@ class DashboardContentConfigurationTests(TestCase):
         del_res = self.client.delete(f"/api/v1/dashboard/branches/{created_id}/", HTTP_X_CSRFTOKEN=admin_csrf)
         self.assertEqual(del_res.status_code, 200)
 
+    def test_save_fix_empty_image_retention_partial_updates(self):
+        """
+        Regression test: editing records in the dashboard sends empty string or
+        0-byte file for untouched image inputs. Serializers must retain the existing
+        image and not fail with 'The submitted data was not a file'.
+        """
+        from base.models import BaseModel
+        from apps.home.models import AboutSection, VipSanctuarySection
+        from apps.inventory.models import Brand
+        from apps.dashboard_api.serializers import (
+            BrandManagementSerializer,
+            AboutSectionManagementSerializer,
+            VipSanctuarySectionManagementSerializer,
+        )
+
+        brand = Brand.objects.create(name="Test Retain Logo Brand", order=1, status=BaseModel.StatusChoices.PUBLISHED)
+        try:
+            # Test BrandManagementSerializer partial update with empty strings
+            serializer = BrandManagementSerializer(
+                brand,
+                data={"name": "Test Retain Logo Brand Updated", "image": "", "feature_image": ""},
+                partial=True,
+            )
+            self.assertTrue(serializer.is_valid(), serializer.errors)
+            self.assertNotIn("image", serializer.validated_data)
+            self.assertNotIn("feature_image", serializer.validated_data)
+
+            # Test AboutSectionManagementSerializer partial update with empty reel_image
+            about = AboutSection.objects.create(hero_title="Original Hero Title")
+            about_serializer = AboutSectionManagementSerializer(
+                about,
+                data={"hero_title": "Updated Hero Title", "reel_image": ""},
+                partial=True,
+            )
+            self.assertTrue(about_serializer.is_valid(), about_serializer.errors)
+            self.assertNotIn("reel_image", about_serializer.validated_data)
+            self.assertEqual(about_serializer.validated_data["hero_title"], "Updated Hero Title")
+
+            # Test VipSanctuarySectionManagementSerializer partial update with empty background_image
+            vip = VipSanctuarySection.objects.create(title="Original VIP Title")
+            vip_serializer = VipSanctuarySectionManagementSerializer(
+                vip,
+                data={"title": "Updated VIP Title", "background_image": ""},
+                partial=True,
+            )
+            self.assertTrue(vip_serializer.is_valid(), vip_serializer.errors)
+            self.assertNotIn("background_image", vip_serializer.validated_data)
+            self.assertEqual(vip_serializer.validated_data["title"], "Updated VIP Title")
+        finally:
+            brand.delete()
+
+    def test_about_section_management_and_public_api(self):
+        """
+        Tests the About Us section dashboard management endpoint and public SSR endpoint.
+        """
+        from apps.home.models import AboutSection
+
+        admin_csrf = self._login_superuser()
+        anon_client = APIClient()
+
+        # 1. Unauthenticated request to dashboard endpoint is rejected
+        res_unauth = anon_client.get("/api/v1/dashboard/about-us/")
+        self.assertEqual(res_unauth.status_code, 403)
+
+        # 2. Staff without view_aboutsection is rejected with 403
+        self._login_readonly()
+        res_no_perm = self.client.get("/api/v1/dashboard/about-us/")
+        self.assertEqual(res_no_perm.status_code, 403)
+
+        # 3. Superuser can view about section
+        admin_csrf = self._login_superuser()
+        res_get = self.client.get("/api/v1/dashboard/about-us/")
+        self.assertEqual(res_get.status_code, 200)
+        self.assertTrue(res_get.json()["success"])
+        self.assertIn("hero_title", res_get.json()["data"])
+
+        # 4. Superuser can update about section
+        res_update = self.client.post(
+            "/api/v1/dashboard/about-us/",
+            {
+                "hero_title": "Automotive Excellence in Dhaka",
+                "hero_badge": "DCH HERITAGE",
+                "stats": [
+                    {"number": "20+", "label": "Years Curating Luxury"},
+                    {"number": "100%", "label": "Verified Pedigree"},
+                ],
+                "pillars": [
+                    {"title": "Global Import", "description": "Direct factory allocation."},
+                    {"title": "Vault Handover", "description": "Private sanctuary delivery."},
+                ],
+                "is_active": True,
+            },
+            HTTP_X_CSRFTOKEN=admin_csrf,
+            format="json",
+        )
+        self.assertIn(res_update.status_code, [200, 201])
+        self.assertEqual(res_update.json()["data"]["hero_title"], "Automotive Excellence in Dhaka")
+
+        # 5. Public API returns the active about section
+        res_pub = anon_client.get("/api/v1/home/about/")
+        self.assertEqual(res_pub.status_code, 200)
+        self.assertTrue(res_pub.json()["success"])
+        self.assertEqual(res_pub.json()["data"]["hero_title"], "Automotive Excellence in Dhaka")
+        self.assertEqual(len(res_pub.json()["data"]["stats"]), 2)
+
+
 
 

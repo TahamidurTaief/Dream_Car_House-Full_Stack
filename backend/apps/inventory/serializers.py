@@ -254,6 +254,7 @@ class InventoryDetailSerializer(serializers.ModelSerializer, OptimizedImageSeria
 
 
 class BrandListSerializer(serializers.ModelSerializer, OptimizedImageSerializerMixin):
+    slug = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
     car_names = serializers.SerializerMethodField()
     starting_price = serializers.SerializerMethodField()
@@ -264,9 +265,13 @@ class BrandListSerializer(serializers.ModelSerializer, OptimizedImageSerializerM
     class Meta:
         model = Brand
         fields = [
-            'id', 'name', 'image', 'car_names', 'starting_price', 'segment',
+            'id', 'name', 'slug', 'image', 'car_names', 'starting_price', 'segment',
             'listing_footer_text', 'logo_alt', 'order', 'is_in_runway', 'destination_url',
         ]
+
+    def get_slug(self, obj):
+        from django.utils.text import slugify
+        return slugify(obj.name)
 
     def get_image(self, obj):
         return self.get_optimized_image_url(obj, 'image')
@@ -302,18 +307,29 @@ class BrandSEOSerializer(serializers.ModelSerializer, OptimizedImageSerializerMi
     exactly, just sourced from the Brand row itself instead of a separate
     page-keyed table.
     """
+    slug = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
     feature_image = serializers.SerializerMethodField()
+    segment = serializers.CharField(source='get_segment_display', read_only=True)
 
     class Meta:
         model = Brand
         fields = [
-            'id', 'name',
+            'id', 'name', 'slug', 'image', 'logo_alt', 'segment',
+            'listing_footer_text', 'destination_url',
             'feature_image', 'feature_image_alt',
             'target_keyword', 'meta_title', 'meta_description',
             'canonical_url', 'robots', 'schema_json',
             'h1_title', 'short_description', 'long_description',
             'seo_updated_at',
         ]
+
+    def get_slug(self, obj):
+        from django.utils.text import slugify
+        return slugify(obj.name)
+
+    def get_image(self, obj):
+        return self.get_optimized_image_url(obj, 'image')
 
     def get_feature_image(self, obj):
         return self.get_optimized_image_url(obj, 'feature_image')

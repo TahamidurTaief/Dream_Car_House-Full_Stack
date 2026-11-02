@@ -32,6 +32,7 @@ from apps.home.models import (
     VisualChroniclesSection,
     VisualChroniclesItem,
     VipSanctuarySection,
+    AboutSection,
 )
 from django.contrib.auth.models import User, Group, Permission
 from apps.seo_config.models import SEOConfig, CategoryPageSEO
@@ -69,6 +70,7 @@ from .serializers import (
     VisualChroniclesItemManagementSerializer,
     VisualChroniclesSectionManagementSerializer,
     VipSanctuarySectionManagementSerializer,
+    AboutSectionManagementSerializer,
 )
 
 
@@ -2521,6 +2523,41 @@ class VipSanctuarySectionManagementView(DashboardBaseAPIView):
         serializer.is_valid(raise_exception=True)
         saved = serializer.save()
         return Response({"success": True, "data": VipSanctuarySectionManagementSerializer(saved, context={"request": request}).data})
+
+
+class AboutSectionManagementView(DashboardBaseAPIView):
+    permission_classes = (IsActiveStaff, DashboardModelPermission)
+    model = AboutSection
+
+    def get(self, request):
+        section = AboutSection.objects.first()
+        if not section:
+            section = AboutSection()
+        serializer = AboutSectionManagementSerializer(section, context={"request": request})
+        return Response({"success": True, "data": serializer.data})
+
+    def post(self, request):
+        section = AboutSection.objects.first()
+        if section:
+            serializer = AboutSectionManagementSerializer(section, data=request.data, partial=True, context={"request": request})
+        else:
+            serializer = AboutSectionManagementSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        saved = serializer.save()
+        return Response(
+            {"success": True, "data": AboutSectionManagementSerializer(saved, context={"request": request}).data},
+            status=status.HTTP_200_OK if section else status.HTTP_201_CREATED,
+        )
+
+    def patch(self, request):
+        section = AboutSection.objects.first()
+        if not section:
+            section = AboutSection.objects.create()
+        serializer = AboutSectionManagementSerializer(section, data=request.data, partial=True, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        saved = serializer.save()
+        return Response({"success": True, "data": AboutSectionManagementSerializer(saved, context={"request": request}).data})
+
 
 
 

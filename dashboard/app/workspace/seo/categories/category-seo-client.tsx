@@ -493,6 +493,19 @@ export function CategorySEOClient({
           >
             <FileText size={16} /> Category Pages SEO
           </Link>
+          <Link
+            href="/workspace/brands"
+            className="button button--ghost"
+            style={{
+              fontSize: "var(--font-size-sm)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "var(--space-2)",
+            }}
+            title="Manage individual brand landing page SEO, H1 headings, and dossiers"
+          >
+            🏷️ Brand Pages SEO
+          </Link>
         </div>
 
         {canAdd && (

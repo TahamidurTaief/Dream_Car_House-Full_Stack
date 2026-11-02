@@ -14,6 +14,7 @@ urlpatterns = [
     path('', InventoryListView.as_view(), name='inventory_list'),
     path('brands/', BrandListView.as_view(), name='brand_list'),
     path('brands/<int:brand_id>/seo/', BrandSEODetailView.as_view(), name='brand_seo_detail'),
+    path('brands/<slug:slug>/seo/', BrandSEODetailView.as_view(), name='brand_seo_detail_slug'),
     path('generations/', ModelGenerationListView.as_view(), name='generation_list'),
     path('body-style/', BodyStyleListView.as_view(), name='body_style_list'),
     path('filters/', InventoryFiltersView.as_view(), name='inventory_filters'),

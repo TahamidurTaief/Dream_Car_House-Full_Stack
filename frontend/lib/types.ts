@@ -151,6 +151,7 @@ export interface PublicPreferenceSection {
 export interface PublicBrand {
   id: number;
   name: string;
+  slug?: string;
   image?: string | null;
   car_names?: string[];
   starting_price?: number | null;
@@ -302,3 +303,74 @@ export interface PublicCategorySEO {
   long_description?: string | null;
   updated_at?: string;
 }
+
+export interface PublicBrandSEO {
+  id: number;
+  name: string;
+  slug?: string;
+  image?: string | null;
+  logo_alt?: string | null;
+  segment?: string | null;
+  destination_url?: string | null;
+  listing_footer_text?: string | null;
+  feature_image?: string | null;
+  feature_image_alt?: string | null;
+  target_keyword?: string | null;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  canonical_url?: string | null;
+  robots?: string | null;
+  schema_json?: Record<string, unknown> | null;
+  h1_title?: string | null;
+  short_description?: string | null;
+  long_description?: string | null;
+  seo_updated_at?: string;
+}
+
+export interface PublicAboutStat {
+  id?: string | number;
+  number: string;
+  label: string;
+  order?: number;
+}
+
+export interface PublicAboutPillar {
+  id?: string | number;
+  title: string;
+  description: string;
+  icon?: string;
+  icon_key?: string;
+  order?: number;
+}
+
+export interface PublicAboutSection {
+  id: number;
+  hero_badge: string;
+  hero_title: string;
+  hero_subtitle: string;
+  stats: PublicAboutStat[];
+  story_eyebrow: string;
+  story_title: string;
+  story_content_p1: string;
+  story_content_p2: string;
+  quote_text: string;
+  quote_author: string;
+  reel_image?: string | null;
+  reel_image_url?: string | null;
+  reel_title: string;
+  reel_duration: string;
+  reel_video_target: string;
+  tour_cta_label: string;
+  tour_video_target: string;
+  pillars_eyebrow: string;
+  pillars_title: string;
+  pillars: PublicAboutPillar[];
+  cta_title: string;
+  cta_description: string;
+  cta_primary_label: string;
+  cta_secondary_label: string;
+  cta_whatsapp_label: string;
+  updated_at?: string;
+}
+
+

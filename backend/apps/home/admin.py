@@ -68,3 +68,12 @@ class ShowroomBranchAdmin(admin.ModelAdmin):
     search_fields = ['name', 'branch_id', 'address', 'phone']
     list_editable = ['order', 'status']
 
+
+from apps.home.models import AboutSection
+
+@admin.register(AboutSection)
+class AboutSectionAdmin(admin.ModelAdmin):
+    list_display = ['hero_title', 'hero_badge', 'is_active', 'updated_at']
+    list_editable = ['is_active']
+
+

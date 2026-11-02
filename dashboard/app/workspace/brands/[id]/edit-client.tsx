@@ -11,13 +11,16 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Upload } from "@/components/ui/Upload";
 import { Tabs } from "@/components/ui/Tabs";
 import { useToast } from "@/components/ui/Toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 import { updateBrandAction } from "@/app/actions/inventory";
 import type { BrandItem } from "@/lib/types";
 
 export function BrandEditClient({ brand }: { brand: BrandItem }) {
   const router = useRouter();
   const { showToast } = useToast();
+
+  const brandSlug = (brand.slug || brand.name || "").toLowerCase().replace(/[\s_]+/g, "-");
+  const liveUrl = `https://dreamcarhouse.com/cars/brand/${brandSlug}/`;
 
   const [activeTab, setActiveTab] = useState("general");
   const [submitting, setSubmitting] = useState(false);
@@ -73,10 +76,22 @@ export function BrandEditClient({ brand }: { brand: BrandItem }) {
 
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link href="/workspace/brands" className="button button--secondary" style={{ display: "inline-flex", alignItems: "center", gap: "var(--space-2)" }}>
-          <ArrowLeft size={16} /> Back to Brands
-        </Link>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "var(--space-2)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+          <Link href="/workspace/brands" className="button button--secondary" style={{ display: "inline-flex", alignItems: "center", gap: "var(--space-2)" }}>
+            <ArrowLeft size={16} /> Back to Brands
+          </Link>
+          <a
+            href={liveUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="button button--secondary"
+            style={{ display: "inline-flex", alignItems: "center", gap: "var(--space-2)" }}
+            title="View Brand Listing on Dream Car House Website"
+          >
+            <ExternalLink size={16} /> View Live Page
+          </a>
+        </div>
         <Button type="submit" variant="primary" disabled={submitting}>
           {submitting ? "Saving..." : "Save Changes"}
         </Button>
@@ -200,7 +215,7 @@ export function BrandEditClient({ brand }: { brand: BrandItem }) {
           </FormField>
 
           <FormField label="Canonical URL" error={fieldErrors.canonical_url}>
-            <Input name="canonical_url" defaultValue={brand.canonical_url || ""} placeholder="https://dreamcarhouse.com/inventory/brand/toyota/" />
+            <Input name="canonical_url" defaultValue={brand.canonical_url || ""} placeholder="https://dreamcarhouse.com/cars/brand/toyota/" />
           </FormField>
 
           <FormField label="Search Engine Robots" error={fieldErrors.robots}>

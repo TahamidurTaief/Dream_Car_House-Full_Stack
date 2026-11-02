@@ -24,6 +24,7 @@ from apps.home.models import (
     VisualChroniclesSection,
     VisualChroniclesItem,
     VipSanctuarySection,
+    AboutSection,
 )
 
 from apps.seo_config.models import SEOConfig, CategoryPageSEO
@@ -113,6 +114,20 @@ class BrandManagementSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("JSON-LD schema must be a valid JSON object or list.")
         return value
 
+    def to_internal_value(self, data):
+        if hasattr(data, "dict"):
+            data = data.dict()
+        elif hasattr(data, "copy"):
+            data = dict(data)
+        if self.partial and isinstance(data, dict):
+            for field in ["image", "feature_image"]:
+                if field in data:
+                    val = data.get(field)
+                    if val == "" or val is None or (hasattr(val, "size") and val.size == 0):
+                        data = data.copy() if hasattr(data, "copy") else dict(data)
+                        data.pop(field, None)
+        return super().to_internal_value(data)
+
 
 class ModelGenerationManagementSerializer(serializers.ModelSerializer):
     brand_name = serializers.CharField(source="brand.name", read_only=True)
@@ -168,6 +183,19 @@ class InventoryImageManagementSerializer(serializers.ModelSerializer):
             "order",
         ]
         read_only_fields = ["id"]
+
+    def to_internal_value(self, data):
+        if hasattr(data, "dict"):
+            data = data.dict()
+        elif hasattr(data, "copy"):
+            data = dict(data)
+        if self.partial and isinstance(data, dict) and "image" in data:
+            val = data.get("image")
+            if val == "" or val is None or (hasattr(val, "size") and val.size == 0):
+                data = data.copy() if hasattr(data, "copy") else dict(data)
+                data.pop("image", None)
+        return super().to_internal_value(data)
+
 
 
 class InventoryListManagementSerializer(serializers.ModelSerializer):
@@ -1294,6 +1322,25 @@ class PreferenceCategoryManagementSerializer(serializers.ModelSerializer, Optimi
                 raise serializers.ValidationError("Each highlight must specify a title.")
         return value
 
+    def to_internal_value(self, data):
+        if hasattr(data, "dict"):
+            data = data.dict()
+        elif hasattr(data, "copy"):
+            data = dict(data)
+        if isinstance(data, dict):
+            if "highlights" in data and isinstance(data["highlights"], str):
+                try:
+                    data["highlights"] = json.loads(data["highlights"])
+                except Exception:
+                    pass
+            if self.partial and "image" in data:
+                val = data.get("image")
+                if val == "" or val is None or (hasattr(val, "size") and val.size == 0):
+                    data = data.copy() if hasattr(data, "copy") else dict(data)
+                    data.pop("image", None)
+        return super().to_internal_value(data)
+
+
 
 class PreferenceSectionManagementSerializer(serializers.ModelSerializer):
     categories = serializers.SerializerMethodField()
@@ -1424,6 +1471,25 @@ class ExperiencePillarManagementSerializer(serializers.ModelSerializer, Optimize
                     })
         return attrs
 
+    def to_internal_value(self, data):
+        if hasattr(data, "dict"):
+            data = data.dict()
+        elif hasattr(data, "copy"):
+            data = dict(data)
+        if isinstance(data, dict):
+            if "tags" in data and isinstance(data["tags"], str):
+                try:
+                    data["tags"] = json.loads(data["tags"])
+                except Exception:
+                    pass
+            if self.partial and "image" in data:
+                val = data.get("image")
+                if val == "" or val is None or (hasattr(val, "size") and val.size == 0):
+                    data = data.copy() if hasattr(data, "copy") else dict(data)
+                    data.pop("image", None)
+        return super().to_internal_value(data)
+
+
 
 class ExperienceSectionManagementSerializer(serializers.ModelSerializer):
     pillars = serializers.SerializerMethodField()
@@ -1508,6 +1574,25 @@ class VisualChroniclesItemManagementSerializer(serializers.ModelSerializer, Opti
             if value.size > 10 * 1024 * 1024:
                 raise serializers.ValidationError("Image file size cannot exceed 10MB.")
         return value
+
+    def to_internal_value(self, data):
+        if hasattr(data, "dict"):
+            data = data.dict()
+        elif hasattr(data, "copy"):
+            data = dict(data)
+        if isinstance(data, dict):
+            if "specs" in data and isinstance(data["specs"], str):
+                try:
+                    data["specs"] = json.loads(data["specs"])
+                except Exception:
+                    pass
+            if self.partial and "front_image" in data:
+                val = data.get("front_image")
+                if val == "" or val is None or (hasattr(val, "size") and val.size == 0):
+                    data = data.copy() if hasattr(data, "copy") else dict(data)
+                    data.pop("front_image", None)
+        return super().to_internal_value(data)
+
 
 
 class VisualChroniclesSectionManagementSerializer(serializers.ModelSerializer):
@@ -1601,6 +1686,122 @@ class VipSanctuarySectionManagementSerializer(serializers.ModelSerializer, Optim
             if not item.get("title"):
                 raise serializers.ValidationError("Each value pillar must specify a title.")
         return value
+
+    def to_internal_value(self, data):
+        if hasattr(data, "dict"):
+            data = data.dict()
+        elif hasattr(data, "copy"):
+            data = dict(data)
+        if isinstance(data, dict):
+            if "value_pillars" in data and isinstance(data["value_pillars"], str):
+                try:
+                    data["value_pillars"] = json.loads(data["value_pillars"])
+                except Exception:
+                    pass
+            if self.partial and "background_image" in data:
+                val = data.get("background_image")
+                if val == "" or val is None or (hasattr(val, "size") and val.size == 0):
+                    data = data.copy() if hasattr(data, "copy") else dict(data)
+                    data.pop("background_image", None)
+        return super().to_internal_value(data)
+
+
+
+class AboutSectionManagementSerializer(serializers.ModelSerializer, OptimizedImageSerializerMixin):
+    reel_image_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AboutSection
+        fields = [
+            "id",
+            "hero_badge",
+            "hero_title",
+            "hero_subtitle",
+            "stats",
+            "story_eyebrow",
+            "story_title",
+            "story_content_p1",
+            "story_content_p2",
+            "quote_text",
+            "quote_author",
+            "reel_image",
+            "reel_image_url",
+            "reel_image_display",
+            "reel_title",
+            "reel_duration",
+            "reel_video_target",
+            "tour_cta_label",
+            "tour_video_target",
+            "pillars_eyebrow",
+            "pillars_title",
+            "pillars",
+            "cta_title",
+            "cta_description",
+            "cta_primary_label",
+            "cta_secondary_label",
+            "cta_whatsapp_label",
+            "is_active",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "reel_image_display", "updated_at"]
+
+    def get_reel_image_display(self, obj):
+        if obj.reel_image:
+            return self.get_optimized_image_url(obj, "reel_image")
+        return obj.reel_image_url or None
+
+    def validate_stats(self, value):
+        if isinstance(value, str):
+            import json
+            try:
+                value = json.loads(value)
+            except Exception:
+                raise serializers.ValidationError("Stats must be valid JSON.")
+        if not isinstance(value, list):
+            raise serializers.ValidationError("Stats must be a list of objects.")
+        for item in value:
+            if not isinstance(item, dict) or not item.get("label"):
+                raise serializers.ValidationError("Each stat must be an object with 'number' and 'label'.")
+        return value
+
+    def validate_pillars(self, value):
+        if isinstance(value, str):
+            import json
+            try:
+                value = json.loads(value)
+            except Exception:
+                raise serializers.ValidationError("Pillars must be valid JSON.")
+        if not isinstance(value, list):
+            raise serializers.ValidationError("Pillars must be a list of objects.")
+        for item in value:
+            if not isinstance(item, dict) or not item.get("title"):
+                raise serializers.ValidationError("Each pillar must be an object with 'title' and 'description'.")
+        return value
+
+    def to_internal_value(self, data):
+        if hasattr(data, "dict"):
+            data = data.dict()
+        elif hasattr(data, "copy"):
+            data = dict(data)
+        if isinstance(data, dict):
+            if "stats" in data and isinstance(data["stats"], str):
+                try:
+                    data["stats"] = json.loads(data["stats"])
+                except Exception:
+                    pass
+            if "pillars" in data and isinstance(data["pillars"], str):
+                try:
+                    data["pillars"] = json.loads(data["pillars"])
+                except Exception:
+                    pass
+            if self.partial and "reel_image" in data:
+                val = data.get("reel_image")
+                if val == "" or val is None or (hasattr(val, "size") and val.size == 0):
+                    data = data.copy() if hasattr(data, "copy") else dict(data)
+                    data.pop("reel_image", None)
+        return super().to_internal_value(data)
+
+
 
 
 
