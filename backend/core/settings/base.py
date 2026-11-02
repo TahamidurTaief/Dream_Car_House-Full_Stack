@@ -102,13 +102,13 @@ CONTENT_SECURITY_POLICY = {
             "'self'",
             "data:",
             "blob:",
-            "https://begautos.com",
-            "https://www.begautos.com",
+            "https://dreamcarhouse.com",
+            "https://www.dreamcarhouse.com",
         ],
         "connect-src": [
             "'self'",
-            "https://begautos.com",
-            "https://www.begautos.com",
+            "https://dreamcarhouse.com",
+            "https://www.dreamcarhouse.com",
         ],
     }
 }
@@ -209,13 +209,13 @@ TINYMCE_DEFAULT_CONFIG = {
 
 # JAZZMIN SETTINGS
 JAZZMIN_SETTINGS = {
-    "site_title": "BegAutos",
-    "site_header": "BegAutos",
-    "site_brand": "BegAutos",
+    "site_title": "DCH",
+    "site_header": "DCH",
+    "site_brand": "DCH",
     "login_logo_dark": None,
     "site_logo_classes": "img-circle",
-    "welcome_sign": "Welcome to the BegAutos",
-    "copyright": "begautos",
+    "welcome_sign": "Welcome to DCH Admin Portal",
+    "copyright": "DCH",
     "user_avatar": None,
 
     "topmenu_links": [
@@ -276,20 +276,20 @@ CORS_ALLOW_METHODS = (
 )
 
 CORS_ALLOWED_ORIGINS = [
-    "https://begautos.com",
-    "https://www.begautos.com",
+    "https://dreamcarhouse.com",
+    "https://www.dreamcarhouse.com",
 ]
 
 CORS_ORIGIN_WHITELIST = [
-    'https://begautos.com',
-    'https://www.begautos.com',
+    'https://dreamcarhouse.com',
+    'https://www.dreamcarhouse.com',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://author.begautos.com',
-    'http://author.begautos.com',
-    'https://begautos.com',
-    'https://www.begautos.com',
+    'https://author.dreamcarhouse.com',
+    'http://author.dreamcarhouse.com',
+    'https://dreamcarhouse.com',
+    'https://www.dreamcarhouse.com',
 ]
 
 CORS_ALLOW_HEADERS = [

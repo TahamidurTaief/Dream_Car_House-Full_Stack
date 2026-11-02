@@ -168,7 +168,7 @@ export function BrandEditClient({ brand }: { brand: BrandItem }) {
           </FormField>
 
           <FormField label="Canonical URL" error={fieldErrors.canonical_url}>
-            <Input name="canonical_url" defaultValue={brand.canonical_url || ""} placeholder="https://www.begautos.com/cars/brand/toyota/" />
+            <Input name="canonical_url" defaultValue={brand.canonical_url || ""} placeholder="https://dreamcarhouse.com/inventory/brand/toyota/" />
           </FormField>
 
           <FormField label="Search Engine Robots" error={fieldErrors.robots}>

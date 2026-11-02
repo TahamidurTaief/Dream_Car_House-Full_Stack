@@ -571,7 +571,7 @@ export default async function WorkspacePage() {
                   <h3 style={{ margin: 0, fontSize: "var(--font-size-md)" }}>Social Features</h3>
                 </div>
                 <p className="muted" style={{ fontSize: "var(--font-size-sm)", margin: "0 0 var(--space-3) 0" }}>
-                  &quot;BEG across socials&quot; feature highlights, publications, and featured social media cards.
+                  &quot;DCH across socials&quot; feature highlights, publications, and featured social media cards.
                 </p>
               </div>
               <Link

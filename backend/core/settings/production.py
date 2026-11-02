@@ -44,19 +44,19 @@ if os.environ.get('JTRO_SSL_ENABLED') == 'True':
 
 
 CORS_ALLOWED_ORIGINS = [
-    'https://begautos.com',
-    'https://www.begautos.com',
+    'https://dreamcarhouse.com',
+    'https://www.dreamcarhouse.com',
 ]
 
 CORS_ORIGIN_WHITELIST = [
-    'https://begautos.com',
-    'https://www.begautos.com',
+    'https://dreamcarhouse.com',
+    'https://www.dreamcarhouse.com',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://author.begautos.com',
-    'https://begautos.com',
-    'https://www.begautos.com',
+    'https://author.dreamcarhouse.com',
+    'https://dreamcarhouse.com',
+    'https://www.dreamcarhouse.com',
 ]
 
 

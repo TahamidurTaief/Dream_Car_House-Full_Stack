@@ -707,7 +707,7 @@ export function SocialMediaClient({
           <FormField label="Facebook URL" required error={formErrors.facebook}>
             <Input
               type="url"
-              placeholder="https://facebook.com/begautos"
+              placeholder="https://facebook.com/dreamcarhouse"
               value={formData.facebook}
               onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
               required
@@ -718,7 +718,7 @@ export function SocialMediaClient({
           <FormField label="Instagram URL (Optional)" error={formErrors.instagram}>
             <Input
               type="url"
-              placeholder="https://instagram.com/begautos"
+              placeholder="https://instagram.com/dreamcarhouse"
               value={formData.instagram}
               onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
               disabled={submitting}
@@ -728,7 +728,7 @@ export function SocialMediaClient({
           <FormField label="Twitter / X URL (Optional)" error={formErrors.twitter}>
             <Input
               type="url"
-              placeholder="https://twitter.com/begautos"
+              placeholder="https://twitter.com/dreamcarhouse"
               value={formData.twitter}
               onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
               disabled={submitting}
@@ -738,7 +738,7 @@ export function SocialMediaClient({
           <FormField label="YouTube URL (Optional)" error={formErrors.youtube}>
             <Input
               type="url"
-              placeholder="https://youtube.com/@begautos"
+              placeholder="https://youtube.com/@dreamcarhouse"
               value={formData.youtube}
               onChange={(e) => setFormData({ ...formData, youtube: e.target.value })}
               disabled={submitting}
@@ -766,7 +766,7 @@ export function SocialMediaClient({
           <FormField label="Facebook URL" required error={formErrors.facebook}>
             <Input
               type="url"
-              placeholder="https://facebook.com/begautos"
+              placeholder="https://facebook.com/dreamcarhouse"
               value={formData.facebook}
               onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
               required
@@ -777,7 +777,7 @@ export function SocialMediaClient({
           <FormField label="Instagram URL (Optional)" error={formErrors.instagram}>
             <Input
               type="url"
-              placeholder="https://instagram.com/begautos"
+              placeholder="https://instagram.com/dreamcarhouse"
               value={formData.instagram}
               onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
               disabled={submitting}
@@ -787,7 +787,7 @@ export function SocialMediaClient({
           <FormField label="Twitter / X URL (Optional)" error={formErrors.twitter}>
             <Input
               type="url"
-              placeholder="https://twitter.com/begautos"
+              placeholder="https://twitter.com/dreamcarhouse"
               value={formData.twitter}
               onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
               disabled={submitting}
@@ -797,7 +797,7 @@ export function SocialMediaClient({
           <FormField label="YouTube URL (Optional)" error={formErrors.youtube}>
             <Input
               type="url"
-              placeholder="https://youtube.com/@begautos"
+              placeholder="https://youtube.com/@dreamcarhouse"
               value={formData.youtube}
               onChange={(e) => setFormData({ ...formData, youtube: e.target.value })}
               disabled={submitting}

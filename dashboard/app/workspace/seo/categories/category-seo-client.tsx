@@ -669,7 +669,7 @@ export function CategorySEOClient({
                 <Input
                   value={canonicalUrl}
                   onChange={(e) => setCanonicalUrl(e.target.value)}
-                  placeholder="https://www.begautos.com/cars/"
+                  placeholder="https://dreamcarhouse.com/inventory/"
                 />
               </FormField>
 
