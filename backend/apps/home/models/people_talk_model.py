@@ -41,6 +41,6 @@ class PeopleTalkAboutUs(BaseModel):
         return self.title
 
     class Meta:
-        verbose_name = "BEG across socials"
-        verbose_name_plural = "BEG across socials"
+        verbose_name = "DCH across socials"
+        verbose_name_plural = "DCH across socials"
         db_table = "tbl_people_talk"

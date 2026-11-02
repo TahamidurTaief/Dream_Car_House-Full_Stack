@@ -423,8 +423,8 @@ class Inventory(BaseModel):
             old_default_canonical = self._build_canonical_url(slug=old_slug)
             if old_canonical_url in {
                 old_default_canonical,
-                old_default_canonical.replace('www.begautos.com', 'begautos.com'),
-                old_default_canonical.replace('begautos.com', 'bigautos.com'),
+                old_default_canonical.replace('dreamcarhouse.com', 'dreamcarhouse.com'),
+                old_default_canonical.replace('dreamcarhouse.com', 'bigautos.com'),
             }:
                 self.canonical_url = self._build_canonical_url()
 

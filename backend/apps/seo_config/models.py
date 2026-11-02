@@ -129,7 +129,7 @@ class SEOConfig(models.Model):
         null=True,
         default=None,
         verbose_name=_('Canonical URL'),
-        help_text=_('Preferred URL for this page (e.g. https://www.begautos.com/).'),
+        help_text=_('Preferred URL for this page (e.g. https://dreamcarhouse.com/).'),
     )
 
     # --- Open Graph ---
@@ -321,7 +321,7 @@ class CategoryPageSEO(models.Model):
         null=True,
         default=None,
         verbose_name=_('Canonical URL'),
-        help_text=_('Preferred URL for this page, e.g. https://www.begautos.com/cars/.'),
+        help_text=_('Preferred URL for this page, e.g. https://dreamcarhouse.com/cars/.'),
     )
     robots = models.CharField(
         max_length=50,

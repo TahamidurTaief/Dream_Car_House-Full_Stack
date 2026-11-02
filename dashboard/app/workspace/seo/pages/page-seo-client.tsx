@@ -560,7 +560,7 @@ export function PageSEOClient({
       >
         <AlertTriangle size={18} style={{ color: "var(--accent)" }} />
         <span style={{ fontSize: "var(--font-size-xs)", color: "var(--text)" }}>
-          <strong>Indexing & Privacy Notice:</strong> Settings configured here control the public website (<code style={{ fontFamily: "var(--font-mono)" }}>begautos.com</code>). All internal dashboard routes remain permanently protected by <code style={{ fontFamily: "var(--font-mono)" }}>X-Robots-Tag: noindex, nofollow, noarchive</code> and are completely excluded from indexing.
+          <strong>Indexing & Privacy Notice:</strong> Settings configured here control the public website (<code style={{ fontFamily: "var(--font-mono)" }}>dreamcarhouse.com</code>). All internal dashboard routes remain permanently protected by <code style={{ fontFamily: "var(--font-mono)" }}>X-Robots-Tag: noindex, nofollow, noarchive</code> and are completely excluded from indexing.
         </span>
       </div>
 
@@ -684,7 +684,7 @@ export function PageSEOClient({
               <Input
                 value={canonicalUrl}
                 onChange={(e) => setCanonicalUrl(e.target.value)}
-                placeholder="https://www.begautos.com/"
+                placeholder="https://dreamcarhouse.com/"
               />
             </FormField>
           </div>
@@ -822,7 +822,7 @@ export function PageSEOClient({
               <Input
                 value={canonicalUrl}
                 onChange={(e) => setCanonicalUrl(e.target.value)}
-                placeholder="https://www.begautos.com/"
+                placeholder="https://dreamcarhouse.com/"
               />
             </FormField>
           </div>

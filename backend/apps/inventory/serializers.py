@@ -180,7 +180,7 @@ class InventoryDetailSerializer(serializers.ModelSerializer, OptimizedImageSeria
             try:
                 page_url = self.context['request'].build_absolute_uri(f'/cars/{obj.slug}/')
             except Exception:
-                page_url = f'https://dreamcarhouse.com/cars/{obj.slug}/'
+                page_url = f'https://dreamcarhouse.com/inventory/{obj.slug}/'
 
         # Build feature image URL
         feature_image_url = ''
