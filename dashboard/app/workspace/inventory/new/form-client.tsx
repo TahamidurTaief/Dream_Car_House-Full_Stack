@@ -113,16 +113,8 @@ export function InventoryFormClient({
     formData.set("is_call_for_price", isCallForPrice ? "true" : "false");
     formData.set("registration_number", registrationNumber.trim());
     formData.set("brand", selectedBrandId);
-    if (selectedBranchId) {
-      formData.set("branch", selectedBranchId);
-    } else {
-      formData.delete("branch");
-    }
-    if (selectedModelId) {
-      formData.set("model", selectedModelId);
-    } else {
-      formData.delete("model");
-    }
+    formData.set("branch", selectedBranchId || "");
+    formData.set("model", selectedModelId || "");
 
     const featImg = formData.get("feature_image");
     if (featImg instanceof File && featImg.size === 0) {
@@ -133,7 +125,7 @@ export function InventoryFormClient({
     if (schemaText.trim()) {
       try {
         JSON.parse(schemaText);
-        formData.set("schema_override", schemaText);
+        formData.set("schema_override", schemaText.trim());
       } catch {
         setSubmitting(false);
         setFieldErrors({ schema_override: "Invalid JSON-LD schema syntax." });
@@ -141,7 +133,7 @@ export function InventoryFormClient({
         return;
       }
     } else {
-      formData.delete("schema_override");
+      formData.set("schema_override", "");
     }
 
     let res;
@@ -255,6 +247,37 @@ export function InventoryFormClient({
     { label: "-- Select Body Style --", value: "" },
     ...bodyStyles.map((s) => ({ label: s.body, value: String(s.id) })),
   ];
+
+  const fuelTypeOptions = useMemo(() => {
+    const standardOptions = [
+      { label: "PETROL", value: "PETROL" },
+      { label: "OCTANE", value: "OCTANE" },
+      { label: "DIESEL", value: "DIESEL" },
+      { label: "HYBRID", value: "HYBRID" },
+      { label: "ELECTRIC", value: "ELECTRIC" },
+      { label: "PETROL+HYBRID", value: "PETROL+HYBRID" },
+      { label: "DIESEL+HYBRID", value: "DIESEL+HYBRID" },
+      { label: "OCTANE+HYBRID", value: "OCTANE+HYBRID" },
+      { label: "CNG+HYBRID", value: "CNG+HYBRID" },
+      { label: "LPG+HYBRID", value: "LPG+HYBRID" },
+      { label: "PETROL+PLUG-IN HYBRID", value: "PETROL+PLUG-IN HYBRID" },
+      { label: "DIESEL+PLUG-IN HYBRID", value: "DIESEL+PLUG-IN HYBRID" },
+      { label: "OCTANE+PLUG-IN HYBRID", value: "OCTANE+PLUG-IN HYBRID" },
+      { label: "CNG+PLUG-IN HYBRID", value: "CNG+PLUG-IN HYBRID" },
+      { label: "LPG+PLUG-IN HYBRID", value: "LPG+PLUG-IN HYBRID" },
+      { label: "CNG", value: "CNG" },
+      { label: "LPG", value: "LPG" },
+      { label: "ETHANOL", value: "ETHANOL" },
+      { label: "HYDROGEN", value: "HYDROGEN" },
+      { label: "BIO-DIESEL", value: "BIO-DIESEL" },
+      { label: "FLEX-FUEL", value: "FLEX-FUEL" },
+      { label: "OTHERS", value: "OTHERS" },
+    ];
+    if (initialCar?.fuel_type && !standardOptions.some((o) => o.value === initialCar.fuel_type)) {
+      return [{ label: initialCar.fuel_type, value: initialCar.fuel_type }, ...standardOptions];
+    }
+    return standardOptions;
+  }, [initialCar?.fuel_type]);
 
   return (
     <form onSubmit={handleSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
@@ -394,11 +417,11 @@ export function InventoryFormClient({
       <div style={{ display: activeTab === "specs" ? "flex" : "none", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
             <FormField label="Engine Capacity (cc)" error={fieldErrors.engine_capacity}>
-              <Input name="engine_capacity" defaultValue={initialCar?.engine_capacity || ""} placeholder="e.g. 3500" />
+              <Input name="engine_capacity" defaultValue={initialCar?.engine_capacity || ""} maxLength={20} placeholder="e.g. 3500" />
             </FormField>
 
             <FormField label="Mileage" error={fieldErrors.mileage}>
-              <Input name="mileage" defaultValue={initialCar?.mileage || ""} placeholder="e.g. 12000" />
+              <Input name="mileage" defaultValue={initialCar?.mileage || ""} maxLength={20} placeholder="e.g. 12000" />
             </FormField>
           </div>
 
@@ -406,19 +429,7 @@ export function InventoryFormClient({
             <FormField label="Fuel Type" required error={fieldErrors.fuel_type}>
               <Select
                 name="fuel_type"
-                options={[
-                  { label: "PETROL", value: "PETROL" },
-                  { label: "OCTANE", value: "OCTANE" },
-                  { label: "DIESEL", value: "DIESEL" },
-                  { label: "HYBRID", value: "HYBRID" },
-                  { label: "ELECTRIC", value: "ELECTRIC" },
-                  { label: "PETROL+HYBRID", value: "PETROL+HYBRID" },
-                  { label: "OCTANE+HYBRID", value: "OCTANE+HYBRID" },
-                  { label: "PETROL+PLUG-IN HYBRID", value: "PETROL+PLUG-IN HYBRID" },
-                  { label: "CNG", value: "CNG" },
-                  { label: "LPG", value: "LPG" },
-                  { label: "OTHERS", value: "OTHERS" },
-                ]}
+                options={fuelTypeOptions}
                 defaultValue={initialCar?.fuel_type || "PETROL"}
                 required
               />
@@ -439,15 +450,15 @@ export function InventoryFormClient({
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "var(--space-4)" }}>
             <FormField label="Color / Exterior" error={fieldErrors.color}>
-              <Input name="color" defaultValue={initialCar?.color || ""} placeholder="e.g. Pearl White" />
+              <Input name="color" defaultValue={initialCar?.color || ""} maxLength={30} placeholder="e.g. Pearl White" />
             </FormField>
 
             <FormField label="Drive Train / Type" error={fieldErrors.drive_type}>
-              <Input name="drive_type" defaultValue={initialCar?.drive_type || ""} placeholder="e.g. 4WD, AWD, FWD" />
+              <Input name="drive_type" defaultValue={initialCar?.drive_type || ""} maxLength={50} placeholder="e.g. 4WD, AWD, FWD" />
             </FormField>
 
             <FormField label="Wheel Base" error={fieldErrors.wheel_base}>
-              <Input name="wheel_base" defaultValue={initialCar?.wheel_base || ""} placeholder="e.g. 2850mm" />
+              <Input name="wheel_base" defaultValue={initialCar?.wheel_base || ""} maxLength={20} placeholder="e.g. 2850mm" />
             </FormField>
           </div>
         </div>
@@ -488,6 +499,7 @@ export function InventoryFormClient({
                 name="registration_number"
                 value={registrationNumber}
                 onChange={(e) => setRegistrationNumber(e.target.value)}
+                maxLength={100}
                 placeholder="e.g. DHAKA-METRO-GA-12-3456"
               />
             </FormField>
@@ -731,11 +743,11 @@ export function InventoryFormClient({
       {/* 6. SEO Settings Tab */}
       <div style={{ display: activeTab === "seo" ? "flex" : "none", flexDirection: "column", gap: "var(--space-4)", background: "var(--surface)", padding: "var(--space-4)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
           <FormField label="H1 Title" error={fieldErrors.h1_title} description="Heading on vehicle page; falls back to Name if blank">
-            <Input name="h1_title" defaultValue={initialCar?.h1_title || ""} placeholder="e.g. 2023 Toyota Land Cruiser ZX 3.5L Turbo" />
+            <Input name="h1_title" defaultValue={initialCar?.h1_title || ""} maxLength={200} placeholder="e.g. 2023 Toyota Land Cruiser ZX 3.5L Turbo" />
           </FormField>
 
           <FormField label="Target Primary Keyword" error={fieldErrors.target_keyword}>
-            <Input name="target_keyword" defaultValue={initialCar?.target_keyword || ""} placeholder="e.g. toyota land cruiser zx price bd" />
+            <Input name="target_keyword" defaultValue={initialCar?.target_keyword || ""} maxLength={120} placeholder="e.g. toyota land cruiser zx price bd" />
           </FormField>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
@@ -754,7 +766,7 @@ export function InventoryFormClient({
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
             <FormField label="Canonical URL" error={fieldErrors.canonical_url} description="Auto-generated based on authoritative base domain">
-              <Input name="canonical_url" defaultValue={initialCar?.canonical_url || ""} />
+              <Input name="canonical_url" defaultValue={initialCar?.canonical_url || ""} maxLength={500} />
             </FormField>
 
             <FormField label="Search Engine Indexing" error={fieldErrors.indexing}>
@@ -772,7 +784,7 @@ export function InventoryFormClient({
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)" }}>
             <FormField label="Featured Image Alt Text" error={fieldErrors.featured_image_alt}>
-              <Input name="featured_image_alt" defaultValue={initialCar?.featured_image_alt || ""} />
+              <Input name="featured_image_alt" defaultValue={initialCar?.featured_image_alt || ""} maxLength={200} />
             </FormField>
 
             <FormField label="Previous Slug (for 301 redirect)" error={fieldErrors.previous_slug} description="Auto-populated when slug changes">

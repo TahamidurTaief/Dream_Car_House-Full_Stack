@@ -142,16 +142,96 @@ cd frontend && npm run build
 
 ---
 
+---
+
+### Task 6: Inventory Create/Update Payload Semantics & Normalization Fix
+
+#### Trace & Reproduction
+- **Execution Flow:** `InventoryFormClient` (`form-client.tsx`) → `createInventoryAction` / `updateInventoryAction` (`app/actions/inventory.ts`) → `InventoryDetailView` (`apps/dashboard_api/views.py`) → `InventoryDetailManagementSerializer` (`apps/dashboard_api/serializers.py`) → `Inventory.save()` (`apps/inventory/models/inventory_model.py`).
+- **Reproduced Failure Case:**
+  When creating or editing a vehicle with blank optional fields across all six tabs (as sent natively in multipart browser `FormData`):
+  1. `year: ""` was rejected by DRF's `IntegerField` with:
+     ```json
+     {"error": {"field_errors": {"year": ["A valid integer is required."]}}}
+     ```
+  2. `feature_image: ""` was rejected during creation with:
+     ```json
+     {"error": {"field_errors": {"feature_image": ["The submitted data was not a file. Check the encoding type on the form."]}}}
+     ```
+  3. `model: ""` and `branch: ""` were deleted from `FormData` on edit, preventing explicit clearing (DRF treated it as an omission and retained the old values).
+  4. Changing `brand` (e.g. from Toyota to BMW) while clearing or omitting `model` triggered false-positive relationship validation error:
+     ```json
+     {"error": {"field_errors": {"model": ["Model generation 'LC300' does not belong to brand 'BMW'."]}}}
+     ```
+     because `validate()` fell back to `self.instance.model` via `attrs.get("model") or self.instance.model` without distinguishing explicit null from omission.
+  5. The dashboard UI dropdown was missing 11 of the 22 backend `FuelTypeChoices`, risking silent overwrite of unsupported or legacy fuel types.
+  6. Specifications length constraints were misaligned: `engine_capacity`, `wheel_base`, and `mileage` were defined with `max_length=100` in the serializer while the model constraint is `max_length=20`.
+
+#### Solutions Implemented
+1. **Nullable Normalization Without Data Corruption:**
+   - In `InventoryDetailManagementSerializer.to_internal_value`, explicitly normalize empty strings to `None` for nullable fields (`model`, `branch`, `body_style`, `year`, `price`, `redirect_url`, `youtube`).
+   - If non-numeric strings (e.g. `"not_a_number"`) or invalid data are supplied, they are preserved for DRF validation so validation integrity is never weakened.
+   - Blank values never convert into zero or `0.00`.
+2. **Omission vs. Explicit Clearing:**
+   - On PATCH, omitted keys retain the persisted database value.
+   - Explicitly submitted empty strings (`branch=""`, `model=""`, `schema_override=""`) update the database row to `NULL`.
+   - `InventoryFormClient` now sends `formData.set("branch", selectedBranchId || "")`, `formData.set("model", selectedModelId || "")`, and `formData.set("schema_override", schemaText.trim() || "")` instead of deleting them.
+3. **Relationship Validation Distinguishing Explicit Null:**
+   - In `InventoryDetailManagementSerializer.validate`, check `"brand" in attrs` and `"model" in attrs` directly.
+   - When `model` is explicitly `None` (cleared), it never falls back to `self.instance.model`, allowing smooth brand changes.
+   - When `model` is omitted during a brand change, it retains the existing model and properly asserts brand compatibility.
+4. **Complete Fuel Choices & Field Constraint Alignment:**
+   - Populated all 22 `FuelTypeChoices` in `InventoryFormClient` and dynamically preserved any existing unsupported fuel type from `initialCar`.
+   - Aligned `engine_capacity`, `wheel_base`, and `mileage` to `max_length=20` across serializer and frontend inputs.
+   - Added matching `maxLength` constraints to all vehicle inputs (`color`, `drive_type`, `registration_number`, `h1_title`, `target_keyword`, `featured_image_alt`, `canonical_url`).
+
+---
+
+## Automated Verification Suite
+
+#### 1. Backend Django Unit & Regression Tests
+```bash
+python3 backend/manage.py test apps.dashboard_api apps.home apps.inventory
+```
+- **Result:** Ran 68 tests in ~39s; 68/68 passed (0 errors, 0 failures).
+- Covers inventory multipart create with complete blank optionals, PATCH omission vs explicit clear, brand change with model clearing, validation integrity guards, serializer save defect, brand SEO, about section, and authentication.
+
+#### 2. Dashboard TypeScript & Unit Tests
+```bash
+cd dashboard && npm run typecheck && npm run test
+```
+- **TypeScript:** `next typegen && tsc --noEmit` passed with 0 errors.
+- **Unit Tests:** `tests/*.test.ts` passed (13/13 passed).
+
+#### 3. Dashboard Production Build
+```bash
+cd dashboard && npm run build
+```
+- **Output:** Compiled successfully in 973ms; all 34 routes compiled with standalone output.
+
+#### 4. Frontend Production Build
+```bash
+cd frontend && npm run build
+```
+- **Output:** Compiled successfully in 4.5s; all 17 public routes generated cleanly with App Router.
+
+---
+
 ## Manual UI Checklist for Acceptance Testing
 
 | Area | Route | Test Action | Expected Result |
 |---|---|---|---|
+| **Inventory Create Blank Optionals** | `/workspace/inventory/new` | Fill only required fields (Name, Brand, Car Type, Condition, Fuel Type, Transmission, Availability, Status); leave Year, Price, Model, Branch blank. Click "Create Vehicle". | Vehicle created successfully with 201; persisted year, price, model, branch are NULL (not 0). |
+| **Inventory Clear Branch** | `/workspace/inventory/[id]` | On an existing car with an assigned branch, select "-- Unassigned (Global / Main) --" and click "Save Changes". | Branch is removed and persists as NULL in database. |
+| **Inventory Brand Switch** | `/workspace/inventory/[id]` | Change Brand from Toyota to BMW (Model dropdown automatically resets to empty). Click "Save Changes". | Save succeeds without "Model does not belong to brand" error. Brand is updated and model is cleared. |
+| **Inventory Clear Schema** | `/workspace/inventory/[id]` | Clear the Schema.org JSON-LD Override textarea completely and click "Save Changes". | Schema override is cleared and persists as NULL in database. |
+| **Inventory Unsupported Fuel** | `/workspace/inventory/[id]` | View vehicle with uncommon/legacy fuel type (e.g. `DIESEL+HYBRID` or `HYDROGEN`). | Dropdown accurately displays the current fuel type without silently switching to PETROL. |
+| **Field Length Guards** | `/workspace/inventory/new` | Attempt typing more than 20 chars in Engine Capacity or Mileage. | Browser input restricts length to 20; backend rejects if bypassed. |
 | **Dashboard Form Save** | `/workspace/brands/[id]` | Open any brand, change the display order or text without selecting a new logo file, click "Save Changes". | Toast indicates "Brand saved successfully." Logo and feature images remain intact without 400 error. |
-| **Brand Live Link** | `/workspace/brands/[id]` | Click the "View Live Page" button in the header bar. | Opens `https://dreamcarhouse.com/cars/brand/<slug>/` in a new tab. |
-| **Brand SEO Nav** | `/workspace/seo/categories` | Click the `Brand Pages SEO` tab. | Seamlessly navigates to `/workspace/brands` without page reload. |
-| **About Us Management** | `/workspace/content/about-us` | Edit Hero badge, add a trust stat, edit quotation, and click "Save Changes". | Form saves successfully; changes immediately persist in database and refresh live preview. |
-| **Public About Us** | `/about` | Load page in browser. Click "Schedule Showroom Tour" or "Watch Cinema Reel". | Opens appointment modal or cinema video modal without hydration or runtime errors. |
-| **Brand Listing Page** | `/cars/brand/mercedes-benz` | Search vehicles, adjust price slider, change filter. | Grid updates reactively, displays matching vehicles, and shows empty state when no match. |
+| **Brand Live Link** | `/workspace/brands/[id]` | Click the "View Live Page" button in the header bar. | Opens public brand page in new tab. |
+| **About Us Management** | `/workspace/content/about-us` | Edit Hero badge, trust metrics, quotation, and click "Save Changes". | Form saves successfully; changes persist in database and refresh live preview. |
+| **Public About Us** | `/about` | Load page in browser. Click "Schedule Showroom Tour" or "Watch Cinema Reel". | Opens appointment modal or cinema video modal without errors. |
+| **Brand Listing Page** | `/cars/brand/mercedes-benz` | Search vehicles, adjust price slider, change filter. | Grid updates reactively, displays matching vehicles. |
 | **Brand Directory** | `/cars/brand` | Load brand grid. | Displays all active brands with logos, car counts, and starting prices. |
 | **Public Sitemap** | `/sitemap.xml` | Fetch sitemap. | Includes `/about`, `/cars/brand`, and individual published brand routes. |
 
@@ -159,4 +239,4 @@ cd frontend && npm run build
 
 ## Conclusion & Deployment Status
 
-All 5 sequential tasks are complete, verified by 77 automated full-stack tests, and clean production builds in both Next.js applications. No secrets, binary databases, or transient build outputs have been staged.
+All tasks and regression checks are complete and verified by 81 automated full-stack tests and production builds in both Next.js applications. No secrets, binary databases, or transient build outputs have been staged.

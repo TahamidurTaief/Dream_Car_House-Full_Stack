@@ -254,9 +254,15 @@ class InventoryDetailManagementSerializer(serializers.ModelSerializer):
     branch_detail = serializers.SerializerMethodField()
     inventory_images = InventoryImageManagementSerializer(many=True, read_only=True)
     slug = serializers.SlugField(required=False, allow_blank=True)
-    engine_capacity = serializers.CharField(required=False, allow_blank=True, max_length=100)
-    wheel_base = serializers.CharField(required=False, allow_blank=True, max_length=100)
-    mileage = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    engine_capacity = serializers.CharField(required=False, allow_blank=True, max_length=20)
+    wheel_base = serializers.CharField(required=False, allow_blank=True, max_length=20)
+    mileage = serializers.CharField(required=False, allow_blank=True, max_length=20)
+    year = serializers.IntegerField(required=False, allow_null=True)
+    price = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, allow_null=True)
+    model = serializers.PrimaryKeyRelatedField(queryset=ModelGeneration.objects.all(), required=False, allow_null=True)
+    branch = serializers.PrimaryKeyRelatedField(queryset=ShowroomBranch.objects.all(), required=False, allow_null=True)
+    body_style = serializers.PrimaryKeyRelatedField(queryset=BodyStyle.objects.all(), required=False, allow_null=True)
+    youtube = serializers.URLField(max_length=500, required=False, allow_blank=True, allow_null=True)
 
     def get_branch_detail(self, obj):
         if not obj.branch:
@@ -355,7 +361,6 @@ class InventoryDetailManagementSerializer(serializers.ModelSerializer):
         }
         return bleach.clean(value, tags=allowed_tags, attributes=allowed_attrs, strip=True)
 
-
     def validate_schema_override(self, value):
         if value is None or value == "":
             return None
@@ -376,11 +381,20 @@ class InventoryDetailManagementSerializer(serializers.ModelSerializer):
         else:
             data = dict(data)
 
-        # Handle empty feature_image on partial updates (PATCH)
-        if self.partial and "feature_image" in data:
+        # Handle empty feature_image:
+        # On partial updates (PATCH) or create (POST): pop empty or 0-byte file
+        if "feature_image" in data:
             val = data.get("feature_image")
             if val == "" or val is None or (hasattr(val, "size") and val.size == 0):
                 data.pop("feature_image", None)
+
+        # Normalize nullable foreign keys, numeric, and URL fields when explicitly submitted as empty string
+        nullable_fields = ["model", "branch", "body_style", "year", "price", "redirect_url", "youtube"]
+        for field in nullable_fields:
+            if field in data:
+                val = data.get(field)
+                if val == "" or val is None:
+                    data[field] = None
 
         # Handle schema_override parsing from form data
         if "schema_override" in data:
@@ -388,17 +402,31 @@ class InventoryDetailManagementSerializer(serializers.ModelSerializer):
             if val == "" or val is None:
                 data["schema_override"] = None
             elif isinstance(val, str):
-                try:
-                    data["schema_override"] = json.loads(val)
-                except Exception:
-                    pass
+                val_str = val.strip()
+                if not val_str:
+                    data["schema_override"] = None
+                else:
+                    try:
+                        data["schema_override"] = json.loads(val_str)
+                    except Exception:
+                        pass  # Let validate_schema_override report invalid JSON
 
         return super().to_internal_value(data)
 
     def validate(self, attrs):
-        # Validate that model belongs to brand if both are provided or being updated
-        brand = attrs.get("brand") or (self.instance.brand if self.instance else None)
-        model = attrs.get("model") or (self.instance.model if self.instance else None)
+        # Distinguish explicit null from omission:
+        # If 'brand' or 'model' key is present in attrs, use the explicit value (even if None).
+        # Only fall back to instance when the key was omitted during partial update.
+        if "brand" in attrs:
+            brand = attrs["brand"]
+        else:
+            brand = self.instance.brand if self.instance else None
+
+        if "model" in attrs:
+            model = attrs["model"]
+        else:
+            model = self.instance.model if self.instance else None
+
         if model and brand and model.brand_id != brand.id:
             raise serializers.ValidationError({
                 "model": f"Model generation '{model.model}' does not belong to brand '{brand.name}'."

@@ -580,6 +580,248 @@ class DashboardReferenceDataTests(TestCase):
         self.assertEqual(res.json()["error"]["code"], "VALIDATION_ERROR")
         self.assertIn("model", res.json()["error"]["field_errors"])
 
+    def test_inventory_create_multipart_complete_payload_with_blank_optionals(self):
+        """
+        Verify that creating an inventory vehicle with the complete FormData payload
+        (including empty strings for optional fields across all 6 tabs) validates and
+        persists nulls without converting blanks to zero or failing validation.
+        """
+        csrf = self._login_superuser()
+        from apps.inventory.models import Inventory
+
+        # Complete multipart payload replicating the browser FormData submission
+        payload = {
+            "name": "2024 Toyota Land Cruiser ZX",
+            "brand": self.brand_toyota.id,
+            "model": "",
+            "model_name": "",
+            "car_type": "RECONDITIONED",
+            "year": "",
+            "condition": "USED",
+            "body_style": "",
+            "inventory_type": "BUDGET FRIENDLY",
+            "branch": "",
+            "is_featured": "false",
+            "engine_capacity": "",
+            "mileage": "",
+            "fuel_type": "PETROL",
+            "transmission": "AUTOMATIC",
+            "color": "",
+            "drive_type": "",
+            "wheel_base": "",
+            "price": "",
+            "is_call_for_price": "false",
+            "slightly_negotiable": "YES",
+            "registration_number": "",
+            "registered": "Available",
+            "status": "PUBLISHED",
+            "youtube": "",
+            "description": "",
+            "h1_title": "",
+            "target_keyword": "",
+            "meta_title": "",
+            "slug": "",
+            "meta_description": "",
+            "canonical_url": "",
+            "indexing": "index, follow",
+            "featured_image_alt": "",
+            "previous_slug": "",
+            "schema_override": "",
+        }
+
+        res = self.client.post("/api/v1/dashboard/inventory/", payload, HTTP_X_CSRFTOKEN=csrf)
+        self.assertEqual(res.status_code, 201, msg=f"Error: {res.content.decode()}")
+        car_id = res.json()["data"]["id"]
+
+        car = Inventory.objects.get(id=car_id)
+        # Verify nullable numeric and foreign keys are persisted as None (NOT zero)
+        self.assertIsNone(car.year)
+        self.assertIsNone(car.price)
+        self.assertIsNone(car.branch)
+        self.assertIsNone(car.model)
+        self.assertIsNone(car.body_style)
+        self.assertIsNone(car.schema_override)
+        self.assertEqual(car.name, "2024 Toyota Land Cruiser ZX")
+        self.assertEqual(car.brand_id, self.brand_toyota.id)
+
+    def test_inventory_patch_omission_vs_explicit_clear(self):
+        """
+        Verify PATCH semantics:
+        - Omission retains existing nullable values.
+        - Explicit clearing (submitting empty string) clears them to NULL.
+        """
+        csrf = self._login_superuser()
+        from apps.inventory.models import Inventory
+        from apps.home.models import ShowroomBranch
+
+        branch = ShowroomBranch.objects.create(name="Gulshan Showroom", branch_id="gulshan-flagship")
+        body_style = BodyStyle.objects.create(body="SUV")
+
+        car = Inventory.objects.create(
+            name="Lexus LX600 Ultra Luxury",
+            brand=self.brand_toyota,
+            model=self.model_lc,
+            branch=branch,
+            body_style=body_style,
+            year=2023,
+            price=32000000.00,
+            fuel_type="PETROL",
+            transmission="AUTOMATIC",
+            condition="USED",
+            registered="Available",
+            schema_override={"@context": "https://schema.org", "@type": "Car"},
+        )
+
+        # 1. OMISSION: PATCH updating only 'registered' to 'Sold'
+        res_omit = self.client.patch(
+            f"/api/v1/dashboard/inventory/{car.id}/",
+            {"registered": "Sold"},
+            HTTP_X_CSRFTOKEN=csrf,
+        )
+        self.assertEqual(res_omit.status_code, 200)
+        car.refresh_from_db()
+        self.assertEqual(car.registered, "Sold")
+        # Retained values:
+        self.assertEqual(car.branch_id, branch.id)
+        self.assertEqual(car.model_id, self.model_lc.id)
+        self.assertEqual(car.body_style_id, body_style.id)
+        self.assertEqual(car.year, 2023)
+        self.assertEqual(float(car.price), 32000000.00)
+        self.assertIsNotNone(car.schema_override)
+
+        # 2. EXPLICIT CLEAR: PATCH sending branch="", schema_override="", price=""
+        res_clear = self.client.patch(
+            f"/api/v1/dashboard/inventory/{car.id}/",
+            {"branch": "", "schema_override": "", "price": ""},
+            HTTP_X_CSRFTOKEN=csrf,
+        )
+        self.assertEqual(res_clear.status_code, 200)
+        car.refresh_from_db()
+        # Persisted branch, schema_override, and price are cleared to NULL
+        self.assertIsNone(car.branch)
+        self.assertIsNone(car.schema_override)
+        self.assertIsNone(car.price)
+        # Untouched fields remain intact
+        self.assertEqual(car.model_id, self.model_lc.id)
+        self.assertEqual(car.year, 2023)
+
+    def test_inventory_patch_brand_change_with_model_clear_vs_omission(self):
+        """
+        Edge case:
+        - When brand changes and old model is explicitly cleared (model=''), save succeeds.
+        - When brand changes and model is omitted, validation fails because old model belongs to old brand.
+        """
+        csrf = self._login_superuser()
+        from apps.inventory.models import Inventory, Brand, ModelGeneration
+
+        bmw = Brand.objects.create(name="BMW Motorsport", segment=Brand.SegmentChoices.LUXURY_PERFORMANCE)
+
+        car = Inventory.objects.create(
+            name="Brand Switch Vehicle",
+            brand=self.brand_toyota,
+            model=self.model_lc,
+            fuel_type="PETROL",
+            transmission="AUTOMATIC",
+            condition="USED",
+            registered="Available",
+        )
+
+        # 1. Brand changes to BMW, but model is omitted -> fails validation
+        res_bad = self.client.patch(
+            f"/api/v1/dashboard/inventory/{car.id}/",
+            {"brand": bmw.id},
+            HTTP_X_CSRFTOKEN=csrf,
+        )
+        self.assertEqual(res_bad.status_code, 400)
+        self.assertIn("model", res_bad.json()["error"]["field_errors"])
+
+        # 2. Brand changes to BMW, and model is explicitly cleared (model='') -> succeeds
+        res_good = self.client.patch(
+            f"/api/v1/dashboard/inventory/{car.id}/",
+            {"brand": bmw.id, "model": ""},
+            HTTP_X_CSRFTOKEN=csrf,
+        )
+        self.assertEqual(res_good.status_code, 200)
+        car.refresh_from_db()
+        self.assertEqual(car.brand_id, bmw.id)
+        self.assertIsNone(car.model)
+
+    def test_inventory_validation_integrity_preserved(self):
+        """
+        Verify that validation is never weakened:
+        - Non-numeric year or price fails with 400 (never silently converted to None or zero).
+        - Blank required name fails with 400.
+        - Field lengths exceeding constraints fail with 400.
+        """
+        csrf = self._login_superuser()
+
+        # 1. Invalid year string fails
+        res_year = self.client.post(
+            "/api/v1/dashboard/inventory/",
+            {
+                "name": "Invalid Year Car",
+                "brand": self.brand_toyota.id,
+                "year": "not_a_number",
+                "fuel_type": "PETROL",
+                "transmission": "AUTOMATIC",
+                "condition": "USED",
+                "registered": "Available",
+            },
+            HTTP_X_CSRFTOKEN=csrf,
+        )
+        self.assertEqual(res_year.status_code, 400)
+        self.assertIn("year", res_year.json()["error"]["field_errors"])
+
+        # 2. Invalid price string fails
+        res_price = self.client.post(
+            "/api/v1/dashboard/inventory/",
+            {
+                "name": "Invalid Price Car",
+                "brand": self.brand_toyota.id,
+                "price": "not_a_price",
+                "fuel_type": "PETROL",
+                "transmission": "AUTOMATIC",
+                "condition": "USED",
+                "registered": "Available",
+            },
+            HTTP_X_CSRFTOKEN=csrf,
+        )
+        self.assertEqual(res_price.status_code, 400)
+        self.assertIn("price", res_price.json()["error"]["field_errors"])
+
+        # 3. Blank required name fails
+        res_name = self.client.post(
+            "/api/v1/dashboard/inventory/",
+            {
+                "name": "",
+                "brand": self.brand_toyota.id,
+                "fuel_type": "PETROL",
+                "transmission": "AUTOMATIC",
+                "condition": "USED",
+                "registered": "Available",
+            },
+            HTTP_X_CSRFTOKEN=csrf,
+        )
+        self.assertEqual(res_name.status_code, 400)
+        self.assertIn("name", res_name.json()["error"]["field_errors"])
+
+        # 4. Engine capacity exceeding 20 chars fails
+        res_len = self.client.post(
+            "/api/v1/dashboard/inventory/",
+            {
+                "name": "Overlong Engine Spec",
+                "brand": self.brand_toyota.id,
+                "engine_capacity": "123456789012345678901",  # 21 chars > 20
+                "fuel_type": "PETROL",
+                "transmission": "AUTOMATIC",
+                "condition": "USED",
+                "registered": "Available",
+            },
+            HTTP_X_CSRFTOKEN=csrf,
+        )
+        self.assertEqual(res_len.status_code, 400)
+        self.assertIn("engine_capacity", res_len.json()["error"]["field_errors"])
+
     def test_stock_crud(self):
         csrf = self._login_superuser()
 
@@ -2420,6 +2662,7 @@ class DashboardContentConfigurationTests(TestCase):
         self.assertTrue(res_pub.json()["success"])
         self.assertEqual(res_pub.json()["data"]["hero_title"], "Automotive Excellence in Dhaka")
         self.assertEqual(len(res_pub.json()["data"]["stats"]), 2)
+
 
 
 
