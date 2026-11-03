@@ -53,7 +53,7 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,dreamcarhouse.com,www.dreamcarhouse.com}
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,https://dreamcarhouse.com,https://www.dreamcarhouse.com}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3100,https://dreamcarhouse.com,https://www.dreamcarhouse.com}
       - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-https://dreamcarhouse.com,https://www.dreamcarhouse.com}
       - SECRET_KEY=${SECRET_KEY:-django-insecure-dch-super-secret-key-prod-2026}
     volumes:
@@ -108,7 +108,24 @@ services:
     networks:
       - dch_network
 
-  # 6. High-Performance Nginx Reverse Proxy with SSL
+  # 6. Node.js Custom Dynamic Workspace Dashboard
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: dch_custom_dashboard
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - INTERNAL_BACKEND_URL=http://backend:8000
+      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BASE_URL:-https://dreamcarhouse.com}
+      - PORT=3100
+    depends_on:
+      - backend
+    networks:
+      - dch_network
+
+  # 7. High-Performance Nginx Reverse Proxy with SSL
   nginx:
     image: nginx:alpine
     container_name: dch_nginx
@@ -125,6 +142,7 @@ services:
     depends_on:
       - frontend
       - backend
+      - dashboard
     networks:
       - dch_network
 
