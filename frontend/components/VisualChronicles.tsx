@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-export default function VisualChronicles() {
+export default function VisualChronicles({ chronicles }: { chronicles?: unknown } = {}) {
   const [flippedCards, setFlippedCards] = useState<Record<number, boolean>>({});
 
   const toggleFlip = (id: number) => {
@@ -15,7 +15,8 @@ export default function VisualChronicles() {
   };
 
   return (
-    <section className="socials-section max-w-7xl" id="socials">
+    <section className="socials-section w-full" id="socials">
+      <div className="luxury-container px-4 sm:px-6 lg:px-8">
       <div className="socials-header">
         <div className="socials-header-text">
           <h2 className="section-h2" style={{ marginBottom: "0.35rem" }}>
@@ -364,6 +365,7 @@ export default function VisualChronicles() {
             </svg>
           </Link>
         </div>
+      </div>
       </div>
     </section>
   );

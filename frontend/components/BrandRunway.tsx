@@ -106,7 +106,7 @@ const CAR_SVG_DEPLOYER = `
   <circle cx="125" cy="42" r="3" fill="#ffffff"/>
 </svg>`;
 
-export default function BrandRunway() {
+export default function BrandRunway({ brands }: { brands?: unknown } = {}) {
   const router = useRouter();
 
   // Responsive page size: Mobile = 3, Tablet = 6, Desktop = 8
@@ -338,7 +338,7 @@ export default function BrandRunway() {
 
   return (
     <section className="brand-strip-section" id="brand-runway-section">
-      <div className="max-w-7xl">
+      <div className="luxury-container px-4 sm:px-6 lg:px-8">
         <div className="runway-header">
           <h2 className="section-h2" style={{ marginBottom: "0.35rem" }}>
             Prestigious Automotive Marques

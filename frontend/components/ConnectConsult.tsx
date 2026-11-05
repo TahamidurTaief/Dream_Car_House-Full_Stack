@@ -3,12 +3,12 @@
 import React from "react";
 import { useUI } from "@/lib/UIContext";
 
-export default function ConnectConsult() {
+export default function ConnectConsult({ consultation }: { consultation?: unknown } = {}) {
   const { openAppointmentModal } = useUI();
 
   return (
     <section className="connect-consult-section" id="connect-consult">
-      <div className="max-w-7xl">
+      <div className="luxury-container px-4 sm:px-6 lg:px-8">
         <div className="consult-concept-card concept-card-1">
           <div className="concept-1-grid">
             <div className="concept-1-left">

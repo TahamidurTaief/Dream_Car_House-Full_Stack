@@ -2,24 +2,52 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { VEHICLE_DATA } from "@/lib/showroomData";
+import { Vehicle, VEHICLE_DATA } from "@/lib/showroomData";
+import { PublicVehicle, PublicPreferenceSection } from "@/lib/types";
 import VehicleCard from "./VehicleCard";
 
-export default function PreferenceSection() {
+interface PreferenceSectionProps {
+  vehicles?: (PublicVehicle | Vehicle)[];
+  sectionData?: PublicPreferenceSection | null;
+}
+
+export default function PreferenceSection({
+  vehicles,
+  sectionData,
+}: PreferenceSectionProps = {}) {
   const [activeTab, setActiveTab] = useState<"BRAND_NEW" | "PRE_OWNED">("BRAND_NEW");
 
-  const brandNewCars = VEHICLE_DATA.filter((c) => c.car_type === "BRAND_NEW");
-  const preOwnedCars = VEHICLE_DATA.filter((c) => c.car_type === "PRE_OWNED");
+  const sourceCars = Array.isArray(vehicles) && vehicles.length > 0 ? vehicles : VEHICLE_DATA;
+
+  const brandNewCars = sourceCars.filter((c) => c.car_type === "BRAND_NEW");
+  const preOwnedCars = sourceCars.filter((c) => c.car_type === "PRE_OWNED");
 
   const currentList = activeTab === "BRAND_NEW" ? brandNewCars : preOwnedCars;
   const showcaseCars = currentList.slice(0, 3);
 
+  const headingText = sectionData?.heading || "Choose per your preference";
+
+  // Dynamic category highlights from Dashboard if configured
+  const currentCategoryData = sectionData?.categories?.find((cat) => {
+    return (
+      cat.category_key === activeTab ||
+      (activeTab === "BRAND_NEW"
+        ? cat.label.toLowerCase().includes("brand")
+        : cat.label.toLowerCase().includes("pre"))
+    );
+  });
+
+  const dynamicHighlights = currentCategoryData?.highlights && currentCategoryData.highlights.length > 0
+    ? currentCategoryData.highlights
+    : null;
+
   return (
-    <section className="preference-section max-w-7xl">
-      <div className="preference-header-wrap">
+    <section className="preference-section w-full">
+      <div className="luxury-container px-4 sm:px-6 lg:px-8">
+        <div className="preference-header-wrap">
         <div>
           <h2 className="section-h2" style={{ margin: 0 }}>
-            Choose per your preference
+            {headingText}
           </h2>
         </div>
 
@@ -54,7 +82,17 @@ export default function PreferenceSection() {
 
       {/* Trust / Guarantee Highlights Bar */}
       <div id="preference-highlights-bar" className="preference-highlights-bar">
-        {activeTab === "BRAND_NEW" ? (
+        {dynamicHighlights ? (
+          dynamicHighlights.map((hl, idx) => (
+            <div key={idx} className="highlight-pill-card">
+              <div className="highlight-pill-accent"></div>
+              <div className="highlight-pill-content">
+                <h4>{hl.title}</h4>
+                <p>{hl.description}</p>
+              </div>
+            </div>
+          ))
+        ) : activeTab === "BRAND_NEW" ? (
           <>
             <div className="highlight-pill-card">
               <div className="highlight-pill-accent"></div>
@@ -128,6 +166,7 @@ export default function PreferenceSection() {
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
         </Link>
+      </div>
       </div>
     </section>
   );

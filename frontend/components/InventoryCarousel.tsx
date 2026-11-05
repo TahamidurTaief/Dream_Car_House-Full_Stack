@@ -2,10 +2,11 @@
 
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { VEHICLE_DATA, Vehicle } from "@/lib/showroomData";
 import { useUI } from "@/lib/UIContext";
 
-export default function InventoryCarousel() {
+export default function InventoryCarousel({ vehicles }: { vehicles?: unknown } = {}) {
   const { openCarModal } = useUI();
   const trackRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -264,24 +265,28 @@ export default function InventoryCarousel() {
     }, 70);
   };
 
-  // Card Click: Only open modal if not dragging/swiping
+  const router = useRouter();
+
+  // Card Click: Navigate to full car detail page if not dragging/swiping
   const handleCardClick = (car: Vehicle) => {
     if (hasDraggedRef.current) return;
-    openCarModal(car);
+    router.push(`/cars/${car.slug || car.id}`);
   };
 
   return (
-    <section id="carousel-section" className="carousel-section max-w-7xl">
-      <div className="section-head">
-        <h2 className="section-h2">Current Inventory</h2>
-        <Link className="see-all-link" href="/inventory">
-          See All ({allInventory.length})
-        </Link>
+    <section id="carousel-section" className="carousel-section w-full">
+      <div className="luxury-container px-4 sm:px-6 lg:px-8">
+        <div className="section-head">
+          <h2 className="section-h2">Current Inventory</h2>
+          <Link className="see-all-link" href="/inventory">
+            See All ({allInventory.length})
+          </Link>
+        </div>
       </div>
 
       <div
         ref={containerRef}
-        className="inventory-slider-container"
+        className="inventory-slider-container w-full"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >

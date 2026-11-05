@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useUI } from "@/lib/UIContext";
 
-export default function VipSanctuary() {
+export default function VipSanctuary({ sanctuary }: { sanctuary?: unknown } = {}) {
   const { openAppointmentModal, openVideoModal } = useUI();
 
   return (
@@ -21,7 +21,7 @@ export default function VipSanctuary() {
       />
       <div className="vip-sanctuary-overlay"></div>
 
-      <div className="vip-sanctuary-container max-w-7xl">
+      <div className="vip-sanctuary-container luxury-container px-4 sm:px-6 lg:px-8">
         <div className="vip-sanctuary-grid">
           {/* Left Column: Editorial Invitation & Value Pillars */}
           <div className="vip-sanctuary-narrative">
